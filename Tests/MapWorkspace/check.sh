@@ -20,14 +20,14 @@ python3 Tests/MapWorkspace/diagnostics.py "$QA_DIR"
 PREVIEW_APP="$QA_DIR/MapWorkspacePreview.app"
 mkdir -p "$PREVIEW_APP"
 python3 Tests/RoutePicker/bookmark-support.py "$QA_DIR/Bookmarks.swift"
-xcrun --sdk iphonesimulator swiftc TrollRoute/Storage/SharedPreferences.swift -target arm64-apple-ios17.0-simulator \
+xcrun --sdk iphonesimulator swiftc TrollRoute/Storage/SharedPreferences.swift TrollRoute/Storage/FavoritesStore.swift -target arm64-apple-ios17.0-simulator \
   -sdk "$(xcrun --sdk iphonesimulator --show-sdk-path)" \
   "$QA_DIR/CustomMapView.swift" TrollRoute/LocSim/FloatingQuickMenu.swift \
   TrollRoute/LocSim/RouteLocationPicker.swift TrollRoute/LocSim/FavoritePlaceEditor.swift TrollRoute/LocSim/PlaceModels.swift TrollRoute/LocSim/PlaceInput.swift TrollRoute/LocSim/AddressQuery.swift TrollRoute/LocSim/PlaceSearch.swift TrollRoute/SettingsView.swift \
   TrollRoute/LocSim/MapMoveConfirmation.swift TrollRoute/LocSim/MainStopConfirmation.swift "$QA_DIR/LongPressRoute.swift" \
   TrollRoute/LocSim/RouteElevation.swift TrollRoute/LocSim/Altitude.swift TrollRoute/LocSim/AltitudeSheet.swift \
   TrollRoute/LocSim/CoordTransform.swift TrollRoute/LocSim/RouteFinish.swift TrollRoute/LocSim/RouteStop.swift TrollRoute/LocSim/LocationSession.swift "$QA_DIR/Bookmarks.swift" \
-  "$QA_DIR/AppSettings.swift" Tests/MapWorkspace/Preview.swift \
+  TrollRoute/LocSim/SharedPlace.swift "$QA_DIR/AppSettings.swift" Tests/MapWorkspace/Preview.swift \
   -o "$PREVIEW_APP/MapWorkspacePreview"
 python3 - "$PREVIEW_APP/Info.plist" <<'PY'
 import plistlib, sys

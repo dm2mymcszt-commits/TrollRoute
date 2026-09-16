@@ -152,14 +152,14 @@ struct SharedPlaceInbox {
         for url in legacy { try? FileManager.default.removeItem(at: url) }
     }
 
-    static func saveFavorite(_ place: RoutePlace, defaults: UserDefaults? = UserDefaults(suiteName: suite)) throws {
-        guard let defaults = defaults else { throw SearchError.message("Couldn't access Favorites. Open TrollRoute once and try again.") }
+    static func saveFavorite(_ place: RoutePlace, id: UUID = UUID(), store: FavoritesStore? = .shared) throws {
+        guard let store = store else { throw FavoritesStore.Failure.unavailable }
         let coordinate = CoordTransform.gcj02ToWgs84(place.coordinate)
         guard CLLocationCoordinate2DIsValid(coordinate) else { throw SearchError.message("Invalid location.") }
-        var bookmarks = defaults.array(forKey: "bookmarks") as? [[String: Any]] ?? []
-        bookmarks.append(["name": place.name, "lat": coordinate.latitude, "long": coordinate.longitude])
-        defaults.set(bookmarks, forKey: "bookmarks")
+        try store.save(.init(id: id, name: place.name, latitude: coordinate.latitude, longitude: coordinate.longitude))
+        SharedPlaceSignal.post()
     }
+
 }
 
 struct SharedRouteDraft: Codable {

@@ -46,6 +46,9 @@ struct MigrationLaunchView: View {
     private func check() {
         let defaults = SharedPreferences.defaults
         do {
+            guard let store = FavoritesStore.shared else { throw FavoritesStore.Failure.unavailable }
+            // This also upgrades Favorites from earlier TrollRoute builds once.
+            _ = try store.read()
             if defaults.bool(forKey: LegacyMigration.completionKey) {
                 summary = LegacyMigration.pendingSummary(in: defaults)
             } else {
@@ -54,7 +57,7 @@ struct MigrationLaunchView: View {
                 let paths = (locations["preferences"] as? [String] ?? []).map { URL(fileURLWithPath: $0) }
                 let favorites = (locations["favorites"] as? String).map { URL(fileURLWithPath: $0) }
                 summary = try LegacyMigration.run(preferenceURLs: paths, favoritesURL: favorites,
-                    oldAppInstalled: locations["installed"] as? Bool ?? false, target: defaults)
+                    oldAppInstalled: locations["installed"] as? Bool ?? false, target: defaults, favoriteStore: store)
             }
             failure = nil
         } catch { failure = error.localizedDescription }

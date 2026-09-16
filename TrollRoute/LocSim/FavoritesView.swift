@@ -15,7 +15,10 @@ struct FavoritesView: View {
     var currentLong: Double
     var onSelect: (Double, Double, String) -> Void
     
-    @State private var bookmarks: [[String: Any]] = []
+    @Environment(\.scenePhase) private var scenePhase
+    @StateObject private var changes = SharedPlaceChannel()
+    @State private var bookmarks: [FavoritesStore.Favorite] = []
+    @State private var failure: String?
     @State private var showAddSheet = false
     @State private var newName = ""
     
@@ -46,10 +49,10 @@ struct FavoritesView: View {
                     }
                 } else {
                     List {
-                        ForEach(Array(bookmarks.enumerated()), id: \.offset) { index, bookmark in
-                            let name = bookmark["name"] as? String ?? "Unknown"
-                            let lat = bookmark["lat"] as? Double ?? 0
-                            let long = bookmark["long"] as? Double ?? 0
+                        ForEach(bookmarks) { bookmark in
+                            let name = bookmark.name
+                            let lat = bookmark.latitude
+                            let long = bookmark.longitude
                             
                             Button(action: {
                                 onSelect(lat, long, name)
@@ -108,9 +111,12 @@ struct FavoritesView: View {
             .sheet(isPresented: $showAddSheet) {
                 addFavoriteSheet()
             }
-            .onAppear {
-                bookmarks = BookMarkRetrieve()
-            }
+            .onAppear(perform: reload)
+            .onChange(of: changes.revision) { _ in reload() }
+            .onChange(of: scenePhase) { phase in if phase == .active { reload() } }
+            .alert("Favorites unavailable", isPresented: Binding(get: { failure != nil }, set: { if !$0 { failure = nil } })) {
+                Button("OK") { failure = nil }
+            } message: { Text(failure ?? "") }
         }
     }
     
@@ -118,6 +124,7 @@ struct FavoritesView: View {
     private func addFavoriteSheet() -> some View {
         NavigationView {
             Form {
+                if let failure = failure { Text(failure).foregroundColor(.red) }
                 Section(header: Text("Location Name")) {
                     TextField("e.g. Home, Work, Park...", text: $newName)
                 }
@@ -151,22 +158,32 @@ struct FavoritesView: View {
         }
     }
     
+    private func reload() {
+        do { bookmarks = try bookmarkStore().read() }
+        catch { failure = error.localizedDescription }
+    }
+
     private func saveFavorite() {
-        let _ = BookMarkSave(lat: currentLat, long: currentLong, name: newName)
-        bookmarks = BookMarkRetrieve()
+        guard BookMarkSave(lat: currentLat, long: currentLong, name: newName) else {
+            failure = "Couldn't save this favorite. Your existing places have not been changed."
+            return
+        }
+        reload()
         newName = ""
         showAddSheet = false
         AlertKitAPI.present(title: "Saved!", icon: .done, style: .iOS17AppleMusic, haptic: .success)
     }
-    
+
     private func deleteBookmark(at offsets: IndexSet) {
-        var allBookmarks = BookMarkRetrieve()
-        allBookmarks.remove(atOffsets: offsets)
-        let sharedUserDefaults = UserDefaults(suiteName: sharedUserDefaultsSuiteName)
-        sharedUserDefaults?.set(allBookmarks, forKey: "bookmarks")
-        bookmarks = allBookmarks
+        // Remove the displayed identities, never offsets into a newly read array.
+        let ids = Set(offsets.compactMap { bookmarks.indices.contains($0) ? bookmarks[$0].id : nil })
+        do {
+            try bookmarkStore().remove(ids: ids)
+            SharedPlaceSignal.post()
+            reload()
+        } catch { failure = error.localizedDescription }
     }
-    
+
     private func categoryColor(for name: String) -> Color {
         switch name.lowercased() {
         case let n where n.contains("home"): return .green

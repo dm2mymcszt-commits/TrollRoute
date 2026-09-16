@@ -256,8 +256,8 @@ struct LocSimView: View {
                 showRouteSheet = true
                 return
             }
-            // Legacy Go requests keep their existing review until the direct-Go
-            // command path is installed. Endpoint requests never enter this sheet.
+            // Requests left by older builds retain their explicit review. New Go
+            // and Favorite actions complete in the extension; endpoints skip review.
             guard incomingPlace == nil, let request = pending.first(where: { $0.action == .go || $0.action == .favorite }) else { return }
             mapMove.cancel()
             if showAltitude || showSettings || showSearchBar || showRouteSheet || showFavorites || showRouteFinish {
@@ -271,7 +271,12 @@ struct LocSimView: View {
 
     private func handleSharedPlace(_ request: SharedPlaceRequest, accept: Bool) {
         do {
-            // Remove before applying so activation cannot repeat an accepted move.
+            // Favorites have durable save receipts: complete the save before
+            // acknowledging an older queued request, and safely retry on failure.
+            if accept, request.action == .favorite, let place = request.place {
+                try SharedPlaceInbox.saveFavorite(place, id: request.id)
+            }
+            // Legacy movement requests still require this explicit review.
             try SharedPlaceInbox().remove(request)
             incomingPlace = nil
             guard accept, let place = request.place else { return }
@@ -284,7 +289,7 @@ struct LocSimView: View {
             case .start, .destination:
                 break // Consumed transactionally by the endpoint channel.
             case .favorite:
-                try SharedPlaceInbox.saveFavorite(place)
+                break // Saved before acknowledging the queued request.
             }
         } catch {
             incomingPlace = nil

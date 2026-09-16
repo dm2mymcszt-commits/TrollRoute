@@ -53,13 +53,19 @@ require(draft.destination?.id == resolvedCurrent.id && draft.destination?.latitu
 require(draft.swapEndpoints() && draft.start?.id == resolvedCurrent.id && draft.destination?.id == place.id, "Swap twice restores endpoints")
 draft.start = nil
 require(!draft.swapEndpoints() && draft.destination?.id == place.id, "Unresolved current location cannot swap")
-let suite = "andromeda.share.tests." + UUID().uuidString
-let defaults = UserDefaults(suiteName: suite)!
-defer { defaults.removePersistentDomain(forName: suite) }
-try SharedPlaceInbox.saveFavorite(place, defaults: defaults)
-let favorites = RouteFavoritePlaces.places(from: defaults.array(forKey: "bookmarks") as! [[String: Any]])
-require(favorites.count == 1 && favorites[0].name == place.name, "Shared favorite must use existing bookmark storage")
+let favoriteStore = FavoritesStore(url: container.appendingPathComponent("favorites.json"))
+let favoriteID = UUID()
+try SharedPlaceInbox.saveFavorite(place, id: favoriteID, store: favoriteStore)
+try SharedPlaceInbox.saveFavorite(place, id: favoriteID, store: favoriteStore)
+let favorites = RouteFavoritePlaces.places(from: try favoriteStore.read().map(\.dictionary))
+require(favorites.count == 1 && favorites[0].name == place.name, "App and extension must share one store without duplicate retries")
 require(abs(favorites[0].latitude - map.latitude) < 0.00003 && abs(favorites[0].longitude - map.longitude) < 0.00003, "Shared favorite must convert exactly once")
+try favoriteStore.remove(ids: [favoriteID])
+try SharedPlaceInbox.saveFavorite(place, id: favoriteID, store: favoriteStore)
+let afterDeletedRetry = try favoriteStore.read()
+require(afterDeletedRetry.isEmpty, "A delayed accepted share must not recreate a deleted favorite")
+do { try SharedPlaceInbox.saveFavorite(place, store: nil); fatalError("Missing group must not report saved") }
+catch FavoritesStore.Failure.unavailable { }
 print("PASS: four share actions, durable inbox, cancellation, invalid payloads, independent endpoints and WGS-84 Favorites")
 for autoStart in [false, true] {
     draft.prepareFromMap(start: resolvedCurrent, destination: place, autoStart: autoStart)

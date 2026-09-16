@@ -47,7 +47,7 @@ enum LegacyMigration {
     }
 
     static func run(preferenceURLs: [URL], favoritesURL: URL?, oldAppInstalled: Bool,
-                    target: UserDefaults) throws -> MigrationSummary? {
+                    target: UserDefaults, favoriteStore: FavoritesStore) throws -> MigrationSummary? {
         if target.bool(forKey: completionKey) { return pendingSummary(in: target) }
         // The old app has no-container: its global domain takes precedence. A
         // container plist is used only if that global plist does not exist.
@@ -68,11 +68,11 @@ enum LegacyMigration {
         var writes: [String: Any] = [:]
         for (key, value) in imported {
             if key == "bookmarks", let old = value as? [[String: Any]] {
-                var combined = target.array(forKey: key) as? [[String: Any]] ?? []
+                var combined = try favoriteStore.read().map(\.values)
                 for item in old where !combined.contains(where: { NSDictionary(dictionary: $0).isEqual(to: item) }) {
                     combined.append(item); summary.favorites += 1
                 }
-                writes[key] = combined
+                writes[key] = old
             } else if key == "routeRecentPlaces.v1", let data = value as? Data {
                 var combined = (target.data(forKey: key).flatMap { try? JSONSerialization.jsonObject(with: $0) } as? [[String: Any]]) ?? []
                 let old = try JSONSerialization.jsonObject(with: data) as! [[String: Any]]
@@ -102,7 +102,12 @@ enum LegacyMigration {
             target.set(["summary": try JSONEncoder().encode(summary), "values": writes], forKey: journalKey)
             guard target.synchronize() else { throw MigrationError.unreadable("TrollRoute's import journal could not be saved.") }
         }
-        for (key, value) in writes { target.set(value, forKey: key) }
+        // Do not replace a previously read Favorites array: the extension can
+        // save while import runs. Merge old-app candidates under the store lock.
+        if let favorites = writes["bookmarks"] as? [[String: Any]] {
+            try favoriteStore.mergeImported(favorites)
+        }
+        for (key, value) in writes where key != "bookmarks" { target.set(value, forKey: key) }
         // Commit completion only after new data has reached its persistent domain.
         guard target.synchronize() else { throw MigrationError.unreadable("TrollRoute's imported preferences could not be saved.") }
         target.set(try JSONEncoder().encode(summary), forKey: summaryKey)

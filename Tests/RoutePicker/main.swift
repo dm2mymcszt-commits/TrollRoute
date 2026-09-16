@@ -23,19 +23,14 @@ defaults.set(Data("broken data".utf8), forKey: "routeRecentPlaces.v1")
 assert(RouteRecentPlaces(defaults: defaults).places.isEmpty)
 print("PASS: recent-place limit, ordering, deduplication, persistence, removal, invalid coordinates, corrupt data")
 
-// The isolated test executable reads/writes the exact suite and functions used
-// by FavoritesView. Preserve anything pre-existing on the CI host.
-let bookmarkDefaults = UserDefaults(suiteName: sharedUserDefaultsSuiteName)!
-let savedBookmarks = bookmarkDefaults.object(forKey: "bookmarks")
-defer {
-    if let saved = savedBookmarks { bookmarkDefaults.set(saved, forKey: "bookmarks") }
-    else { bookmarkDefaults.removeObject(forKey: "bookmarks") }
-}
-bookmarkDefaults.removeObject(forKey: "bookmarks")
-assert(RouteFavoritePlaces.places(from: BookMarkRetrieve()).isEmpty)
+func savedBookmarks() -> [[String: Any]] { try! BookMarkRetrieve() }
+
+// Production operations use an isolated file, never a developer's saved places.
+defer { try? FileManager.default.removeItem(at: qaFavoriteDirectory) }
+assert(RouteFavoritePlaces.places(from: savedBookmarks()).isEmpty)
 assert(BookMarkSave(lat: 44.817059, long: -0.585746, name: "Café préféré"))
 assert(BookMarkSave(lat: 39.9087, long: 116.3975, name: "Beijing"))
-let favorites = RouteFavoritePlaces.places(from: BookMarkRetrieve())
+let favorites = RouteFavoritePlaces.places(from: savedBookmarks())
 assert(favorites.map(\.name) == ["Café préféré", "Beijing"])
 assert(favorites[0].latitude == 44.817059 && favorites[0].longitude == -0.585746)
 let china = favorites[1].coordinate
@@ -54,8 +49,8 @@ let malformed: [[String: Any]] = [
 ]
 assert(RouteFavoritePlaces.places(from: malformed).map(\.name) == ["Favorite"])
 assert(BookMarkSave(lat: 48.85, long: 2.35, name: "Added later"))
-assert(RouteFavoritePlaces.places(from: BookMarkRetrieve()).last?.name == "Added later")
-assert((BookMarkRetrieve()[1]["long"] as? Double) == 116.3975, "Reading must never rewrite saved coordinates")
+assert(RouteFavoritePlaces.places(from: savedBookmarks()).last?.name == "Added later")
+assert((savedBookmarks()[1]["long"] as? Double) == 116.3975, "Reading must never rewrite saved coordinates")
 print("PASS: shared favorites storage; fresh reload; name/accent filtering; invalid entries; WGS-84 and China selection round trip")
 
 let searchResult = RoutePlace(name: "Pasted location", address: "44.817059, -0.585746",
@@ -63,7 +58,7 @@ let searchResult = RoutePlace(name: "Pasted location", address: "44.817059, -0.5
 assert(FavoritePlaceSave.save(searchResult, name: "  Saved search  "))
 let mapPin = RoutePlace(name: "Map pin", coordinate: china)
 assert(FavoritePlaceSave.save(mapPin, name: "Saved map pin"))
-let saved = BookMarkRetrieve()
+let saved = savedBookmarks()
 assert(saved[saved.count - 2]["name"] as? String == "Saved search")
 assert(saved[saved.count - 2]["lat"] as? Double == searchResult.latitude)
 assert(saved.last?["name"] as? String == "Saved map pin")
@@ -75,5 +70,5 @@ assert(!FavoritePlaceSave.save(RoutePlace(name: "Invalid", coordinate: CLLocatio
     name: "Invalid") { _, _, _ in writes += 1; return true })
 assert(writes == 0, "Invalid favorite input must not write")
 assert(!FavoritePlaceSave.save(mapPin, name: "Failure") { _, _, _ in false }, "Storage failure must not report success")
-assert(BookMarkRetrieve().count == saved.count, "Invalid saves must leave existing favorites untouched")
+assert(savedBookmarks().count == saved.count, "Invalid saves must leave existing favorites untouched")
 print("PASS: editable favorites from search result and map pin, shared persistence, China conversion, invalid input and failed storage")

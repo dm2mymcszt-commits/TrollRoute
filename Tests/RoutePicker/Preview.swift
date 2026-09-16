@@ -16,7 +16,6 @@ struct EquatableCoordinate: Equatable {
         return args[index + 1]
     }
     private let places: RouteRecentPlaces = {
-        UserDefaults(suiteName: sharedUserDefaultsSuiteName)?.removeObject(forKey: "bookmarks")
         _ = BookMarkSave(lat: 44.817059, long: -0.585746, name: "Café préféré")
         _ = BookMarkSave(lat: 48.8584, long: 2.2945, name: "Tour Eiffel")
         let defaults = UserDefaults(suiteName: "RoutePickerPreview")!

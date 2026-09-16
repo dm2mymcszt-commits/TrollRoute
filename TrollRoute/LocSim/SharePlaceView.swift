@@ -10,6 +10,7 @@ struct SharePlaceView: View {
     }
     @State private var operation: Task<Void, Never>?
     @State private var busy = false
+    @State private var queuedFavorite: SharedPlaceRequest?
     @State private var queuedMove: SharedPlaceRequest?
     @State private var queuedEndpoint: SharedPlaceRequest?
     @State private var places: [RoutePlace] = []
@@ -80,7 +81,13 @@ struct SharePlaceView: View {
         place.sharedSource = selected.sharedSource
         do {
             if action == .favorite {
-                try SharedPlaceInbox.saveFavorite(place)
+                let candidate = SharedPlaceRequest(place: place, action: .favorite)
+                let request: SharedPlaceRequest
+                if let queued = queuedFavorite, queued.name == candidate.name,
+                   queued.latitude == candidate.latitude, queued.longitude == candidate.longitude { request = queued }
+                else { request = candidate }
+                queuedFavorite = request
+                try SharedPlaceInbox.saveFavorite(place, id: request.id)
                 completion = "Saved to Favorites"
             } else if action == .start || action == .destination {
                 let candidate = SharedPlaceRequest(place: place, action: action)

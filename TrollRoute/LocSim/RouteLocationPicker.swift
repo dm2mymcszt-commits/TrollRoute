@@ -12,6 +12,9 @@ struct RouteLocationPicker: View {
     @Environment(\.dismiss) private var dismiss
     @StateObject private var search = RoutePlaceSearch()
     @State private var showMap = false
+    @Environment(\.scenePhase) private var scenePhase
+    @StateObject private var favoriteChanges = SharedPlaceChannel()
+    @State private var favoriteError: String?
     @State private var favorites: [RoutePlace] = []
     @State private var favoriteToSave: RoutePlace?
 
@@ -36,7 +39,8 @@ struct RouteLocationPicker: View {
                 }
                 if search.query.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || !matchingFavorites.isEmpty {
                     Section("Favorites") {
-                        if favorites.isEmpty {
+                        if let error = favoriteError { Text(error).foregroundColor(.secondary) }
+                        else if favorites.isEmpty {
                             Text("Save places in Favorites to choose them here.").foregroundColor(.secondary)
                         }
                         ForEach(matchingFavorites) { place in
@@ -122,11 +126,16 @@ struct RouteLocationPicker: View {
             search.region = region
             if search.query.isEmpty && !initialQuery.isEmpty { search.query = initialQuery }
         }
+        .onChange(of: favoriteChanges.revision) { _ in reloadFavorites() }
+        .onChange(of: scenePhase) { phase in if phase == .active { reloadFavorites() } }
         .onDisappear { search.cancel() }
     }
 
     private func reloadFavorites() {
-        favorites = RouteFavoritePlaces.places(from: BookMarkRetrieve())
+        do {
+            favorites = RouteFavoritePlaces.places(from: try BookMarkRetrieve())
+            favoriteError = nil
+        } catch { favoriteError = error.localizedDescription }
     }
 
     private func choose(_ place: RoutePlace) {

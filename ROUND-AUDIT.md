@@ -1161,3 +1161,11 @@ Added actual 12-process competition: only six100-coordinate batches fit a600-coo
 ### Favorites test entry point
 
 CI35130100117 compiled the app and direct-share changes, but Favorites.swift used top-level statements in a multi-file swiftc invocation without being named main.swift. Added an explicit @main throwing entry point; assertions unchanged. Foundation acceptance remains pending. Gesture dependency checkpoint is 441369a (build36).
+
+### Favorites integration - build37
+
+Confirmed write race: BookMarkSave and SharedPlaceInbox.saveFavorite each independently loaded/replaced a UserDefaults bookmarks array; FavoritesView removed indices against a fresh array. Atomic store foundation 84417c9 now becomes the common app/extension source. All normal saves, share saves and old-app import use the same locked file. The old TrollRoute bookmarks array is read once without mutation; import keeps old-app bytes untouched and merges under the same lock. No parallel legacy writer remains.
+
+FavoritesView deletes displayed UUIDs; SharePlaceView retains a save request UUID across retries, with edited name and WGS-84 coordinates. Success appears after durable save. Legacy queued Favorite handling saves before acknowledging, using the same receipt, so failure/relaunch does not lose/replay it. Readers refresh from Darwin signals and app activation; storage failures are visible instead of silently reporting empty/saved. Picker coordinate conversion stays unchanged.
+
+Acceptance additions: actual shared-save duplicate and deleted receipt tests; missing-group failure; migration now exercises canonical storage in every fixture, including corruption failure and an extension save during journal recovery. Existing picker save/filter/China conversion tests compile the production helper against a QA-only container, not a fake persistence layer. Full 16-process store checks remain. Local identity, generated harness and diff checks pass; compilation and UI acceptance await macOS CI. No injection behavior changed in this commit.
