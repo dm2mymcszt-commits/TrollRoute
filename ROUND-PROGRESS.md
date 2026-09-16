@@ -8,9 +8,9 @@
 - Phase5: R10 `539c587` build29 and ledger/Darwin `92534f2` build30 passed full CI. `cd1d979` build31 adds automatic endpoint handoff and applies the four approved share keys. `5188d2c` build32 adds the cross-process elevation quota; its quota/command tests and app package passed.
 - Map test observation correction `07f1319`: full CI35095688375 SUCCESS. Prior diagnostic CI35066100040 passed; intermittent Create remains under investigation, with five repeated Cancel/Create pairs and tracing.
 - Lease foundation `81d54e8` build33 passed full CI35066588142. Build34 `53e200e` connects the actual owner/engine to cross-process authority; includes late-callback, stale Stop, paused/moving route and relaunch tests. Injection change: phone Snapchat Bitmoji check required.
-- Build34 CI35097168633: package, owner, injection, actual engine and other model checks passed; UI jobs pending. Build35 `0d4a093` wires direct Go in the extension with saved altitude, durable retry and revocation; CI required.
-- Favorites storage foundation added with concurrent-process and retry/deletion tests; not connected to app writers yet. Root cause: independently replacing a UserDefaults array loses simultaneous app/extension saves.
-- **Next:** verify builds34/35 CI and Favorites tests; connect all favorite writers/readers and old-app migration to the locked store, then build the lifecycle/UI acceptance harness. Phase5 is not accepted. Four share privileges already approved and applied.
+- Builds34/35 (`53e200e` / `0d4a093`) compiled and packaged, but UI failed. Route UI's previous-location fixture omitted the new explicit-user-intent flag; corrected. Build35 route runner was killed before tests began. Both map runs recorded a tap during double-tap; downloading traces to establish cause.
+- Favorites foundation `84417c9` pushed, CI35130100117 running; not wired to app writers yet. Locked collection, stable IDs, receipts/deletion and16-process tests. Root cause: independent UserDefaults array replacements lose concurrent saves.
+- **Next:** inspect map touch traces/recording, resolve the double-tap failure without masking delays; verify direct Go/Favorites CI. Then wire all favorite readers/writers and migration, and complete the lifecycle/UI harness. Phase5 is not accepted.
 - Persist each finished step and its next action. Keep this file short; append detailed findings to audit. Delete **all three ROUND files** in the final commit.
 
 ## Decisions already approved

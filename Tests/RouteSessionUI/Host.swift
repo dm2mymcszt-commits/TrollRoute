@@ -91,7 +91,7 @@ struct SessionHost: View {
         SharedPreferences.defaults.set(false, forKey: "mapButtonLabels")
         if arguments.contains("--previous") {
             fixture.owner.receive(RouteLocationSample.make(coordinate: fixture.c, course: 0,
-                speed: 0, timestamp: Date()), kind: .stationary)
+                speed: 0, timestamp: Date()), kind: .stationary, newIntent: true)
         }
         fixture.prepare()
         let navigation = arguments.contains("--navigation") || arguments.contains("--active-navigation")
