@@ -16,14 +16,15 @@ for removed in ['HomeView.swift', 'DaemonView.swift', 'CleanerView.swift', 'Supe
     assert removed not in project, f'{removed} remains in the build'
 print('PASS: full-screen map entry and unused feature sources removed from the build')
 PY
+python3 Tests/MapWorkspace/diagnostics.py "$QA_DIR"
 PREVIEW_APP="$QA_DIR/MapWorkspacePreview.app"
 mkdir -p "$PREVIEW_APP"
 python3 Tests/RoutePicker/bookmark-support.py "$QA_DIR/Bookmarks.swift"
 xcrun --sdk iphonesimulator swiftc TrollRoute/Storage/SharedPreferences.swift -target arm64-apple-ios17.0-simulator \
   -sdk "$(xcrun --sdk iphonesimulator --show-sdk-path)" \
-  TrollRoute/LocSim/CustomMapView.swift TrollRoute/LocSim/FloatingQuickMenu.swift \
+  "$QA_DIR/CustomMapView.swift" TrollRoute/LocSim/FloatingQuickMenu.swift \
   TrollRoute/LocSim/RouteLocationPicker.swift TrollRoute/LocSim/FavoritePlaceEditor.swift TrollRoute/LocSim/PlaceModels.swift TrollRoute/LocSim/PlaceInput.swift TrollRoute/LocSim/AddressQuery.swift TrollRoute/LocSim/PlaceSearch.swift TrollRoute/SettingsView.swift \
-  TrollRoute/LocSim/MapMoveConfirmation.swift TrollRoute/LocSim/MainStopConfirmation.swift TrollRoute/LocSim/LongPressRoute.swift \
+  TrollRoute/LocSim/MapMoveConfirmation.swift TrollRoute/LocSim/MainStopConfirmation.swift "$QA_DIR/LongPressRoute.swift" \
   TrollRoute/LocSim/RouteElevation.swift TrollRoute/LocSim/Altitude.swift TrollRoute/LocSim/AltitudeSheet.swift \
   TrollRoute/LocSim/CoordTransform.swift TrollRoute/LocSim/RouteFinish.swift TrollRoute/LocSim/RouteStop.swift TrollRoute/LocSim/LocationSession.swift "$QA_DIR/Bookmarks.swift" \
   "$QA_DIR/AppSettings.swift" Tests/MapWorkspace/Preview.swift \
@@ -51,9 +52,12 @@ xcodebuild test -project "$QA_DIR/MapGestureTests.xcodeproj" -scheme MapGestureT
   -derivedDataPath "$QA_DIR/DerivedData" -resultBundlePath "$QA_DIR/Gestures.xcresult" \
   CODE_SIGNING_ALLOWED=NO > "$QA_DIR/gestures.log" 2>&1 || {
     xcrun xcresulttool export attachments --path "$QA_DIR/Gestures.xcresult" --output-path "$QA_DIR/attachments" || true
+    cp "$CONTAINER/Documents/workspace-trace.log" "$QA_DIR/workspace-trace.log" || true
+    cat "$QA_DIR/workspace-trace.log" || true
     cat "$QA_DIR/gestures.log"
     exit 1
   }
+cp "$CONTAINER/Documents/workspace-trace.log" "$QA_DIR/workspace-trace.log" || true
 cat "$QA_DIR/gestures.log"
 xcrun xcresulttool export attachments --path "$QA_DIR/Gestures.xcresult" --output-path "$QA_DIR/attachments"
 for appearance in dark light; do

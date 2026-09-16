@@ -10,6 +10,32 @@ permissions:
   contents: read
 
 jobs:
+  map-workspace-ui:
+    runs-on: macos-15
+    timeout-minutes: 20
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_16.4.app/Contents/Developer
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - name: Check map workspace and capture previews
+        run: bash Tests/MapWorkspace/check.sh
+
+      - name: Upload map workspace previews
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: map-workspace-preview
+          path: |
+            build/map-workspace-qa/*.png
+            build/map-workspace-qa/gestures.log
+            build/map-workspace-qa/workspace-trace.log
+            build/map-workspace-qa/Gestures.xcresult
+            build/map-workspace-qa/attachments
+          if-no-files-found: ignore
+          retention-days: 14
+
   route-session-ui:
     runs-on: macos-15
     timeout-minutes: 20
@@ -140,22 +166,6 @@ jobs:
           path: build/TrollRoute.tipa
           if-no-files-found: error
           retention-days: 30
-
-      - name: Check map workspace and capture previews
-        run: bash Tests/MapWorkspace/check.sh
-
-      - name: Upload map workspace previews
-        if: always()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
-        with:
-          name: map-workspace-preview
-          path: |
-            build/map-workspace-qa/*.png
-            build/map-workspace-qa/gestures.log
-            build/map-workspace-qa/Gestures.xcresult
-            build/map-workspace-qa/attachments
-          if-no-files-found: ignore
-          retention-days: 14
 
       - name: Upload build log
         if: always()

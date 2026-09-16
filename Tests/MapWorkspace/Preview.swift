@@ -113,6 +113,7 @@ struct WorkspacePreview: View {
 @main struct MapWorkspacePreview: App {
     init() {
         let args = ProcessInfo.processInfo.arguments
+        workspaceTrace("launch \(args)")
         SharedPreferences.defaults.set(!args.contains("--stop-without-confirmation"), forKey: "confirmBeforeStoppingSpoofing")
         if let index = args.firstIndex(of: "--labels"), index + 1 < args.count {
             SharedPreferences.defaults.set(args[index + 1] == "yes", forKey: "mapButtonLabels")
@@ -156,4 +157,16 @@ struct MapObservation: UIViewRepresentable {
         return view
     }
     func updateUIView(_ view: Probe, context: Context) {}
+}
+
+// Diagnostics are confined to the UI-test host. No production logging or timing changes.
+func workspaceTrace(_ message: String) {
+    let url = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
+        .appendingPathComponent("workspace-trace.log")
+    let data = "\(Date().timeIntervalSince1970) \(message)\n".data(using: .utf8)!
+    if !FileManager.default.fileExists(atPath: url.path) { FileManager.default.createFile(atPath: url.path, contents: nil) }
+    guard let handle = try? FileHandle(forWritingTo: url) else { return }
+    defer { try? handle.close() }
+    try? handle.seekToEnd()
+    try? handle.write(contentsOf: data)
 }

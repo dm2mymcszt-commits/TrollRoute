@@ -5,8 +5,9 @@
 - Plan: [ROUND-PLAN.md](ROUND-PLAN.md). Detailed evidence, root causes, inventory, exact approvals/commands, tag snapshot and migration inputs: [ROUND-AUDIT.md](ROUND-AUDIT.md).
 - Branch: `experiment/route-motion`; origin: `dm2mymcszt-commits/TrollRoute`. Application baseline `546ffb2`; Phase 1 identity and migration pushed.
 - Current checkpoint: **Phase 4 accepted**, build28 `e1f3cac`, full CI34976588469 SUCCESS; five route UI tests, engine tests, screenshots and package/signing verified.
-- Phase5 R10 `539c587` build29 in CI35008261441 (app/package passed, rest running). Four extension additions approved at997ebc9; applied in build31 signing file only. Ledger/Darwin `92534f2` build30 CI35008857508 running; `cd1d979` build31 adds automatic endpoint handoff. Build32 adds the shared elevation quota ledger; direct Go/lease and lifecycle UI tests remain.
-- **Next:** validate build29?31 CI; add lifecycle/UI handoff harness, direct Go with cross-process injection lease and quota, then lifecycle/UI acceptance. Approval is already recorded; do not ask again for those four keys.
+- Phase5: R10 `539c587` build29 and ledger/Darwin `92534f2` build30 passed full CI. `cd1d979` build31 adds automatic endpoint handoff and applies the four approved share keys. `5188d2c` build32 adds the cross-process elevation quota; its quota/command tests and app package passed.
+- Builds31/32 failed different map gesture UI checks. Video32 confirms the second Create alert dismisses without creation; cause not yet established. Observation-only harness traces are being added; assertions remain unchanged. Map UI gets its own CI job for faster evidence.
+- **Next:** inspect the diagnostic map UI run and fix the confirmed cause; then implement direct Go with a cross-process injection lease and the Phase5 lifecycle/UI harness. Phase5 is not accepted. No renewed approval needed for the four share keys.
 - Persist each finished step and its next action. Keep this file short; append detailed findings to audit. Delete **all three ROUND files** in the final commit.
 
 ## Decisions already approved
@@ -44,7 +45,7 @@
 | 4 R11, R12, R13 | Done; phone checks remain | `1976d8a`, `08eb495`; full engine/action matrix and actual Navigation/panel UI pass |
 | 4 R15, R16, R17 | Done; phone checks remain | `369ef15`, `b0fdc0b`; both sets, all outcomes, three Stop entry points pass; phone Bitmoji check |
 | 4 R14, F3 + acceptance | Done; phone checks remain | `c0962af`, `6d4fa2e`, `e1f3cac`; credits reviewed, moving/paused scrub metadata pass; signed build28; phone Bitmoji check |
-| 5 R7, R8, R9, R10, F4 | In progress | Architecture / exact four-key extension proposal in audit; four additions approved (997ebc9 proposal), not yet applied. R10 provenance build29 ready for CI; next durable command lifecycle/lease and direct Go/automatic open |
+| 5 R7, R8, R9, R10, F4 | In progress | R10/ledger full CI29-30; automatic endpoints and approved keys `cd1d979`; shared quota `5188d2c`. Direct Go/lease and lifecycle UI acceptance remain |
 | 5 acceptance | Not started | Lifecycle harness, source/outcome tests; phone flows |
 | 6 R29, R30, R31, R32 | Not started | Registration/access/accuracy status, evidence-based onboarding |
 | 6 acceptance | Not started | Status model tests, good/bad screenshots, documented permission decision |
