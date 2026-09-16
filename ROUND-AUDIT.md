@@ -1157,3 +1157,7 @@ Added actual 12-process competition: only six100-coordinate batches fit a600-coo
 - Source inspection: the single-tap recognizer requires both long-press and double-tap failure, but the double-tap guard itself is permitted to recognize simultaneously with the route hold and does not require its failure. This lets the held touch participate in the guard's multi-tap sequence. Add the same explicit long-press failure dependency to the guard, so a recognized hold invalidates both tap recognizers. No time-based suppression window, extra wait or manual zoom implementation.
 - Existing actual-touch test remains unchanged: hold creates once, immediate double tap zooms without selecting location, later single tap selects once. Added test-host touch-count/timestamp and single-tap traces to distinguish further input-sequence issues if this does not resolve the CI failure. Acceptance still pending; do not claim physical behavior verified.
 - Route UI fixture correction committed31841d6. Favorites foundation84417c9 remains unwired; its tests run in subsequent CI. No changes to location injection in this gesture commit.
+
+### Favorites test entry point
+
+CI35130100117 compiled the app and direct-share changes, but Favorites.swift used top-level statements in a multi-file swiftc invocation without being named main.swift. Added an explicit @main throwing entry point; assertions unchanged. Foundation acceptance remains pending. Gesture dependency checkpoint is 441369a (build36).
