@@ -79,6 +79,121 @@ final class LocationSessionStore {
     }
 }
 
+/// Cross-process authority. A timer/altitude callback may use an existing token,
+/// but only a new user action may claim one. Revocation precedes direct Go's
+/// driver call, so a suspended app cannot overwrite it when its timer wakes.
+struct LocationLeaseStore {
+    struct State: Codable {
+        var owner: UUID?
+        var snapshot = LocationSessionSnapshot()
+        var moves: [UUID: Move] = [:]
+    }
+    struct Move: Codable {
+        enum Status: String, Codable { case pending, applied, superseded }
+        let sample: SessionLocation
+        var status: Status
+    }
+    enum Failure: Error { case invalidState, conflictingMove, supersededMove }
+    let file: SharedStateFile<State>
+
+    init(url: URL, initial: @escaping () -> LocationSessionSnapshot = { LocationSessionSnapshot() }) {
+        file = SharedStateFile(url: url, initial: { State(snapshot: initial()) })
+    }
+
+    func read() throws -> State {
+        let state = try file.read()
+        try validate(state)
+        return state
+    }
+
+    /// Does not inject. Claiming invalidates unfinished older commands as well
+    /// as old route/joystick callbacks. Keep the last actual sample until delivery.
+    func claim(_ owner: UUID) throws -> LocationSessionSnapshot {
+        try file.update { state in
+            try validate(state)
+            for id in Array(state.moves.keys) where state.moves[id]?.status == .pending {
+                state.moves[id]?.status = .superseded
+            }
+            state.owner = owner
+            return state.snapshot
+        }
+    }
+
+    /// Check and driver effect share a lock; checking a token then injecting
+    /// outside that lock would still race an extension taking ownership.
+    @discardableResult
+    func perform(_ owner: UUID, _ operation: (inout LocationSessionSnapshot) throws -> Void) throws -> Bool {
+        try file.transaction { loaded, persist in
+            var state = loaded
+            try validate(state)
+            guard state.owner == owner else { return false }
+            try operation(&state.snapshot)
+            try validate(state)
+            try persist(state)
+            return true
+        }
+    }
+
+    @discardableResult
+    func stop(_ owner: UUID, driverStop: () throws -> Void) throws -> Bool {
+        try file.transaction { loaded, persist in
+            var state = loaded
+            try validate(state)
+            guard state.owner == owner else { return false }
+            // Revoke before the external effect. Even if the driver or final
+            // write fails, callbacks holding this token are no longer authorized.
+            state.owner = nil
+            try persist(state)
+            try driverStop()
+            state.snapshot = LocationSessionSnapshot()
+            try persist(state)
+            return true
+        }
+    }
+
+    /// Idempotent receipt for a direct stationary move. Success is recorded only
+    /// after the driver returns. If the process exits between delivery and the
+    /// receipt write, retry repeats the same stationary sample (never a route).
+    /// No filesystem can atomically commit an external locationd side effect.
+    @discardableResult
+    func move(_ id: UUID, sample: SessionLocation,
+              inject: (CLLocation) throws -> Void) throws -> Bool {
+        guard sample.isValid, sample.speed == 0 else { throw Failure.invalidState }
+        return try file.transaction { loaded, persist in
+            var state = loaded
+            try validate(state)
+            if let previous = state.moves[id] {
+                guard previous.sample == sample else { throw Failure.conflictingMove }
+                if previous.status == .applied { return false }
+                guard previous.status == .pending, state.owner == id else { throw Failure.supersededMove }
+            } else {
+                for old in Array(state.moves.keys) where state.moves[old]?.status == .pending {
+                    state.moves[old]?.status = .superseded
+                }
+                state.owner = id
+                state.moves[id] = Move(sample: sample, status: .pending)
+                // The shared route is logically ended before delivery; current
+                // remains the last actual sample until injection succeeds.
+                state.snapshot.kind = state.snapshot.current == nil ? nil : .stationary
+                state.snapshot.beforeRoute = nil
+                try persist(state)
+            }
+            try inject(sample.location)
+            state.snapshot = LocationSessionSnapshot(kind: .stationary, current: sample)
+            state.moves[id]?.status = .applied
+            try persist(state)
+            return true
+        }
+    }
+
+    private func validate(_ state: State) throws {
+        guard state.snapshot.isValid,
+              state.moves.values.allSatisfy({ $0.sample.isValid && $0.sample.speed == 0 }) else {
+            throw Failure.invalidState
+        }
+    }
+}
+
 protocol LocationSimulationDriver: AnyObject {
     func inject(_ location: CLLocation, reason: LocationInjectionReason)
     func stop()

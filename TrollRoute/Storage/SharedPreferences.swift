@@ -35,11 +35,22 @@ struct SharedStateFile<Value: Codable> {
 
     @discardableResult
     func update<Result>(_ operation: (inout Value) throws -> Result) throws -> Result {
-        try locked {
-            var value = try load()
+        try transaction { loaded, persist in
+            var value = loaded
             let result = try operation(&value)
-            try JSONEncoder().encode(value).write(to: url, options: .atomic)
+            try persist(value)
             return result
+        }
+    }
+
+    /// Supports a durable checkpoint before an external side effect, with the
+    /// same cross-process lock held throughout. A thrown operation does not undo
+    /// checkpoints already written. The closures must not recursively use this file.
+    func transaction<Result>(_ operation: (Value, (Value) throws -> Void) throws -> Result) throws -> Result {
+        try locked {
+            try operation(load()) { value in
+                try JSONEncoder().encode(value).write(to: url, options: .atomic)
+            }
         }
     }
 

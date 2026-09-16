@@ -7,6 +7,7 @@
 - Current checkpoint: **Phase 4 accepted**, build28 `e1f3cac`, full CI34976588469 SUCCESS; five route UI tests, engine tests, screenshots and package/signing verified.
 - Phase5: R10 `539c587` build29 and ledger/Darwin `92534f2` build30 passed full CI. `cd1d979` build31 adds automatic endpoint handoff and applies the four approved share keys. `5188d2c` build32 adds the cross-process elevation quota; its quota/command tests and app package passed.
 - Builds31/32 failed different map gesture UI checks. Video32 confirms the second Create alert dismisses without creation; cause not yet established. Observation-only harness traces pushed at `2bc3861`; assertions remain unchanged. Map UI gets its own CI job for faster evidence.
+- Lease foundation prepared for build33 (not connected to injection yet): durable revocation and Go receipts, with child-process race tests. CI pending.
 - **Next:** inspect the diagnostic map UI run and fix the confirmed cause; then implement direct Go with a cross-process injection lease and the Phase5 lifecycle/UI harness. Phase5 is not accepted. No renewed approval needed for the four share keys.
 - Persist each finished step and its next action. Keep this file short; append detailed findings to audit. Delete **all three ROUND files** in the final commit.
 

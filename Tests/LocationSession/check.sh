@@ -13,3 +13,7 @@ xcrun swiftc -parse-as-library TrollRoute/Storage/SharedPreferences.swift \
   TrollRoute/LocSim/RouteElevation.swift TrollRoute/LocSim/Altitude.swift TrollRoute/LocSim/LocationSession.swift \
   "$QA_DIR/RouteLocationSample.swift" Tests/LocationSession/main.swift -o "$QA_DIR/session-tests"
 "$QA_DIR/session-tests"
+xcrun swiftc -parse-as-library TrollRoute/Storage/SharedPreferences.swift \
+  TrollRoute/LocSim/RouteElevation.swift TrollRoute/LocSim/Altitude.swift TrollRoute/LocSim/LocationSession.swift \
+  Tests/LocationSession/Lease.swift -o "$QA_DIR/lease-tests"
+"$QA_DIR/lease-tests"
