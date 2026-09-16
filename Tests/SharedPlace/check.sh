@@ -14,3 +14,7 @@ xcrun swiftc -parse-as-library TrollRoute/Storage/SharedPreferences.swift \
   TrollRoute/LocSim/LocationSession.swift TrollRoute/LocSim/DirectLocationMove.swift \
   Tests/SharedPlace/DirectMove.swift -o "$QA_DIR/direct-move-tests"
 "$QA_DIR/direct-move-tests"
+
+xcrun swiftc TrollRoute/Storage/SharedPreferences.swift TrollRoute/Storage/FavoritesStore.swift \
+  Tests/SharedPlace/Favorites.swift -o "$QA_DIR/favorite-store-tests"
+"$QA_DIR/favorite-store-tests"
