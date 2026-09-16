@@ -40,7 +40,8 @@ enum RouteLocationSample {
 }
 
 class LocSimManager {
-    static let session = LocationSession(driver: CoreLocationSimulationDriver())
+    static let session = LocationSession(driver: CoreLocationSimulationDriver(),
+                                         lease: .shared, requiresLease: true)
 }
 
 /// Starts once, then replaces the queued sample while the session stays active.
@@ -80,6 +81,8 @@ final class CoreLocationSimulationDriver: LocationSimulationDriver {
         running = false
         timezoneUpdate()
     }
+
+    func relinquish() { running = false }
 }
 
 

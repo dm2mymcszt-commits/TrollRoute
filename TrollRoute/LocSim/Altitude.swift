@@ -92,6 +92,7 @@ final class AltitudeController: ObservableObject {
          lookup: @escaping (CLLocationCoordinate2D) async -> Double? = ElevationLookup.fetch,
          batchLookup: @escaping ([CLLocationCoordinate2D]) async -> [Double?]? = ElevationLookup.fetchBatch,
          currentLocation: @escaping () -> CLLocation?,
+         willChangeProfile: @escaping () -> Void = {},
          deliver: @escaping (CLLocation) -> Void) {
         self.profile = settings.profile
         self.defaults = defaults
@@ -104,6 +105,7 @@ final class AltitudeController: ObservableObject {
         nextLookup = defaults.object(forKey: "elevationNextLookup") as? Date ?? .distantPast
         observation = settings.$profile.dropFirst().sink { [weak self] profile in
             guard let self = self else { return }
+            willChangeProfile()
             self.profile = profile
             self.cancelLookup()
             self.refresh()

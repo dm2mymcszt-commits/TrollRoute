@@ -6,9 +6,9 @@
 - Branch: `experiment/route-motion`; origin: `dm2mymcszt-commits/TrollRoute`. Application baseline `546ffb2`; Phase 1 identity and migration pushed.
 - Current checkpoint: **Phase 4 accepted**, build28 `e1f3cac`, full CI34976588469 SUCCESS; five route UI tests, engine tests, screenshots and package/signing verified.
 - Phase5: R10 `539c587` build29 and ledger/Darwin `92534f2` build30 passed full CI. `cd1d979` build31 adds automatic endpoint handoff and applies the four approved share keys. `5188d2c` build32 adds the cross-process elevation quota; its quota/command tests and app package passed.
-- Builds31/32 failed different map gesture UI checks. Video32 confirms the second Create alert dismisses without creation; cause not yet established. Full diagnostic CI `2bc3861` / 35066100040 passed. Build31 recording shows real zoom despite failed predicate; replacing stale accessibility getter with MapKit-event observation. Repeating Cancel/Create pairs to diagnose its separate intermittent failure.
-- Lease foundation `81d54e8` pushed as build33 (not connected to injection yet): durable revocation and Go receipts, with child-process race tests. Full CI35066588142 SUCCESS, including child-process lease tests.
-- **Next:** inspect the diagnostic map UI run and fix the confirmed cause; then implement direct Go with a cross-process injection lease and the Phase5 lifecycle/UI harness. Phase5 is not accepted. No renewed approval needed for the four share keys.
+- Map test observation correction `07f1319` pushed; CI35095688375 running. Prior diagnostic CI35066100040 passed; intermittent Create remains under investigation, with five repeated Cancel/Create pairs and tracing.
+- Lease foundation `81d54e8` build33 passed full CI35066588142. Build34 connects the actual owner/engine to cross-process authority; includes late-callback, stale Stop, paused/moving route and relaunch tests. Injection change: phone Snapchat Bitmoji check required.
+- **Next:** verify build34 CI and latest gesture trace; then wire extension direct Go using the shared authority and saved altitude, followed by favorites and lifecycle/UI acceptance. Phase5 is not accepted. Four share privileges already approved and applied.
 - Persist each finished step and its next action. Keep this file short; append detailed findings to audit. Delete **all three ROUND files** in the final commit.
 
 ## Decisions already approved

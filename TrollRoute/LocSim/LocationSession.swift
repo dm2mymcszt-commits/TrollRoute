@@ -83,6 +83,12 @@ final class LocationSessionStore {
 /// but only a new user action may claim one. Revocation precedes direct Go's
 /// driver call, so a suspended app cannot overwrite it when its timer wakes.
 struct LocationLeaseStore {
+    static var shared: LocationLeaseStore? {
+        FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: SharedPreferences.suite).map {
+            LocationLeaseStore(url: $0.appendingPathComponent("LocationSession/authority.v1.json"),
+                               initial: { LocationSessionStore().load() })
+        }
+    }
     struct State: Codable {
         var owner: UUID?
         var snapshot = LocationSessionSnapshot()
@@ -197,6 +203,12 @@ struct LocationLeaseStore {
 protocol LocationSimulationDriver: AnyObject {
     func inject(_ location: CLLocation, reason: LocationInjectionReason)
     func stop()
+    func relinquish()
+}
+
+extension LocationSimulationDriver {
+    // Pure drivers may have no process-local connection state to reset.
+    func relinquish() {}
 }
 
 enum LocationInjectionReason { case continuous, jump, stateChange }
@@ -270,6 +282,8 @@ final class LocationInjectionQueue {
 /// The only owner of the active spoof. Route geometry and UI remain consumers.
 final class LocationSession: ObservableObject {
     @Published private(set) var snapshot: LocationSessionSnapshot
+    @Published private(set) var error: String?
+    var onOwnershipLost: (() -> Void)?
     private(set) var inputSample: CLLocation?
     private(set) var lastKnown: SessionLocation?
     private let driver: LocationSimulationDriver
@@ -279,16 +293,21 @@ final class LocationSession: ObservableObject {
     private let lookup: (CLLocationCoordinate2D) async -> Double?
     private let batchLookup: ([CLLocationCoordinate2D]) async -> [Double?]?
     private let injectionInterval: TimeInterval
+    private let lease: LocationLeaseStore?
+    private let requiresLease: Bool
+    private var leaseToken: UUID?
     private var deliveryReason = LocationInjectionReason.continuous
     private var firstRouteSample = false
     private lazy var injectionQueue = LocationInjectionQueue(interval: injectionInterval,
         deliver: { [weak self] in self?.inject($0, reason: $1) })
     lazy var altitudeController = AltitudeController(settings: settings, defaults: defaults,
         lookup: lookup, batchLookup: batchLookup, currentLocation: { [weak self] in self?.inputSample },
+        willChangeProfile: { [weak self] in self?.prepareAltitudeEdit() },
         deliver: { [weak self] in self?.deliver($0) })
 
     init(driver: LocationSimulationDriver, defaults: UserDefaults = SharedPreferences.defaults,
          settings: AltitudeSettings = .shared, injectionInterval: TimeInterval = 0.25,
+         lease: LocationLeaseStore? = nil, requiresLease: Bool = false,
          lookup: @escaping (CLLocationCoordinate2D) async -> Double? = ElevationLookup.fetch,
          batchLookup: @escaping ([CLLocationCoordinate2D]) async -> [Double?]? = ElevationLookup.fetchBatch) {
         self.driver = driver
@@ -297,27 +316,36 @@ final class LocationSession: ObservableObject {
         self.lookup = lookup
         self.batchLookup = batchLookup
         self.injectionInterval = injectionInterval
+        self.lease = lease
+        self.requiresLease = requiresLease || lease != nil
         store = LocationSessionStore(defaults: defaults)
-        snapshot = store.load()
-        inputSample = snapshot.current?.location
+        snapshot = self.requiresLease ? ((try? lease?.read().snapshot) ?? LocationSessionSnapshot()) : store.load()
+        inputSample = self.requiresLease ? nil : snapshot.current?.location
         lastKnown = snapshot.current
     }
 
     var current: SessionLocation? { snapshot.current }
     var isActive: Bool { snapshot.isActive }
 
-    func beginRoute() {
+    @discardableResult
+    func beginRoute(prepare: () -> Void = {}) -> Bool {
         injectionQueue.flush()
+        guard claimForUserAction() else { return false }
+        prepare()
         snapshot.beforeRoute = snapshot.current
         altitudeController.activatePreparedRoute()
         snapshot.kind = .route
         firstRouteSample = true
-        store.save(snapshot)
+        persistSnapshot()
+        return error == nil && (!requiresLease || leaseToken != nil)
     }
 
     func receive(_ location: CLLocation, kind: LocationSessionSnapshot.Kind,
-                 reason: LocationInjectionReason = .continuous, routeDistance: Double? = nil) {
+                 reason: LocationInjectionReason = .continuous, routeDistance: Double? = nil,
+                 newIntent: Bool = false) {
         guard SessionLocation(location).isValid else { return }
+        if newIntent { guard claimForUserAction() else { return } }
+        guard authorized() else { return }
         if kind != .route { altitudeController.finishRoute() }
         let stopped = location.speed == 0 && inputSample?.speed != 0
         deliveryReason = (kind == .stationary || firstRouteSample || reason == .jump) ? .jump :
@@ -332,17 +360,18 @@ final class LocationSession: ObservableObject {
 
     /// Natural arrival already emitted its zero-speed sample; only ownership changes.
     func finishHolding() {
+        guard authorized() else { return }
         injectionQueue.flush()
         // Keep terrain loading at the fixed final route distance. This can
         // refine a held provisional height without ever restarting movement.
         snapshot.kind = snapshot.current == nil ? nil : .stationary
         snapshot.beforeRoute = nil
-        store.save(snapshot)
+        persistSnapshot()
     }
 
     /// Stop route movement without ever stopping the underlying location spoof.
     func holdCaptured(_ captured: SessionLocation) {
-        guard captured.isValid else { return }
+        guard captured.isValid, authorized() else { return }
         injectionQueue.stop()
         firstRouteSample = false
         inputSample = captured.stationaryLocation
@@ -353,14 +382,21 @@ final class LocationSession: ObservableObject {
         deliveryReason = .continuous
     }
 
-    func stop() {
+    func stop(newIntent: Bool = true) {
+        if newIntent { guard claimForUserAction() else { return } }
         inputSample = nil
         firstRouteSample = false
         injectionQueue.stop()
         altitudeController.stop()
-        driver.stop()
+        if requiresLease {
+            guard let lease = lease, let token = leaseToken else { return }
+            do {
+                guard try lease.stop(token, driverStop: { self.driver.stop() }) else { refreshShared(); return }
+                leaseToken = nil
+            } catch { failOwnership(error); return }
+        } else { driver.stop() }
         snapshot = LocationSessionSnapshot()
-        store.save(snapshot)
+        if !requiresLease { store.save(snapshot) }
     }
 
     private func deliver(_ location: CLLocation) {
@@ -370,9 +406,93 @@ final class LocationSession: ObservableObject {
 
     private func inject(_ location: CLLocation, reason: LocationInjectionReason) {
         guard inputSample != nil, snapshot.kind != nil else { return }
-        driver.inject(location, reason: reason)
-        snapshot.current = SessionLocation(location)
+        var delivered = snapshot
+        delivered.current = SessionLocation(location)
+        if requiresLease {
+            guard let lease = lease, let token = leaseToken else { return }
+            do {
+                guard try lease.perform(token, { state in
+                    self.driver.inject(location, reason: reason)
+                    state = delivered
+                }) else { refreshShared(); return }
+            } catch { failOwnership(error); return }
+        } else { driver.inject(location, reason: reason) }
+        snapshot = delivered
         lastKnown = snapshot.current
-        store.save(snapshot)
+        if !requiresLease { store.save(snapshot) }
+    }
+
+    /// Called by durable-command wakeups and activation. Loading never acquires
+    /// authority or restarts an old route, even when another process held a spoof.
+    @discardableResult
+    func refreshShared() -> Bool {
+        guard requiresLease else { return false }
+        guard let lease = lease else { failOwnership(nil); return true }
+        do {
+            let state = try lease.read()
+            let lost = leaseToken != nil && leaseToken != state.owner
+            if lost { relinquish() }
+            if leaseToken == nil {
+                snapshot = state.snapshot
+                lastKnown = state.snapshot.current ?? lastKnown
+            }
+            return lost
+        } catch { failOwnership(error); return true }
+    }
+
+    /// Only explicit user actions call this, never a route tick or callback.
+    @discardableResult
+    func claimForUserAction() -> Bool {
+        guard requiresLease else { return true }
+        refreshShared()
+        guard let lease = lease else { failOwnership(nil); return false }
+        injectionQueue.stop()
+        altitudeController.stop()
+        do {
+            let token = UUID()
+            snapshot = try lease.claim(token)
+            leaseToken = token
+            inputSample = snapshot.current?.location
+            error = nil
+            return true
+        } catch { failOwnership(error); return false }
+    }
+
+    private func authorized() -> Bool {
+        guard requiresLease else { return true }
+        refreshShared()
+        return leaseToken != nil && error == nil
+    }
+
+    private func prepareAltitudeEdit() {
+        guard requiresLease else { return }
+        refreshShared()
+        // A Settings edit is a new user intent only if a held spoof exists.
+        // For our running route, keep its token, geometry and terrain profile.
+        if leaseToken == nil && snapshot.isActive { _ = claimForUserAction() }
+    }
+
+    private func persistSnapshot() {
+        guard requiresLease else { store.save(snapshot); return }
+        guard let lease = lease, let token = leaseToken else { return }
+        do {
+            let value = snapshot
+            if try !lease.perform(token, { $0 = value }) { refreshShared() }
+        } catch { failOwnership(error) }
+    }
+
+    private func relinquish() {
+        leaseToken = nil
+        inputSample = nil
+        firstRouteSample = false
+        injectionQueue.stop()
+        altitudeController.stop()
+        driver.relinquish() // Never stop the new owner's locationd simulation.
+        onOwnershipLost?()
+    }
+
+    private func failOwnership(_ cause: Error?) {
+        relinquish()
+        error = "Couldn't access shared location state. Try the action again."
     }
 }

@@ -19,6 +19,8 @@ final class EngineFixture {
     let settings: RouteFinishSettings
     let driver: EngineDriver
     let owner: LocationSession
+    let lease: LocationLeaseStore
+    let leaseDirectory: URL
     let altitude: AltitudeSettings
     var engine: RouteSimulator!
     var clock = 1000.0
@@ -38,8 +40,12 @@ final class EngineFixture {
         let altitudeSettings = AltitudeSettings(defaults: storage)
         altitude = altitudeSettings
         altitudeSettings.setCustom(250)
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent(domain)
+        leaseDirectory = directory
+        let authority = LocationLeaseStore(url: directory.appendingPathComponent("session.json"))
+        lease = authority
         owner = LocationSession(driver: recording, defaults: storage, settings: altitudeSettings,
-            injectionInterval: 0, lookup: { _ in nil }, batchLookup: { _ in nil })
+            injectionInterval: 0, lease: authority, lookup: { _ in nil }, batchLookup: { _ in nil })
         engine = RouteSimulator(locationSession: owner, finishDefaults: settings, stopDefaults: storage,
             now: { [unowned self] in realtime ? ProcessInfo.processInfo.systemUptime : self.clock },
             notifyCompletion: { [unowned self] in self.notifications.append($0) })
@@ -58,6 +64,7 @@ final class EngineFixture {
     func close() {
         engine.stopSimulation()
         defaults.removePersistentDomain(forName: suite)
+        try? FileManager.default.removeItem(at: leaseDirectory)
     }
     func at(_ point: CLLocationCoordinate2D) -> Bool {
         guard let location = owner.current else { return false }
@@ -136,7 +143,7 @@ func testRouteStopEngine() {
             f.defaults.set(preferred.rawValue, forKey: "routeStopDefault")
             if previous {
                 f.owner.receive(RouteLocationSample.make(coordinate: f.c, course: 90, speed: 12,
-                    timestamp: Date()), kind: .joystick)
+                    timestamp: Date()), kind: .joystick, newIntent: true)
             }
             f.prepare(); f.engine.startSimulation()
             f.clock += 2
@@ -160,7 +167,7 @@ func testRouteStopEngine() {
             if previous {
                 f.altitude.setCustom(-12.5)
                 f.owner.receive(RouteLocationSample.make(coordinate: f.c, course: 90, speed: 12,
-                    timestamp: Date()), kind: .joystick)
+                    timestamp: Date()), kind: .joystick, newIntent: true)
             }
             f.prepare(); f.engine.startSimulation()
             f.altitude.setCustom(250)
@@ -258,6 +265,46 @@ func testMovingScrubEngine() {
     precondition(abs(f.engine.progress - 0.4) < 0.000001 && f.owner.current!.speed > 0)
 }
 
+func testSharedMoveRevokesEngine() {
+    // A takeover while idle must not erase the route the user has just prepared.
+    do {
+        let f = EngineFixture()
+        defer { f.close() }
+        f.owner.receive(RouteLocationSample.make(coordinate: f.a, course: 0, speed: 0,
+            timestamp: Date()), kind: .stationary, newIntent: true)
+        f.prepare()
+        let external = SessionLocation(RouteLocationSample.make(coordinate: f.c, altitude: 123,
+            course: 0, speed: 0, timestamp: Date()))
+        try! f.lease.move(UUID(), sample: external) { _ in }
+        f.engine.startSimulation()
+        precondition(f.engine.isSimulating && f.owner.snapshot.beforeRoute == external)
+        f.clock += 1; f.engine.advanceRoute()
+        precondition(f.engine.progress > 0 && f.owner.current?.speed == 50 / 3.6)
+    }
+    for paused in [false, true] {
+        let f = EngineFixture()
+        defer { f.close() }
+        f.prepare(); f.engine.configureFinish(RouteFinishConfiguration(action: .backAndForth))
+        f.engine.startSimulation()
+        if paused { f.engine.togglePause() }
+        f.engine.requestRouteStop()
+        let oldStop = f.engine.stopRequest!
+        let count = f.driver.samples.count
+        let sample = SessionLocation(RouteLocationSample.make(coordinate: f.c, altitude: 123,
+            course: 0, speed: 0, timestamp: Date()))
+        try! f.lease.move(UUID(), sample: sample) { _ in }
+        // A stale dialog must not reclaim authority and restore real GPS.
+        f.engine.confirmRouteStop(oldStop.id, action: .real)
+        precondition(!f.engine.isSimulating && f.at(f.c) && f.owner.current?.meters == 123)
+        f.clock += 1000; f.engine.advanceRoute()
+        precondition(f.driver.samples.count == count && f.driver.stops == 0)
+        precondition(f.notifications.isEmpty, "An externally ended route must not report natural arrival")
+        f.prepare(); f.engine.startSimulation()
+        precondition(f.engine.isSimulating && f.owner.snapshot.beforeRoute == sample)
+        precondition(f.owner.current?.speed == 50 / 3.6 && f.owner.current?.meters == 250)
+    }
+}
+
 @main final class EngineApp: UIResponder, UIApplicationDelegate {
     var window: UIWindow?
     func application(_ application: UIApplication, didFinishLaunchingWithOptions options: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
@@ -269,7 +316,8 @@ func testMovingScrubEngine() {
             testRouteFinishEngine()
             testRouteStopEngine()
             testMovingScrubEngine()
-            let text = "PASS: actual RouteSimulator finish actions, Route Stop choices/outcomes, moving/paused scrub, live speed during scrub, Cancel, reverse transition, endpoint completion, motion and altitude\n"
+            testSharedMoveRevokesEngine()
+            let text = "PASS: actual RouteSimulator finish actions, Route Stop choices/outcomes, moving/paused scrub, live speed during scrub, Cancel, reverse transition, endpoint completion, motion and altitude, shared-move revocation and restart\n"
             let path = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0].appendingPathComponent("results.txt")
             try! text.write(to: path, atomically: true, encoding: .utf8)
         }

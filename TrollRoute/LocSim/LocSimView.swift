@@ -151,7 +151,13 @@ struct LocSimView: View {
         .onChange(of: askBeforeMoving) { _ in mapMove.cancel() }
         .onAppear { sharedChannel.setActive(scenePhase == .active) }
         .onChange(of: scenePhase) { phase in sharedChannel.setActive(phase == .active) }
-        .onReceive(sharedChannel.$revision) { _ in offerSharedPlace() }
+        .onReceive(sharedChannel.$revision) { _ in
+            if locationSession.refreshShared() { joystickActive = false }
+            offerSharedPlace()
+        }
+        .onReceive(locationSession.$error) { error in
+            if let error = error { sharedPlaceError = error }
+        }
         .onOpenURL { url in
             if SharedCommandURL.requestID(url) != nil { sharedChannel.wake() }
         }
@@ -295,7 +301,8 @@ struct LocSimView: View {
         
         
         let location = RouteLocationSample.make(coordinate: wgsCoordinate, course: 0, speed: 0, timestamp: Date())
-        locationSession.receive(location, kind: .stationary)
+        locationSession.receive(location, kind: .stationary, newIntent: true)
+        guard locationSession.error == nil else { return }
         
         
         AlertKitAPI.present(
@@ -320,6 +327,7 @@ struct LocSimView: View {
             if !joystickActive && routeSimulator.isSimulating {
                 routeSimulator.stopSimulation()
             }
+            if !joystickActive && !locationSession.claimForUserAction() { return }
             withAnimation(.spring(response: 0.3)) {
                 joystickActive.toggle()
             }

@@ -417,6 +417,10 @@ class RouteSimulator: NSObject, ObservableObject, CLLocationManagerDelegate {
         self.now = now
         self.notifyCompletion = notifyCompletion
         super.init()
+        locationSession.onOwnershipLost = { [weak self] in
+            guard let self = self, self.isSimulating else { return }
+            self.endPlayback()
+        }
         locationManager.delegate = self
         locationManager.desiredAccuracy = kCLLocationAccuracyBest
         locationManager.distanceFilter = kCLDistanceFilterNone
@@ -548,8 +552,10 @@ class RouteSimulator: NSObject, ObservableObject, CLLocationManagerDelegate {
             startError = "Choose where this route should finish before starting."
             return
         }
-        prepareElevation()
-        locationSession.beginRoute()
+        guard locationSession.beginRoute(prepare: { self.prepareElevation() }) else {
+            startError = locationSession.error ?? "Couldn't start location simulation."
+            return
+        }
         tripID = UUID()
         stopRequest = nil
         finishState = RouteFinishState(action: finishConfiguration.action)
@@ -564,7 +570,7 @@ class RouteSimulator: NSObject, ObservableObject, CLLocationManagerDelegate {
         locationManager.startUpdatingLocation()
         startBackgroundTask()
         updateLocation()
-        startTimer()
+        if isSimulating { startTimer() }
     }
 
     private func startTimer() {
@@ -656,12 +662,13 @@ class RouteSimulator: NSObject, ObservableObject, CLLocationManagerDelegate {
     }
 
     func confirmRouteStop(_ id: UUID, action: RouteStopAction, place: RouteFinishDestination? = nil) {
+        if locationSession.refreshShared() { return }
         guard isSimulating, let request = stopRequest, request.id == id,
               request.tripID == tripID, request.choices.contains(action) else { return }
         if action == .specific {
             guard let place = place, CLLocationCoordinate2DIsValid(place.coordinate) else { return }
         }
-        if action == .real { stopSimulation(); return }
+        if action == .real { stopSimulation(newIntent: false); return }
         endPlayback()
         switch action {
         case .previous:
@@ -678,9 +685,9 @@ class RouteSimulator: NSObject, ObservableObject, CLLocationManagerDelegate {
     }
 
     /// Only Main Stop and an explicitly chosen real-location outcome use this.
-    func stopSimulation() {
+    func stopSimulation(newIntent: Bool = true) {
         endPlayback()
-        locationSession.stop()
+        locationSession.stop(newIntent: newIntent)
     }
 
     private func endPlayback() {
@@ -737,7 +744,7 @@ class RouteSimulator: NSObject, ObservableObject, CLLocationManagerDelegate {
             }
             return
         case .stop:
-            stopSimulation()
+            stopSimulation(newIntent: false)
             return
         case .goToPlace:
             if let destination = finishConfiguration.destination {

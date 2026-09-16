@@ -17,3 +17,7 @@ xcrun swiftc -parse-as-library TrollRoute/Storage/SharedPreferences.swift \
   TrollRoute/LocSim/RouteElevation.swift TrollRoute/LocSim/Altitude.swift TrollRoute/LocSim/LocationSession.swift \
   Tests/LocationSession/Lease.swift -o "$QA_DIR/lease-tests"
 "$QA_DIR/lease-tests"
+xcrun swiftc -parse-as-library TrollRoute/Storage/SharedPreferences.swift \
+  TrollRoute/LocSim/RouteElevation.swift TrollRoute/LocSim/Altitude.swift TrollRoute/LocSim/LocationSession.swift \
+  Tests/LocationSession/LeasedOwner.swift -o "$QA_DIR/leased-owner-tests"
+"$QA_DIR/leased-owner-tests"
