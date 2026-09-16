@@ -97,6 +97,11 @@ final class TestClock {
         precondition(Array(CLSimulationManager.operations.suffix(3)) == ["stop", "clear", "flush"])
         queue.submit(sample(1900), reason: .continuous)
         precondition(timezone == 5 && CLSimulationManager.operations.filter { $0 == "start" }.count == 2)
+        let operationsBeforeRelinquish = CLSimulationManager.operations
+        driver.relinquish()
+        precondition(CLSimulationManager.operations == operationsBeforeRelinquish)
+        driver.inject(sample(2000), reason: .jump)
+        precondition(Array(CLSimulationManager.operations.suffix(5)) == ["stop", "clear", "append", "flush", "start"])
         print("PASS: explicit jumps, latest-wins, cancellation race, pause/arrival/resume, Stop and restart; sample metadata unchanged")
     }
 }

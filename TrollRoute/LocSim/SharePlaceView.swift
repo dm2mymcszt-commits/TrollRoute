@@ -5,6 +5,12 @@ struct SharePlaceView: View {
     let load: () async throws -> [RoutePlace]
     let done: () -> Void
     var openContainingApp: (URL) -> Bool = { _ in false }
+    var goThereNow: (SharedPlaceRequest) async throws -> Void = { _ in
+        throw SearchError.message("Location delivery is unavailable in this preview.")
+    }
+    @State private var operation: Task<Void, Never>?
+    @State private var busy = false
+    @State private var queuedMove: SharedPlaceRequest?
     @State private var queuedEndpoint: SharedPlaceRequest?
     @State private var places: [RoutePlace] = []
     @State private var selected: RoutePlace?
@@ -39,17 +45,20 @@ struct SharePlaceView: View {
                             Button { save(action) } label: { Label(action.title, systemImage: action.icon) }
                         }
                     } footer: {
-                        Text("Favorites are saved here. Route start and destination open TrollRoute Navigation automatically.")
+                        Text("Moving here stops any running route. Favorites are saved here. Route start and destination open TrollRoute Navigation automatically.")
                     }
                 }
                 if let error = error {
                     Section { Text(error).foregroundColor(.red) }
                 }
             }
+            .disabled(busy)
+            .overlay { if busy { ProgressView("Moving location...").padding().background(.regularMaterial, in: RoundedRectangle(cornerRadius: 12)) } }
             .navigationTitle("TrollRoute")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar { ToolbarItem(placement: .cancellationAction) { Button(completion == nil ? "Cancel" : "Done", action: done) } }
         }
+        .onDisappear { operation?.cancel() }
         .task {
             do {
                 let result: [RoutePlace]
@@ -63,8 +72,8 @@ struct SharePlaceView: View {
         }
     }
 
-    private func save(_ action: SharedPlaceAction) {
-        guard let selected = selected else { return }
+    @MainActor private func save(_ action: SharedPlaceAction) {
+        guard !busy, let selected = selected else { return }
         let entered = name.trimmingCharacters(in: .whitespacesAndNewlines)
         var place = RoutePlace(name: entered.isEmpty ? selected.name : entered, address: selected.address, coordinate: selected.coordinate)
         place.approximate = selected.approximate
@@ -88,8 +97,23 @@ struct SharePlaceView: View {
                 completion = "Opening TrollRoute Navigation"
                 done()
             } else {
-                try SharedPlaceInbox().enqueue(SharedPlaceRequest(place: place, action: action))
-                completion = "Ready. Open TrollRoute to continue."
+                let candidate = SharedPlaceRequest(place: place, action: .go)
+                let request: SharedPlaceRequest
+                if let queued = queuedMove, queued.latitude == candidate.latitude,
+                   queued.longitude == candidate.longitude { request = queued }
+                else { request = candidate }
+                queuedMove = request
+                busy = true
+                operation = Task { @MainActor in
+                    defer { busy = false; operation = nil }
+                    do {
+                        try await goThereNow(request)
+                        guard !Task.isCancelled else { return }
+                        completion = "Location moved"
+                        error = nil
+                    } catch is CancellationError { }
+                    catch { self.error = error.localizedDescription }
+                }
             }
             error = nil
         } catch { self.error = error.localizedDescription }

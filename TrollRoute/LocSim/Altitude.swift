@@ -49,9 +49,16 @@ enum ElevationLookup {
     static func fetch(_ coordinate: CLLocationCoordinate2D) async -> Double? {
         await fetchBatch([coordinate])?.first ?? nil
     }
+    // A share action cannot remain open waiting for a daily quota reset.
+    static func fetchForShare(_ coordinate: CLLocationCoordinate2D) async -> Double? {
+        await fetchBatch([coordinate], waitForQuota: false)?.first ?? nil
+    }
     static func fetchBatch(_ coordinates: [CLLocationCoordinate2D]) async -> [Double?]? {
+        await fetchBatch(coordinates, waitForQuota: true)
+    }
+    private static func fetchBatch(_ coordinates: [CLLocationCoordinate2D], waitForQuota: Bool) async -> [Double?]? {
         guard (1...100).contains(coordinates.count), coordinates.allSatisfy(CLLocationCoordinate2DIsValid),
-              await ElevationRequestLimiter.shared.reserve(coordinates.count), !Task.isCancelled else { return nil }
+              await ElevationRequestLimiter.shared.reserve(coordinates.count, wait: waitForQuota), !Task.isCancelled else { return nil }
         var url = URLComponents(string: "https://api.open-meteo.com/v1/elevation")!
         url.queryItems = [URLQueryItem(name: "latitude", value: coordinates.map { String($0.latitude) }.joined(separator: ",")),
                          URLQueryItem(name: "longitude", value: coordinates.map { String($0.longitude) }.joined(separator: ","))]

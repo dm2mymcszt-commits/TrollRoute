@@ -108,13 +108,14 @@ actor ElevationRequestLimiter {
         store = container.map { ElevationBudgetStore(url: $0.appendingPathComponent("elevation-budget.v2.json"),
                                                      legacyDefaults: SharedPreferences.defaults) }
     }
-    func reserve(_ count: Int) async -> Bool {
+    func reserve(_ count: Int, wait: Bool = true) async -> Bool {
         guard (1...100).contains(count), let store = store else { return false }
         while !Task.isCancelled {
             let delay: TimeInterval
             do { delay = try store.reserve(count, at: Date()) }
             catch { return false } // Storage failure must not bypass the quota.
             if delay <= 0 { return true }
+            if !wait { return false }
             do { try await Task.sleep(nanoseconds: UInt64(min(60, delay) * 1_000_000_000)) }
             catch { return false }
             // Re-read the shared ledger after suspension; another process may

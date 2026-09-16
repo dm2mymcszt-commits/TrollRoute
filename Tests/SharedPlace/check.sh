@@ -8,3 +8,9 @@ xcrun swiftc TrollRoute/Storage/SharedPreferences.swift TrollRoute/LocSim/PlaceM
   TrollRoute/LocSim/CoordTransform.swift TrollRoute/LocSim/SharedPlace.swift \
   Tests/SharedPlace/main.swift -o "$QA_DIR/share-tests"
 "$QA_DIR/share-tests"
+
+xcrun swiftc -parse-as-library TrollRoute/Storage/SharedPreferences.swift \
+  TrollRoute/LocSim/RouteElevation.swift TrollRoute/LocSim/Altitude.swift \
+  TrollRoute/LocSim/LocationSession.swift TrollRoute/LocSim/DirectLocationMove.swift \
+  Tests/SharedPlace/DirectMove.swift -o "$QA_DIR/direct-move-tests"
+"$QA_DIR/direct-move-tests"

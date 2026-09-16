@@ -100,6 +100,7 @@ struct LocationLeaseStore {
         var status: Status
     }
     enum Failure: Error { case invalidState, conflictingMove, supersededMove }
+    enum ExpectedOwner { case any, matching(UUID?) }
     let file: SharedStateFile<State>
 
     init(url: URL, initial: @escaping () -> LocationSessionSnapshot = { LocationSessionSnapshot() }) {
@@ -162,7 +163,7 @@ struct LocationLeaseStore {
     /// receipt write, retry repeats the same stationary sample (never a route).
     /// No filesystem can atomically commit an external locationd side effect.
     @discardableResult
-    func move(_ id: UUID, sample: SessionLocation,
+    func move(_ id: UUID, sample: SessionLocation, expectedOwner: ExpectedOwner = .any,
               inject: (CLLocation) throws -> Void) throws -> Bool {
         guard sample.isValid, sample.speed == 0 else { throw Failure.invalidState }
         return try file.transaction { loaded, persist in
@@ -173,6 +174,9 @@ struct LocationLeaseStore {
                 if previous.status == .applied { return false }
                 guard previous.status == .pending, state.owner == id else { throw Failure.supersededMove }
             } else {
+                if case .matching(let expected) = expectedOwner, state.owner != expected {
+                    throw Failure.supersededMove
+                }
                 for old in Array(state.moves.keys) where state.moves[old]?.status == .pending {
                     state.moves[old]?.status = .superseded
                 }

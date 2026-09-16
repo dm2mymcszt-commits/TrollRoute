@@ -2,10 +2,15 @@ import UIKit
 import SwiftUI
 import UniformTypeIdentifiers
 import ObjectiveC
+import CoreLocation
 
 final class ActionViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
+        let driver = CoreLocationSimulationDriver()
+        let mover = DirectLocationMove(lease: .shared,
+            profile: { AltitudeSettings().profile }, lookup: ElevationLookup.fetchForShare,
+            inject: { driver.inject($0, reason: .jump) }, changed: SharedPlaceSignal.post)
         let content = SharePlaceView(load: { [weak self] in
             guard let items = self?.extensionContext?.inputItems as? [NSExtensionItem] else {
                 throw SearchError.message("No location was shared.")
@@ -32,7 +37,10 @@ final class ActionViewController: UIViewController {
             }
             throw SearchError.message("Share a Maps link, address, coordinates or plus code.")
         }, done: { [weak self] in self?.extensionContext?.completeRequest(returningItems: nil) },
-           openContainingApp: openTrollRoute)
+           openContainingApp: openTrollRoute, goThereNow: { request in
+               try await mover.perform(id: request.id,
+                   coordinate: CLLocationCoordinate2D(latitude: request.latitude, longitude: request.longitude))
+           })
         let host = UIHostingController(rootView: content.tint(.indigo))
         addChild(host)
         view.addSubview(host.view)

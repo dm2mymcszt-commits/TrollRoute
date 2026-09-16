@@ -7,6 +7,11 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		CDA500010000000000000205 /* DirectLocationMove.swift in Extension Sources */ = {isa = PBXBuildFile; fileRef = CDA500010000000000000101 /* DirectLocationMove.swift */; };
+		CDA500010000000000000204 /* LocSimManager.swift in Extension Sources */ = {isa = PBXBuildFile; fileRef = 799488A52B347E2C00AFFDCF /* LocSimManager.swift */; };
+		CDA500010000000000000203 /* Altitude.swift in Extension Sources */ = {isa = PBXBuildFile; fileRef = BDA110100000000000000002 /* Altitude.swift */; };
+		CDA500010000000000000202 /* RouteElevation.swift in Extension Sources */ = {isa = PBXBuildFile; fileRef = CDA200020000000000000101 /* RouteElevation.swift */; };
+		CDA500010000000000000201 /* LocationSession.swift in Extension Sources */ = {isa = PBXBuildFile; fileRef = CDA200010000000000000101 /* LocationSession.swift */; };
         CDA400030000000000000101 /* RouteStopDialog.swift in Sources */ = {isa = PBXBuildFile; fileRef = CDA400030000000000000201 /* RouteStopDialog.swift */; };
         CDA400020000000000000101 /* RouteStop.swift in Sources */ = {isa = PBXBuildFile; fileRef = CDA400020000000000000201 /* RouteStop.swift */; };
         CDA400010000000000000101 /* RouteFinishControls.swift in Sources */ = {isa = PBXBuildFile; fileRef = CDA400010000000000000201 /* RouteFinishControls.swift */; };
@@ -105,6 +110,7 @@
 
 
 /* Begin PBXFileReference section */
+		CDA500010000000000000101 /* DirectLocationMove.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TrollRoute/LocSim/DirectLocationMove.swift"; sourceTree = SOURCE_ROOT; };
         CDA400030000000000000201 /* RouteStopDialog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TrollRoute/LocSim/RouteStopDialog.swift"; sourceTree = SOURCE_ROOT; };
         CDA400020000000000000201 /* RouteStop.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TrollRoute/LocSim/RouteStop.swift"; sourceTree = SOURCE_ROOT; };
         CDA400010000000000000201 /* RouteFinishControls.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TrollRoute/LocSim/RouteFinishControls.swift"; sourceTree = SOURCE_ROOT; };
@@ -288,6 +294,7 @@
 				CDA100010000000000000102 /* LegacyLocations.m */,
 				CDA100010000000000000103 /* LegacyMigration.swift */,
 				CDA200010000000000000101 /* LocationSession.swift */,
+				CDA500010000000000000101 /* DirectLocationMove.swift */,
 				CDA200020000000000000101 /* RouteElevation.swift */,
 				CDA100010000000000000104 /* MigrationLaunchView.swift */,
 				FAA456D42B265FEA00FC7287 /* TrollRouteApp.swift */,
@@ -507,6 +514,11 @@
 			buildActionMask = 2147483647;
 			files = (
 				796072E52B4F4FAE00737B5D /* ActionViewController.swift in Sources */,
+				CDA500010000000000000205 /* DirectLocationMove.swift in Extension Sources */,
+				CDA500010000000000000204 /* LocSimManager.swift in Extension Sources */,
+				CDA500010000000000000203 /* Altitude.swift in Extension Sources */,
+				CDA500010000000000000202 /* RouteElevation.swift in Extension Sources */,
+				CDA500010000000000000201 /* LocationSession.swift in Extension Sources */,
 				BDA110050000000000000305 /* CoordTransform.swift in Extension Sources */,
 				BDA110050000000000000304 /* PlaceSearch.swift in Extension Sources */,
 				BDA110050000000000000303 /* AddressQuery.swift in Extension Sources */,
@@ -608,7 +620,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = "TrollRouteShare/TrollRouteShare.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 34;
+				CURRENT_PROJECT_VERSION = 35;
 				DEVELOPMENT_TEAM = 7G89J82G2A;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "TrollRouteShare/Info.plist";
@@ -624,6 +636,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = "com.dm2mymcszt.trollroute.share";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
+				SWIFT_OBJC_BRIDGING_HEADER = "TrollRoute/LocSim/LocSimPrivateHeaders.h";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -636,7 +649,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = "TrollRouteShare/TrollRouteShare.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 34;
+				CURRENT_PROJECT_VERSION = 35;
 				DEVELOPMENT_TEAM = 7G89J82G2A;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "TrollRouteShare/Info.plist";
@@ -652,6 +665,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = "com.dm2mymcszt.trollroute.share";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
+				SWIFT_OBJC_BRIDGING_HEADER = "TrollRoute/LocSim/LocSimPrivateHeaders.h";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -787,7 +801,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = TrollRoute/TrollRoute.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 34;
+				CURRENT_PROJECT_VERSION = 35;
 				DEVELOPMENT_ASSET_PATHS = "\"TrollRoute/Preview Content\"";
 				DEVELOPMENT_TEAM = 7G89J82G2A;
 				ENABLE_PREVIEWS = YES;
@@ -826,7 +840,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = TrollRoute/TrollRoute.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 34;
+				CURRENT_PROJECT_VERSION = 35;
 				DEVELOPMENT_ASSET_PATHS = "\"TrollRoute/Preview Content\"";
 				DEVELOPMENT_TEAM = 7G89J82G2A;
 				ENABLE_PREVIEWS = YES;
@@ -863,7 +877,7 @@
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 34;
+				CURRENT_PROJECT_VERSION = 35;
 				DEVELOPMENT_TEAM = 7G89J82G2A;
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
@@ -883,7 +897,7 @@
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 34;
+				CURRENT_PROJECT_VERSION = 35;
 				DEVELOPMENT_TEAM = 7G89J82G2A;
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
@@ -902,7 +916,7 @@
 			buildSettings = {
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 34;
+				CURRENT_PROJECT_VERSION = 35;
 				DEVELOPMENT_TEAM = 7G89J82G2A;
 				GENERATE_INFOPLIST_FILE = YES;
 				MARKETING_VERSION = 3.0.0;
@@ -920,7 +934,7 @@
 			buildSettings = {
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 34;
+				CURRENT_PROJECT_VERSION = 35;
 				DEVELOPMENT_TEAM = 7G89J82G2A;
 				GENERATE_INFOPLIST_FILE = YES;
 				MARKETING_VERSION = 3.0.0;
