@@ -13,7 +13,7 @@ sources = {
     "CustomMapView.swift": {
         "mapView.setRegion(region, animated: true)": 'workspaceTrace("setRegion \\(region)")\n            mapView.setRegion(region, animated: true)',
         "@objc private func ignoreDoubleTap(_ gesture: UITapGestureRecognizer) {}": '@objc private func ignoreDoubleTap(_ gesture: UITapGestureRecognizer) { workspaceTrace("double tap guard recognized") }',
-        "positionBadges(on: mapView) }": 'workspaceTrace("region changed \\(mapView.region)"); positionBadges(on: mapView) }',
+        "positionBadges(on: mapView) }": 'workspaceTrace("region changed \\(mapView.region)"); WorkspaceMapObservation.shared.changed(mapView.region); positionBadges(on: mapView) }',
     },
 }
 for name, replacements in sources.items():

@@ -9,6 +9,7 @@ struct EquatableCoordinate: Equatable {
 }
 
 struct WorkspacePreview: View {
+    @ObservedObject private var mapObservation = WorkspaceMapObservation.shared
     @State private var region: MKCoordinateRegion? = MKCoordinateRegion(
         center: CLLocationCoordinate2D(latitude: 44.8378, longitude: -0.5792),
         span: MKCoordinateSpan(latitudeDelta: 0.07, longitudeDelta: 0.07))
@@ -61,11 +62,14 @@ struct WorkspacePreview: View {
         .frame(maxHeight: .infinity, alignment: .top)
         .overlay(alignment: .topLeading) {
             if screen.hasPrefix("gestures") {
+                VStack(alignment: .leading) {
                 Text("action=\(lastAction),confirmation=\(mainStop.presentedRequest != nil),running=\(routeActive)")
                     .accessibilityIdentifier("toolbar-state").allowsHitTesting(false)
-                MapObservation().frame(width: 1, height: 1).allowsHitTesting(false)
+                Text("Map state").accessibilityIdentifier("map-observation")
+                    .accessibilityValue(mapObservation.value).allowsHitTesting(false)
                 Text("presses=\(pressCount),taps=\(tapCount)")
                     .accessibilityIdentifier("gesture-counts").allowsHitTesting(false)
+                }.font(.caption)
             }
             if screen == "favorites" {
                 Text(savedFavoriteName)
@@ -75,6 +79,7 @@ struct WorkspacePreview: View {
         .modifier(MapMoveConfirmation(controller: mapMove))
         .modifier(MainStopConfirmation(controller: mainStop))
         .modifier(LongPressRouteConfirmation(controller: longPressRoute))
+        .onChange(of: pressCount) { workspaceTrace("press count \($0)") }
         .onChange(of: tapped) { coordinate in
             guard let coordinate = coordinate else { return }
             tapped = nil
@@ -132,31 +137,15 @@ struct WorkspacePreview: View {
     }
 }
 
-// UI-test observation only: reads the real MKMapView on accessibility demand.
-// No simulated gesture, map mutation, timer, or copied toolbar implementation.
-struct MapObservation: UIViewRepresentable {
-    final class Probe: UIView {
-        override var accessibilityValue: String? {
-            get {
-                func findMap(_ view: UIView) -> MKMapView? {
-                    if let map = view as? MKMapView { return map }
-                    for child in view.subviews { if let map = findMap(child) { return map } }
-                    return nil
-                }
-                guard let window = window, let map = findMap(window) else { return nil }
-                return "\(map.centerCoordinate.latitude),\(map.centerCoordinate.longitude),\(map.region.span.latitudeDelta),\(map.region.span.longitudeDelta)"
-            }
-            set {}
-        }
+// Event-driven observation of the actual production MKMapView delegate.
+// A published accessibility value invalidates XCTest's cached snapshot; a
+// computed UIView getter alone does not notify accessibility when the map moves.
+final class WorkspaceMapObservation: ObservableObject {
+    static let shared = WorkspaceMapObservation()
+    @Published var value = ""
+    func changed(_ region: MKCoordinateRegion) {
+        value = "\(region.center.latitude),\(region.center.longitude),\(region.span.latitudeDelta),\(region.span.longitudeDelta)"
     }
-    func makeUIView(context: Context) -> Probe {
-        let view = Probe()
-        view.isAccessibilityElement = true
-        view.accessibilityIdentifier = "map-observation"
-        view.accessibilityLabel = "Map state"
-        return view
-    }
-    func updateUIView(_ view: Probe, context: Context) {}
 }
 
 // Diagnostics are confined to the UI-test host. No production logging or timing changes.

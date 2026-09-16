@@ -6,6 +6,9 @@ final class MapGestureTests: XCTestCase {
         app.launchArguments = ["--screen", screen, "--labels", labels ? "yes" : "no"]
         app.launch()
         XCTAssertTrue(app.buttons["Search"].waitForExistence(timeout: 15))
+        let ready = NSPredicate { _, _ in self.mapState(app).count == 4 }
+        expectation(for: ready, evaluatedWith: app)
+        waitForExpectations(timeout: 5)
         return app
     }
 
@@ -44,20 +47,22 @@ final class MapGestureTests: XCTestCase {
         let app = launch("gestures-confirm")
         let spot = app.coordinate(withNormalizedOffset: CGVector(dx: 0.3, dy: 0.65))
         let alert = app.alerts["Create route to here?"]
-        spot.press(forDuration: 1)
-        XCTAssertTrue(alert.waitForExistence(timeout: 5))
-        capture(app, "long-press-confirmation")
-        alert.buttons["Cancel"].tap()
-        XCTAssertEqual(app.staticTexts["gesture-counts"].label, "presses=0,taps=0")
-        spot.press(forDuration: 1)
-        XCTAssertTrue(alert.waitForExistence(timeout: 5))
-        alert.buttons["Create route"].tap()
-        XCTAssertEqual(app.staticTexts["gesture-counts"].label, "presses=1,taps=0")
+        for iteration in 0..<5 {
+            spot.press(forDuration: 1)
+            XCTAssertTrue(alert.waitForExistence(timeout: 5))
+            if iteration == 0 { capture(app, "long-press-confirmation") }
+            alert.buttons["Cancel"].tap()
+            XCTAssertEqual(app.staticTexts["gesture-counts"].label, "presses=\(iteration),taps=0")
+            spot.press(forDuration: 1)
+            XCTAssertTrue(alert.waitForExistence(timeout: 5))
+            alert.buttons["Create route"].tap()
+            XCTAssertEqual(app.staticTexts["gesture-counts"].label, "presses=\(iteration + 1),taps=0")
+        }
     }
 
     private func mapState(_ app: XCUIApplication) -> [Double] {
-        let probe = app.otherElements["map-observation"]
-        XCTAssertTrue(probe.waitForExistence(timeout: 5))
+        let probe = app.staticTexts["map-observation"]
+        guard probe.exists else { return [] }
         return (probe.value as? String ?? "").split(separator: ",").compactMap { Double($0) }
     }
 
