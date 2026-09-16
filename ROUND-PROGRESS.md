@@ -10,7 +10,8 @@
 - Lease foundation `81d54e8` build33 passed full CI35066588142. Build34 `53e200e` connects the actual owner/engine to cross-process authority; includes late-callback, stale Stop, paused/moving route and relaunch tests. Injection change: phone Snapchat Bitmoji check required.
 - Builds34/35 (`53e200e` / `0d4a093`) compiled and packaged, but UI failed. Route UI's previous-location fixture omitted the new explicit-user-intent flag; corrected. Build35 route runner was killed before tests began. Both map runs recorded a tap during double-tap; downloading traces to establish cause.
 - Favorites foundation `84417c9` pushed, CI35130100117 running; not wired to app writers yet. Locked collection, stable IDs, receipts/deletion and16-process tests. Root cause: independent UserDefaults array replacements lose concurrent saves.
-- **Next:** inspect map touch traces/recording, resolve the double-tap failure without masking delays; verify direct Go/Favorites CI. Then wire all favorite readers/writers and migration, and complete the lifecycle/UI harness. Phase5 is not accepted.
+- Route UI fixture corrected `31841d6`. Build36 makes the double-tap guard also wait for long-press failure; prior graph allowed held touches to participate. Same touch assertions plus more trace evidence; CI acceptance pending.
+- **Next:** verify build36 double-tap and route UI, and direct Go/Favorites tests. Then wire all favorite readers/writers and migration, and complete the lifecycle/UI harness. Phase5 is not accepted.
 - Persist each finished step and its next action. Keep this file short; append detailed findings to audit. Delete **all three ROUND files** in the final commit.
 
 ## Decisions already approved

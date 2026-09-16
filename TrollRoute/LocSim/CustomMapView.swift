@@ -140,6 +140,10 @@ struct CustomMapView: UIViewRepresentable {
             // A held finger must recognize before touch-up. Only the single tap
             // waits for double-tap failure; a long press is distinguished by duration.
             tap.require(toFail: press)
+            // A completed route hold cannot become the first half of a double
+            // tap. Otherwise its release can pair with the next tap, leaving
+            // the second new tap free to select a location instead of zooming.
+            doubleTap.require(toFail: press)
             longPress = press
         }
 
