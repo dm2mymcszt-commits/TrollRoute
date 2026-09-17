@@ -37,7 +37,9 @@ struct FavoritesStore {
             }
         }
     }
-    private struct State: Codable {
+    // Module visibility avoids a Swift 6.1 IR linkage failure when a different
+    // source file passes this store as an optional value. The file stays private.
+    struct State: Codable {
         var initialized = false
         var favorites: [Favorite] = []
         var receipts: [UUID: Favorite] = [:]
