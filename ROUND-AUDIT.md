@@ -1175,3 +1175,9 @@ Acceptance additions: actual shared-save duplicate and deleted receipt tests; mi
 CI35132099453 failed before tests: Swift 6.1.2 LLVM verification reports "Global is external, but doesn't have external or weak linkage" for FavoritesStore's private nested State metadata while compiling a different source file (SharedPlace.swift). Both simulator harnesses and the share target reproduce it. Make State module-internal (same pattern as LocationLeaseStore.State); the storage field remains private and persistence/data behavior is unchanged. Acceptance awaits CI.
 
 CI35131591172 route-session-ui SUCCESS confirms the explicit-user-intent fixture correction. Map still fails the combined hold/double/single test; the build36 dependency alone did not fix it. Touch trace records a count=2 touch passed into the single-tap recognizer, followed by its action; preserve this evidence and do not claim the dependency fixed the bug. Latest integration is 634d0ed, build37.
+
+### Repeated-touch safety and native control - build38
+
+Build36 trace: a touch with UIKit tapCount=2 is delivered to the location single-tap recognizer, which fires at uptime409.736 after a long press. Reject that touch for location selection. Keep both failure dependencies and native MapKit zoom; no artificial delay or manual zoom added. Apple's tapCount documentation defines it as the count within a system-defined period: https://developer.apple.com/documentation/uikit/uitouch/tapcount .
+
+The missing zoom remains under investigation. Add raw began/ended events to QA only, plus a fresh double-tap regression and a native-MapKit control with all TrollRoute recognizers omitted. The control records the same hold/double sequence independently; it does not replace or weaken the original production assertions. Compiler fix checkpoint 81aa5a5 awaits CI.

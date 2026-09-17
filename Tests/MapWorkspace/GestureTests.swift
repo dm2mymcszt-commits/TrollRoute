@@ -133,6 +133,37 @@ final class MapGestureTests: XCTestCase {
         waitForExpectations(timeout: 5)
     }
 
+    func testFreshDoubleTapZoomsWithoutSelectingLocation() {
+        let app = launch("gestures-long")
+        let before = mapState(app)
+        app.coordinate(withNormalizedOffset: CGVector(dx: 0.3, dy: 0.65)).doubleTap()
+        expectation(for: NSPredicate { _, _ in
+            let after = self.mapState(app)
+            return after.count == 4 && after[2] < before[2] * 0.9
+        }, evaluatedWith: app)
+        waitForExpectations(timeout: 5)
+        XCTAssertEqual(app.staticTexts["gesture-counts"].label, "presses=0,taps=0")
+    }
+
+    func testNativeMapHoldThenDoubleTapBaseline() {
+        // Diagnostic control: same MapKit view, but no TrollRoute recognizers.
+        // Retain the original production assertions in the test above.
+        let app = launch("gestures-native")
+        let spot = app.coordinate(withNormalizedOffset: CGVector(dx: 0.3, dy: 0.65))
+        spot.press(forDuration: 1)
+        let before = mapState(app)
+        spot.doubleTap()
+        let zoomed = expectation(for: NSPredicate { _, _ in
+            let after = self.mapState(app)
+            return after.count == 4 && after[2] < before[2] * 0.9
+        }, evaluatedWith: app)
+        let result = XCTWaiter.wait(for: [zoomed], timeout: 5)
+        let observation = XCTAttachment(string: "Native hold/double result: \(result.rawValue); before=\(before); after=\(mapState(app))")
+        observation.name = "native-hold-double-baseline"
+        observation.lifetime = .keepAlways
+        add(observation)
+    }
+
     private func renameAndSave(_ app: XCUIApplication, to name: String) {
         let field = app.textFields["favorite-name"]
         XCTAssertTrue(field.waitForExistence(timeout: 5))

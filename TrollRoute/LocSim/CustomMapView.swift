@@ -237,6 +237,9 @@ struct CustomMapView: UIViewRepresentable {
         }
 
         func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldReceive touch: UITouch) -> Bool {
+            // UIKit may continue a touch sequence after a held finger. Never
+            // reinterpret its second/later tap as a new location-selection tap.
+            if gestureRecognizer === singleTap && touch.tapCount > 1 { return false }
             var view = touch.view
             while let candidate = view {
                 if candidate is MKAnnotationView || candidate is UIControl { return false }

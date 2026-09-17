@@ -11,6 +11,10 @@ sources = {
         "pending = nil": 'workspaceTrace("cancel pending=\\(String(describing: pending?.id))")\n        pending = nil',
     },
     "CustomMapView.swift": {
+        "let tap = UITapGestureRecognizer(target:": "let tap = TracedTapRecognizer(target:",
+        "let doubleTap = UITapGestureRecognizer(target:": "let doubleTap = TracedTapRecognizer(target:",
+        "context.coordinator.installTapRecognizers(on: mapView)": 'if !ProcessInfo.processInfo.arguments.contains("gestures-native") { context.coordinator.installTapRecognizers(on: mapView) }',
+
         "var view = touch.view": 'workspaceTrace("touch recognizer=\\(type(of: gestureRecognizer)), count=\\(touch.tapCount), time=\\(touch.timestamp), state=\\(gestureRecognizer.state.rawValue)")\n            var view = touch.view',
         "handleMapTap(at: gesture.location(in: mapView), on: mapView)": 'workspaceTrace("single tap accepted time=\\(ProcessInfo.processInfo.systemUptime)")\n            handleMapTap(at: gesture.location(in: mapView), on: mapView)',
         "mapView.setRegion(region, animated: true)": 'workspaceTrace("setRegion \\(region)")\n            mapView.setRegion(region, animated: true)',
@@ -24,3 +28,18 @@ for name, replacements in sources.items():
         assert source.count(old) == 1, (name, old)
         source = source.replace(old, new)
     (output / name).write_text(source, encoding="utf-8")
+
+with (output / "CustomMapView.swift").open("a", encoding="utf-8") as f:
+    f.write(r'''
+// Test-only touch observation. All recognition is still performed by UIKit.
+final class TracedTapRecognizer: UITapGestureRecognizer {
+    override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent) {
+        for touch in touches { workspaceTrace("raw began required=\(numberOfTapsRequired), count=\(touch.tapCount), time=\(touch.timestamp), state=\(state.rawValue)") }
+        super.touchesBegan(touches, with: event)
+    }
+    override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent) {
+        for touch in touches { workspaceTrace("raw ended required=\(numberOfTapsRequired), count=\(touch.tapCount), time=\(touch.timestamp), state=\(state.rawValue)") }
+        super.touchesEnded(touches, with: event)
+    }
+}
+''')
