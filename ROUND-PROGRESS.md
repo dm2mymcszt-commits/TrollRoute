@@ -9,9 +9,10 @@
 - Map test observation correction `07f1319`: full CI35095688375 SUCCESS. Prior diagnostic CI35066100040 passed; intermittent Create remains under investigation, with five repeated Cancel/Create pairs and tracing.
 - Lease foundation `81d54e8` build33 passed full CI35066588142. Build34 `53e200e` connects the actual owner/engine to cross-process authority; includes late-callback, stale Stop, paused/moving route and relaunch tests. Injection change: phone Snapchat Bitmoji check required.
 - Builds34/35 (`53e200e` / `0d4a093`) compiled/package passed. Route UI previous-location fixture fixed `31841d6`; build35 runner was killed before tests. `441369a` build36 adds the held-touch/double-tap dependency; dependency alone failed the touch test; trace shows a count=2 touch accepted as a single tap. Route UI passed CI35131591172.
-- Favorites foundation `84417c9`; test entry point fixed `b05c9a3`. `634d0ed` build37 wires app/extension/pickers/import to its locked store, stable deletion IDs, durable share-save receipts and live refresh. CI35132099453 hit a Swift private-metadata linkage crash; `81aa5a5` corrects metadata visibility; CI pending. Existing data preserved; acceptance pending.
-- Build38 rejects repeated UIKit touches for location selection; adds raw touch evidence and native MapKit control without weakening original zoom assertions.
-- **Next:** verify build37 CI (Favorites/concurrency/migration/pickers/direct Go and map/route UI). Then complete Phase5 active/background/cold-launch lifecycle/UI harness; Phase5 is not accepted. Long details and failures are in audit.
+- Favorites foundation `84417c9`; test entry point fixed `b05c9a3`. `634d0ed` build37 wires app/extension/pickers/import to its locked store, stable deletion IDs, durable share-save receipts and live refresh. CI35132099453 hit a Swift private-metadata linkage crash; `81aa5a5` fixes compilation; package, migration, engine, motion, altitude and seven addresses passed. Recents test variable corrected next. Existing data preserved; acceptance pending.
+- `57f84d2` build38: fresh zoom/no accidental tap pass; hold-then-zoom still fails while native control succeeds. Recognition interference remains to fix.
+- Lifecycle UI harness added: actual views, separate process, active <1s/background/cold launch, no replay, edited Favorite without opening. CI pending.
+- **Next:** verify lifecycle/Favorites CI, fix held-touch zoom interference, then finish Phase5 package/phone-check documentation; Phase5 is not accepted. Long details and failures are in audit.
 - Persist each finished step and its next action. Keep this file short; append detailed findings to audit. Delete **all three ROUND files** in the final commit.
 
 ## Decisions already approved

@@ -110,6 +110,9 @@ oldPlace.removeValue(forKey: "sharedSource")
 let decodedOldPlace = try JSONDecoder().decode(RoutePlace.self, from: JSONSerialization.data(withJSONObject: oldPlace))
 require(decodedOldPlace.sharedSource == nil,
         "Old recents remain readable")
+let recentSuite = "TrollRoute.Share.Recents.Tests." + UUID().uuidString
+let defaults = UserDefaults(suiteName: recentSuite)!
+defer { defaults.removePersistentDomain(forName: recentSuite) }
 let recent = RouteRecentPlaces(defaults: defaults)
 recent.remember(googlePlace)
 require(RouteRecentPlaces(defaults: defaults).places.first?.sharedSource == .googleMaps, "Recents retain source")

@@ -22,8 +22,14 @@ product = obj('A00000000000000000000002', 'PBXFileReference', explicitFileType='
               path=f'{test_name}.xctest', sourceTree='BUILT_PRODUCTS_DIR')
 group = obj('A00000000000000000000003', 'PBXGroup', children=[source, product], sourceTree='<group>')
 buildfile = obj('A00000000000000000000004', 'PBXBuildFile', fileRef=source)
+test_sources = [buildfile]
+for index, path in enumerate(sys.argv[4:]):
+    ref = obj(f'{0xB00000000000000000000000 + index * 2:024X}', 'PBXFileReference',
+              lastKnownFileType='sourcecode.swift', path=str(Path(path).resolve()), sourceTree='<absolute>')
+    objects[group]['children'].append(ref)
+    test_sources.append(obj(f'{0xB00000000000000000000001 + index * 2:024X}', 'PBXBuildFile', fileRef=ref))
 sources = obj('A00000000000000000000005', 'PBXSourcesBuildPhase', buildActionMask=2147483647,
-              files=[buildfile], runOnlyForDeploymentPostprocessing=0)
+              files=test_sources, runOnlyForDeploymentPostprocessing=0)
 settings = dict(SDKROOT='iphoneos', IPHONEOS_DEPLOYMENT_TARGET='17.0', SWIFT_VERSION='5.0',
                 TARGETED_DEVICE_FAMILY='1,2', GENERATE_INFOPLIST_FILE='YES',
                 PRODUCT_BUNDLE_IDENTIFIER='local.trollroute.mapgesturetests',
