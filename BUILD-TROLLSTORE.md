@@ -11,6 +11,9 @@ This round is in progress. The repository and application identity have been ren
 - Confirm TrollRoute installs separately and its share action has the correct name.
 - Check favorites, recents, per-mode speeds, finish action/place, altitude and map settings; verify Andromeda's original data is unchanged before deleting it.
 - Recheck static moves, search, joystick, GPX, routes and Snapchat's driving Bitmoji.
+- Share a Google Maps place as Start and Destination while TrollRoute is open, backgrounded and closed: it must open Navigation with the endpoint and "From Google Maps", without a second confirmation. Reopening must not replay it.
+- Share "Go there now" while idle and during a moving or paused route: confirm the location changes before success, the old route cannot move it back, and TrollRoute stays closed. Check Custom altitude and Automatic altitude, then start another route and recheck Snapchat's driving Bitmoji.
+- Edit a shared place's name and save it as a Favorite without opening TrollRoute. Check it in Favorites, Search and both route pickers; confirm existing/imported Favorites remain.
 
 ## Release policy
 

@@ -12,7 +12,7 @@
 - Favorites foundation `84417c9`; test entry point fixed `b05c9a3`. `634d0ed` build37 wires app/extension/pickers/import to its locked store, stable deletion IDs, durable share-save receipts and live refresh. CI35132099453 hit a Swift private-metadata linkage crash; `81aa5a5` fixes compilation; package, migration, engine, motion, altitude and seven addresses passed. Recents test variable corrected next. Existing data preserved; acceptance pending.
 - `57f84d2` build38: fresh zoom/no accidental tap pass; hold-then-zoom still fails while native control succeeds. Recognition interference remains to fix.
 - `c31e6ec` lifecycle UI harness added: actual views, separate process, active <1s/background/cold launch, no replay, edited Favorite without opening. CI pending.
-- Build39 disables underlying-view touch cancellation by the route hold; unchanged zoom regression decides acceptance.
+- `66a6bf4` build39 disables underlying-view touch cancellation by the route hold; unchanged zoom regression decides acceptance. CI35192018301 queued/running; prior lifecycle run CI35191969328 running. Phase5 phone flows added to BUILD-TROLLSTORE.md; not hardware-verified.
 - **Next:** verify lifecycle/Favorites CI, fix held-touch zoom interference, then finish Phase5 package/phone-check documentation; Phase5 is not accepted. Long details and failures are in audit.
 - Persist each finished step and its next action. Keep this file short; append detailed findings to audit. Delete **all three ROUND files** in the final commit.
 
