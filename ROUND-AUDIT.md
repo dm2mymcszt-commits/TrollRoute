@@ -1201,3 +1201,7 @@ CI35192018301: app/package/signing and all build-job checks SUCCESS, route-sessi
 RouteSimSheet initializes its local endpoint fields only while didInitializeStart=false (onAppear), then unconditionally writes those fields back into RouteDraft onDisappear. A repeated handoff to a retained SwiftUI sheet can therefore retain stale fields and overwrite newer shared values. Add an external-draft revision, reload local fields when that revision changes, and only commit closing-sheet edits against the revision they started from. Keep the same failing real-view test and timing bound.
 
 Build39 cancelsTouchesInView=false did not resolve hold-then-zoom. Fresh double tap, no accidental location taps, five Cancel/Create pairs and other map checks passed. Keep the original zoom assertion and investigate recognizer prevention next; no successful fix claimed. Phone checklist committed216de2c.
+
+### Map recognizer isolation checks
+
+Repeat-share revision fix is84e1b3e/build40. Add QA-only hold-only, taps-only and simultaneous-hold variants, exercising the same hold/double sequence and recording zoom/count outcomes. Log native recognizer class/state pairs and long-press state around SwiftUI updateUIView. This distinguishes failure dependencies, native prevention and representable updates without another speculative production change. The original combined zoom/no-location-change assertions remain mandatory.

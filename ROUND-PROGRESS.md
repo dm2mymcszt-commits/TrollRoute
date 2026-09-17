@@ -6,9 +6,10 @@
 - Branch `experiment/route-motion`, origin `dm2mymcszt-commits/TrollRoute`. Phases0-4 accepted; Phase5 in progress; 6-8 not started.
 - Latest verified package: build39 `66a6bf4`, CI35192018301 build job SUCCESS (all model/live tests, Favorites concurrency, direct Go, migration, signing and previews), route-session UI SUCCESS. Phone checklist pushed `216de2c`.
 - Phase5 implementation: endpoints/Darwin `cd1d979`, cross-process authority `53e200e`, direct Go `0d4a093`, Favorites `634d0ed` + compiler fix `81aa5a5`. Injection changes still need phone Bitmoji checks.
-- Lifecycle harness `c31e6ec`: background/cold/no-replay/edited Favorite PASS. Prior active test found second share consumed <1s but UI retained old fields; build39 first launch timed out. Build40 adds external draft revision/reload and rejects stale closing-sheet writes; CI required.
+- Lifecycle harness `c31e6ec`: background/cold/no-replay/edited Favorite PASS. Prior active test found second share consumed <1s but UI retained old fields; build39 first launch timed out. `84e1b3e` build40 adds external draft revision/reload and rejects stale closing-sheet writes; CI required.
 - Map: fresh double-tap and no accidental location taps pass; hold-then-zoom still fails despite build39 touch cancellation change. Native-only baseline zooms. Do not weaken the original test or claim fixed.
-- **Next:** verify build40 lifecycle tests and diagnose map recognizer prevention; finish Phase5 acceptance before Phase6. Keep long evidence in audit. Delete all three ROUND files in the final commit.
+- QA-only recognizer isolation checks added (hold only, taps only, simultaneous hold); no new production gesture change. Original zoom acceptance unchanged.
+- **Next:** verify build40 lifecycle tests and inspect recognizer-isolation results; finish Phase5 acceptance before Phase6. Keep long evidence in audit. Delete all three ROUND files in the final commit.
 
 ## Decisions already approved
 

@@ -11,6 +11,24 @@ sources = {
         "pending = nil": 'workspaceTrace("cancel pending=\\(String(describing: pending?.id))")\n        pending = nil',
     },
     "CustomMapView.swift": {
+        "longPress = press\n        }": '''longPress = press
+            let args = ProcessInfo.processInfo.arguments
+            if args.contains("--hold-only") {
+                mapView.removeGestureRecognizer(tap); mapView.removeGestureRecognizer(doubleTap)
+                singleTap = nil; doubleTapGuard = nil
+            }
+            if args.contains("--taps-only") {
+                press.isEnabled = false; mapView.removeGestureRecognizer(press); longPress = nil
+            }
+        }''',
+        "// MapKit has its own hold recognizer.": '''workspaceTrace("simultaneous \\(type(of: gestureRecognizer)) state=\\(gestureRecognizer.state.rawValue) / \\(type(of: other)) state=\\(other.state.rawValue)")
+            if ProcessInfo.processInfo.arguments.contains("--coexist-hold"),
+               gestureRecognizer === longPress || other === longPress { return true }
+            // MapKit has its own hold recognizer.''',
+        "gestureRecognizer === doubleTapGuard || other === doubleTapGuard": "return gestureRecognizer === doubleTapGuard || other === doubleTapGuard",
+        "context.coordinator.longPress?.isEnabled = onLongPress != nil": '''workspaceTrace("update hold before=\\(String(describing: context.coordinator.longPress?.state.rawValue)), enabled=\\(onLongPress != nil)")
+        context.coordinator.longPress?.isEnabled = onLongPress != nil
+        workspaceTrace("update hold after=\\(String(describing: context.coordinator.longPress?.state.rawValue))")''',
         "let tap = UITapGestureRecognizer(target:": "let tap = TracedTapRecognizer(target:",
         "let doubleTap = UITapGestureRecognizer(target:": "let doubleTap = TracedTapRecognizer(target:",
         "context.coordinator.installTapRecognizers(on: mapView)": 'if !ProcessInfo.processInfo.arguments.contains("gestures-native") { context.coordinator.installTapRecognizers(on: mapView) }',

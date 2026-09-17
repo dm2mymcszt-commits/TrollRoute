@@ -1,9 +1,9 @@
 import XCTest
 
 final class MapGestureTests: XCTestCase {
-    private func launch(_ screen: String = "gestures", labels: Bool = true) -> XCUIApplication {
+    private func launch(_ screen: String = "gestures", labels: Bool = true, arguments: [String] = []) -> XCUIApplication {
         let app = XCUIApplication(bundleIdentifier: "local.trollroute.workspacepreview")
-        app.launchArguments = ["--screen", screen, "--labels", labels ? "yes" : "no"]
+        app.launchArguments = ["--screen", screen, "--labels", labels ? "yes" : "no"] + arguments
         app.launch()
         XCTAssertTrue(app.buttons["Search"].waitForExistence(timeout: 15))
         let ready = NSPredicate { _, _ in self.mapState(app).count == 4 }
@@ -162,6 +162,28 @@ final class MapGestureTests: XCTestCase {
         observation.name = "native-hold-double-baseline"
         observation.lifetime = .keepAlways
         add(observation)
+    }
+
+    func testRecognizerIsolationObservations() {
+        // Isolate our recognizers in the QA copy only. The full production
+        // hold/double/single regression above remains the acceptance test.
+        for variant in ["--hold-only", "--taps-only", "--coexist-hold"] {
+            let app = launch("gestures-long", arguments: [variant])
+            let spot = app.coordinate(withNormalizedOffset: CGVector(dx: 0.3, dy: 0.65))
+            spot.press(forDuration: 1)
+            let before = mapState(app)
+            spot.doubleTap()
+            let zoomed = expectation(for: NSPredicate { _, _ in
+                let after = self.mapState(app)
+                return after.count == 4 && after[2] < before[2] * 0.9
+            }, evaluatedWith: app)
+            let result = XCTWaiter.wait(for: [zoomed], timeout: 5)
+            let detail = "\(variant): result=\(result.rawValue); before=\(before); after=\(mapState(app)); \(app.staticTexts["gesture-counts"].label)"
+            print(detail)
+            let attachment = XCTAttachment(string: detail)
+            attachment.name = variant; attachment.lifetime = .keepAlways; add(attachment)
+            app.terminate()
+        }
     }
 
     private func renameAndSave(_ app: XCUIApplication, to name: String) {
