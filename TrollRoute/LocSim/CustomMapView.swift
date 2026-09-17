@@ -134,6 +134,9 @@ struct CustomMapView: UIViewRepresentable {
             tap.require(toFail: doubleTap)
             let press = UILongPressGestureRecognizer(target: self, action: #selector(handleLongPress(_:)))
             press.minimumPressDuration = 0.5
+            // Keep MapKit's touch stream intact after the route hold. Cancelling
+            // the underlying view's touches disrupts its next double-tap sequence.
+            press.cancelsTouchesInView = false
             press.delegate = self
             press.isEnabled = parent.onLongPress != nil
             mapView.addGestureRecognizer(press)
