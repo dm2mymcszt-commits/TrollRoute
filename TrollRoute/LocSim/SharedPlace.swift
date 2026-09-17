@@ -223,6 +223,8 @@ final class SharedPlaceChannel: ObservableObject {
 final class RouteDraft: ObservableObject {
     @Published var start: RoutePlace?
     @Published var destination: RoutePlace?
+    // External replacements invalidate any local edits held by an older sheet.
+    @Published private(set) var revision = UUID()
     // A shared endpoint invalidates a previous preview when the planner opens.
     var needsRecalculation = false
     // Non-nil only for a newly requested long-press preview; consumed once by Navigation.
@@ -233,6 +235,7 @@ final class RouteDraft: ObservableObject {
         self.destination = destination
         needsRecalculation = true
         automaticPreparation = autoStart
+        revision = UUID()
     }
 
     func takeAutomaticPreparation() -> Bool? {
@@ -256,6 +259,13 @@ final class RouteDraft: ObservableObject {
         destination = saved.destination
         needsRecalculation = true
         automaticPreparation = nil
+        revision = UUID()
+    }
+
+    func commitEdits(start: RoutePlace?, destination: RoutePlace?, revision: UUID) {
+        guard revision == self.revision else { return }
+        self.start = start
+        self.destination = destination
     }
 
     func accept(_ request: SharedPlaceRequest) {
@@ -265,6 +275,7 @@ final class RouteDraft: ObservableObject {
         else { return }
         needsRecalculation = true
         automaticPreparation = nil
+        revision = UUID()
     }
 }
 

@@ -24,6 +24,7 @@ struct RouteSimSheet: View {
     @State private var pickerField: ActiveField?
     @State private var waitingForCurrentStart = false
     @State private var didInitializeStart = false
+    @State private var loadedDraftRevision: UUID?
     @State private var routeReady: Bool = false
     @State private var showGPXPicker: Bool = false
     @State private var isStarting = false
@@ -253,37 +254,8 @@ struct RouteSimSheet: View {
             }
         }
         .modifier(RouteStopPresentation(simulator: routeSimulator))
-        .onAppear {
-            if !didInitializeStart {
-                didInitializeStart = true
-                if draft.start != nil || draft.destination != nil {
-                    startSource = draft.start?.sharedSource
-                    endSource = draft.destination?.sharedSource
-                    startCoord = draft.start?.coordinate
-                    startText = draft.start?.name ?? ""
-                    endCoord = draft.destination?.coordinate
-                    endText = draft.destination?.name ?? ""
-                    selectedMode = routeSimulator.travelMode
-                    if draft.needsRecalculation && !routeSimulator.isSimulating {
-                        invalidateRoute()
-                        draft.needsRecalculation = false
-                    } else { routeReady = !routeSimulator.availableRoutes.isEmpty }
-                    if startCoord == nil && !routeSimulator.isSimulating { useCurrentStart() }
-                    if let autoStart = draft.takeAutomaticPreparation(), !routeSimulator.isSimulating {
-                        calculateRoute(autoStart: autoStart)
-                    }
-                } else if !routeSimulator.availableRoutes.isEmpty {
-                    startCoord = routeSimulator.routeStart
-                    endCoord = routeSimulator.routeEnd
-                    startText = "Route Start"
-                    endText = "Destination"
-                    selectedMode = routeSimulator.travelMode
-                    routeReady = true
-                } else if !routeSimulator.isSimulating {
-                    useCurrentStart()
-                }
-            }
-        }
+        .onAppear { loadDraft() }
+        .onChange(of: draft.revision) { _ in loadDraft() }
         .onChange(of: routeSimulator.isSimulating) { running in
             if !running && draft.needsRecalculation {
                 invalidateRoute()
@@ -296,8 +268,12 @@ struct RouteSimSheet: View {
             startRequestID = UUID()
             isStarting = false
             currentLocation.cancel()
-            draft.start = startCoord.map { endpointPlace(name: startText, coordinate: $0, source: startSource) }
-            draft.destination = endCoord.map { endpointPlace(name: endText, coordinate: $0, source: endSource) }
+            if let revision = loadedDraftRevision {
+                draft.commitEdits(
+                    start: startCoord.map { endpointPlace(name: startText, coordinate: $0, source: startSource) },
+                    destination: endCoord.map { endpointPlace(name: endText, coordinate: $0, source: endSource) },
+                    revision: revision)
+            }
         }
         .onReceive(currentLocation.$location) { location in
             guard waitingForCurrentStart, let location = location else { return }
@@ -309,6 +285,42 @@ struct RouteSimSheet: View {
         }
     }
     
+    private func loadDraft() {
+        if !didInitializeStart || loadedDraftRevision != draft.revision {
+            didInitializeStart = true
+            loadedDraftRevision = draft.revision
+            preparation.cancel()
+            currentLocation.cancel()
+            waitingForCurrentStart = false
+            if draft.start != nil || draft.destination != nil {
+                startSource = draft.start?.sharedSource
+                endSource = draft.destination?.sharedSource
+                startCoord = draft.start?.coordinate
+                startText = draft.start?.name ?? ""
+                endCoord = draft.destination?.coordinate
+                endText = draft.destination?.name ?? ""
+                selectedMode = routeSimulator.travelMode
+                if draft.needsRecalculation && !routeSimulator.isSimulating {
+                    invalidateRoute()
+                    draft.needsRecalculation = false
+                } else { routeReady = !routeSimulator.availableRoutes.isEmpty }
+                if startCoord == nil && !routeSimulator.isSimulating { useCurrentStart() }
+                if let autoStart = draft.takeAutomaticPreparation(), !routeSimulator.isSimulating {
+                    calculateRoute(autoStart: autoStart)
+                }
+            } else if !routeSimulator.availableRoutes.isEmpty {
+                startCoord = routeSimulator.routeStart
+                endCoord = routeSimulator.routeEnd
+                startText = "Route Start"
+                endText = "Destination"
+                selectedMode = routeSimulator.travelMode
+                routeReady = true
+            } else if !routeSimulator.isSimulating {
+                useCurrentStart()
+            }
+        }
+    }
+
     private var routePreview: some View {
         VStack(alignment: .leading, spacing: 8) {
             CustomMapView(

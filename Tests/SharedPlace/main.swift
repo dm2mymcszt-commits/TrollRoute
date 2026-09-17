@@ -182,6 +182,17 @@ require(handoff.start?.id == resolvedCurrent.id && handoff.destination?.sharedSo
         "A shared endpoint must preserve the other point currently edited in Navigation")
 draft.prepareFromMap(start: resolvedCurrent, destination: place, autoStart: true)
 draft.applySharedDraft(handoff)
+let firstSharedRevision = draft.revision
+let replacement = SharedRouteDraft(start: resolvedCurrent, destination: place)
+draft.applySharedDraft(replacement)
+require(draft.revision != firstSharedRevision, "An external replacement invalidates a retained sheet")
+draft.commitEdits(start: nil, destination: nil, revision: firstSharedRevision)
+require(draft.start?.id == resolvedCurrent.id && draft.destination?.id == place.id,
+        "Closing an older sheet must not overwrite the next shared endpoint")
+draft.commitEdits(start: place, destination: resolvedCurrent, revision: draft.revision)
+require(draft.start?.id == place.id && draft.destination?.id == resolvedCurrent.id,
+        "Edits from the current sheet remain persistent")
+draft.applySharedDraft(handoff)
 require(draft.destination?.sharedSource == .googleMaps && draft.takeAutomaticPreparation() == nil,
         "An endpoint share must not inherit an old long-press auto-start")
 let channel = SharedPlaceChannel()

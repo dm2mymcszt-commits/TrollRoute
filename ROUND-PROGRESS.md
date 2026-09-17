@@ -2,19 +2,13 @@
 
 ## Resume
 
-- Plan: [ROUND-PLAN.md](ROUND-PLAN.md). Detailed evidence, root causes, inventory, exact approvals/commands, tag snapshot and migration inputs: [ROUND-AUDIT.md](ROUND-AUDIT.md).
-- Branch: `experiment/route-motion`; origin: `dm2mymcszt-commits/TrollRoute`. Application baseline `546ffb2`; Phase 1 identity and migration pushed.
-- Current checkpoint: **Phase 4 accepted**, build28 `e1f3cac`, full CI34976588469 SUCCESS; five route UI tests, engine tests, screenshots and package/signing verified.
-- Phase5: R10 `539c587` build29 and ledger/Darwin `92534f2` build30 passed full CI. `cd1d979` build31 adds automatic endpoint handoff and applies the four approved share keys. `5188d2c` build32 adds the cross-process elevation quota; its quota/command tests and app package passed.
-- Map test observation correction `07f1319`: full CI35095688375 SUCCESS. Prior diagnostic CI35066100040 passed; intermittent Create remains under investigation, with five repeated Cancel/Create pairs and tracing.
-- Lease foundation `81d54e8` build33 passed full CI35066588142. Build34 `53e200e` connects the actual owner/engine to cross-process authority; includes late-callback, stale Stop, paused/moving route and relaunch tests. Injection change: phone Snapchat Bitmoji check required.
-- Builds34/35 (`53e200e` / `0d4a093`) compiled/package passed. Route UI previous-location fixture fixed `31841d6`; build35 runner was killed before tests. `441369a` build36 adds the held-touch/double-tap dependency; dependency alone failed the touch test; trace shows a count=2 touch accepted as a single tap. Route UI passed CI35131591172.
-- Favorites foundation `84417c9`; test entry point fixed `b05c9a3`. `634d0ed` build37 wires app/extension/pickers/import to its locked store, stable deletion IDs, durable share-save receipts and live refresh. CI35132099453 hit a Swift private-metadata linkage crash; `81aa5a5` fixes compilation; package, migration, engine, motion, altitude and seven addresses passed. Recents test variable corrected next. Existing data preserved; acceptance pending.
-- `57f84d2` build38: fresh zoom/no accidental tap pass; hold-then-zoom still fails while native control succeeds. Recognition interference remains to fix.
-- `c31e6ec` lifecycle UI harness added: actual views, separate process, active <1s/background/cold launch, no replay, edited Favorite without opening. CI pending.
-- `66a6bf4` build39 disables underlying-view touch cancellation by the route hold; unchanged zoom regression decides acceptance. CI35192018301 queued/running; prior lifecycle run CI35191969328 running. Phase5 phone flows added to BUILD-TROLLSTORE.md; not hardware-verified.
-- **Next:** verify lifecycle/Favorites CI, fix held-touch zoom interference, then finish Phase5 package/phone-check documentation; Phase5 is not accepted. Long details and failures are in audit.
-- Persist each finished step and its next action. Keep this file short; append detailed findings to audit. Delete **all three ROUND files** in the final commit.
+- Source of truth: [ROUND-PLAN.md](ROUND-PLAN.md); detailed evidence and prior failures: [ROUND-AUDIT.md](ROUND-AUDIT.md).
+- Branch `experiment/route-motion`, origin `dm2mymcszt-commits/TrollRoute`. Phases0-4 accepted; Phase5 in progress; 6-8 not started.
+- Latest verified package: build39 `66a6bf4`, CI35192018301 build job SUCCESS (all model/live tests, Favorites concurrency, direct Go, migration, signing and previews), route-session UI SUCCESS. Phone checklist pushed `216de2c`.
+- Phase5 implementation: endpoints/Darwin `cd1d979`, cross-process authority `53e200e`, direct Go `0d4a093`, Favorites `634d0ed` + compiler fix `81aa5a5`. Injection changes still need phone Bitmoji checks.
+- Lifecycle harness `c31e6ec`: background/cold/no-replay/edited Favorite PASS. Prior active test found second share consumed <1s but UI retained old fields; build39 first launch timed out. Build40 adds external draft revision/reload and rejects stale closing-sheet writes; CI required.
+- Map: fresh double-tap and no accidental location taps pass; hold-then-zoom still fails despite build39 touch cancellation change. Native-only baseline zooms. Do not weaken the original test or claim fixed.
+- **Next:** verify build40 lifecycle tests and diagnose map recognizer prevention; finish Phase5 acceptance before Phase6. Keep long evidence in audit. Delete all three ROUND files in the final commit.
 
 ## Decisions already approved
 
@@ -52,7 +46,7 @@
 | 4 R15, R16, R17 | Done; phone checks remain | `369ef15`, `b0fdc0b`; both sets, all outcomes, three Stop entry points pass; phone Bitmoji check |
 | 4 R14, F3 + acceptance | Done; phone checks remain | `c0962af`, `6d4fa2e`, `e1f3cac`; credits reviewed, moving/paused scrub metadata pass; signed build28; phone Bitmoji check |
 | 5 R7, R8, R9, R10, F4 | In progress | R10/ledger full CI29-30; automatic endpoints and approved keys `cd1d979`; shared quota `5188d2c`. Direct Go/lease and lifecycle UI acceptance remain |
-| 5 acceptance | Not started | Lifecycle harness, source/outcome tests; phone flows |
+| 5 acceptance | In progress | Model tests/package pass; repeated-share UI and held-touch zoom fixes pending; phone checklist recorded |
 | 6 R29, R30, R31, R32 | Not started | Registration/access/accuracy status, evidence-based onboarding |
 | 6 acceptance | Not started | Status model tests, good/bad screenshots, documented permission decision |
 | 7 R22, R23, R24 | Not started | Optional Live Activity, exact content/Stop, two notification toggles |

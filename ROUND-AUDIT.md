@@ -1193,3 +1193,11 @@ CI35191065452 confirmed app/share compilation and package signing, migration, ro
 ### Native touch continuity after route hold - build39
 
 The native-only baseline zooms after the identical hold/double sequence. In the custom path, the route UILongPressGestureRecognizer was the only custom recognizer still using default cancelsTouchesInView=true. Its recognition cancels the underlying view's touch delivery. Set it false, matching the tap guards, to preserve MapKit's stream; keep tap failure dependencies and repeat-count rejection. This isolates the cancellation difference; the unchanged combined zoom assertion is the acceptance criterion, not the hypothesis alone. Lifecycle harness checkpoint c31e6ec is pushed.
+
+### Phase5 repeat-share UI root cause (build39 results)
+
+CI35192018301: app/package/signing and all build-job checks SUCCESS, route-session UI SUCCESS. Lifecycle background, cold launch/no replay and edited Favorite tests PASS; first active-test launch timed out before its assertions. Prior CI35191969328 did execute active delivery: first shared Start appeared within the latency limit; the next Destination was durably consumed within the limit but Navigation still displayed Choose a place (LifecycleTests lines47/24).
+
+RouteSimSheet initializes its local endpoint fields only while didInitializeStart=false (onAppear), then unconditionally writes those fields back into RouteDraft onDisappear. A repeated handoff to a retained SwiftUI sheet can therefore retain stale fields and overwrite newer shared values. Add an external-draft revision, reload local fields when that revision changes, and only commit closing-sheet edits against the revision they started from. Keep the same failing real-view test and timing bound.
+
+Build39 cancelsTouchesInView=false did not resolve hold-then-zoom. Fresh double tap, no accidental location taps, five Cancel/Create pairs and other map checks passed. Keep the original zoom assertion and investigate recognizer prevention next; no successful fix claimed. Phone checklist committed216de2c.
