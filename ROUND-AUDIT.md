@@ -1259,3 +1259,7 @@ The actual engine regression harness now grants WhenInUse rather than Always, ex
 8556265 CI35780450363 app/share build succeeded, then native macOS model compile rejected CLAuthorizationStatus.authorizedWhenInUse (unavailable on macOS). Separate pure authorization/accuracy enums from a UIKit-only CoreLocation adapter with exhaustive switches and unknown handling. Keep all 60 matrix cases and unknown cases; no weakened expectation or behavior change. iOS simulator UI and app compilation validate the real adapter.
 
 Actual engine harness also asserts its real simulator authorization is WhenInUse and checks all iOS authorization/accuracy conversions before the existing engine scenarios. This prevents a fixture silently exercising Always instead. Phase6 device checks added to the short BUILD guide.
+
+### Phase6 UI query correction
+
+Build43 CI35781124443 map test failed only at the new registration explanation query. Its retained video (build/phase6-status-ui, frame120) shows the sheet and exact text correctly. The XCTest query used `staticTexts.containing`, searching descendants inside text nodes; use `staticTexts.matching` to match the text itself. Preserve the assertion, add retained screenshots of both details, and rerun. Good dark and denied light overview images from CI35780450363 were visually reviewed: System remains informational; authorization and precision show correct green/warning states without clipping. Actual engine authorization checks are committed in a49f025; no app behavior changes in this test correction.

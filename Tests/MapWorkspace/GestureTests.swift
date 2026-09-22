@@ -9,7 +9,8 @@ final class MapGestureTests: XCTestCase {
         XCTAssertTrue(app.staticTexts["System"].exists)
         XCTAssertTrue(app.staticTexts["On"].exists)
         app.buttons["access-TrollStore registration"].tap()
-        XCTAssertTrue(app.staticTexts.containing(NSPredicate(format: "label CONTAINS %@", "System registration is normal")).firstMatch.waitForExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts.matching(NSPredicate(format: "label CONTAINS %@", "System registration is normal")).firstMatch.waitForExistence(timeout: 5))
+        capture(app, "system-registration-explanation")
         app.terminate()
         app.launchArguments = ["--screen", "access-bad"]
         app.launch()
@@ -18,6 +19,7 @@ final class MapGestureTests: XCTestCase {
         app.buttons["access-Location access"].tap()
         XCTAssertTrue(app.buttons["Open iOS Settings"].waitForExistence(timeout: 5))
         XCTAssertFalse(app.buttons["Allow location access"].exists, "Denied permission requires Settings, not another system prompt")
+        capture(app, "denied-location-explanation")
         app.terminate()
     }
 

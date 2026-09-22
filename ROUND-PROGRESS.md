@@ -10,7 +10,8 @@
 - `8556265` build42: live registration/access/accuracy overview implemented with contextual guidance, temporary Precise request, 60-case status tests and good/bad screenshot fixtures; CI pending.
 - `8f56f71` build43: contextual WhenInUse route requests; no launch/automatic Always requests; retained keepalive through pause/repeat, route-access notice and accurate usage strings. Engine suite now runs with WhenInUse; status detail UI test added.
 - Build42 app/package builds; macOS status test exposed platform-unavailable CLAuthorizationStatus.authorizedWhenInUse. `8a8fa70` separates pure enums from the iOS adapter; preserve every test case.
-- **Next:** verify corrected CI runs, inspect good/bad status screenshots and signed build43; resolve any failures before Phase6 acceptance. Actual engine harness now asserts WhenInUse and each iOS adapter mapping. Physical background/Resume and registration checks remain. Delete all three ROUND files in the final commit.
+- `a49f025` asserts actual WhenInUse and iOS adapter mappings. Good/bad overview screenshots reviewed. New detail test queried descendants instead of matching text; failure video confirms the sheet works. Query corrected, assertion retained.
+- **Next:** verify corrected full CI and signed build43, then accept Phase6. Physical background/Resume and registration checks remain. Delete all three ROUND files in the final commit.
 
 ## Decisions already approved
 
