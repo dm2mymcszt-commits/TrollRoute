@@ -198,4 +198,31 @@ struct LocationAccessOverview: View {
         }
     }
 }
+
+/// Explain the limitation before starting from manually chosen endpoints,
+/// where Current Location would not otherwise have requested permission.
+struct RouteLocationAccessNotice: View {
+    @StateObject private var access = LocationAccessController()
+    @State private var showAccess = false
+    var body: some View {
+        Group {
+            if !access.status.authorized {
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Allow location access for reliable background route playback. Without it, keep TrollRoute open. You can still choose places manually.")
+                        .font(.caption).foregroundColor(.secondary)
+                    Button("Review location access") { showAccess = true }
+                }.padding(.horizontal)
+            }
+        }
+        .onAppear { access.refresh() }
+        .onReceive(NotificationCenter.default.publisher(for: UIApplication.didBecomeActiveNotification)) { _ in access.refresh() }
+        .sheet(isPresented: $showAccess) {
+            NavigationView {
+                Form { LocationAccessOverview() }
+                    .navigationTitle("Location access").navigationBarTitleDisplayMode(.inline)
+                    .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { showAccess = false } } }
+            }
+        }
+    }
+}
 #endif

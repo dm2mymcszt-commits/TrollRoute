@@ -19,7 +19,7 @@
 	<key>CFBundleShortVersionString</key>
 	<string>3.0.0</string>
 	<key>CFBundleVersion</key>
-	<string>42</string>
+	<string>43</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>MinimumOSVersion</key>
@@ -35,11 +35,11 @@
 		<string>processing</string>
 	</array>
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
-	<string>TrollRoute needs your location for simulation.</string>
+	<string>Background location access lets TrollRoute receive updates if a route needs to resume while the app is not in use.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>TrollRoute needs your location for simulation.</string>
+	<string>TrollRoute uses your location for Current Location and to keep routes running after you switch apps or lock the screen.</string>
 	<key>NSLocationAlwaysUsageDescription</key>
-	<string>TrollRoute needs your location for simulation.</string>
+	<string>Background location access lets TrollRoute receive updates if a route needs to resume while the app is not in use.</string>
 	<key>CFBundleIcons</key>
 	<dict>
 		<key>CFBundlePrimaryIcon</key>

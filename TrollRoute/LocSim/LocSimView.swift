@@ -71,9 +71,6 @@ struct LocSimView: View {
                               proposedPosition: mapMove.pendingRequest?.coordinate ?? routeSimulator.previewPosition,
                               proposalIsRoutePreview: mapMove.pendingRequest == nil && routeSimulator.previewPosition != nil,
                               onLongPress: longPressToCreateRoute ? requestLongPressRoute : nil)
-                    .onAppear {
-                        CLLocationManager().requestAlwaysAuthorization()
-                    }
                     .onChange(of: tappedCoordinate) { newCoord in
                         guard let coord = newCoord else { return }
                         tappedCoordinate = nil

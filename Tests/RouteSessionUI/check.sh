@@ -30,7 +30,7 @@ PY
 python3 Tests/RoutePicker/bookmark-support.py "$QA_DIR/Bookmarks.swift"
 xcrun --sdk iphonesimulator swiftc -target arm64-apple-ios17.0-simulator \
   -sdk "$(xcrun --sdk iphonesimulator --show-sdk-path)" \
-  TrollRoute/Storage/SharedPreferences.swift TrollRoute/Storage/FavoritesStore.swift TrollRoute/LocSim/RouteSimulator.swift \
+  TrollRoute/Storage/SharedPreferences.swift TrollRoute/Storage/FavoritesStore.swift TrollRoute/LocSim/RouteSimulator.swift TrollRoute/LocationAccess.swift \
   TrollRoute/LocSim/RouteFinish.swift TrollRoute/LocSim/RouteStop.swift TrollRoute/LocSim/CoordTransform.swift \
   TrollRoute/LocSim/RouteElevation.swift TrollRoute/LocSim/Altitude.swift TrollRoute/LocSim/LocationSession.swift \
   TrollRoute/LocSim/RouteFinishControls.swift TrollRoute/LocSim/RouteStopDialog.swift \

@@ -7,8 +7,9 @@
 - Phase5 acceptance: `0f03411`, full CI35737111085 SUCCESS. Eight actual-map touch tests (hold/double/single + panning), share lifecycle <1s/repeated/background/cold/Favorite, route UI and all model/live checks PASS. Downloaded build41 signature/identity verified; details in audit.
 - Phase5 phone checks remain: private automatic open and real injection, including saved altitude and Snapchat Bitmoji. Code/CI acceptance complete.
 - Phase6 evidence `2daac84`: WhenInUse supports foreground-started updates retained during pause/return; fresh background service start differs. No automatic Always requirement. Phone background/Resume check remains.
-- Live registration/access/accuracy overview implemented with contextual guidance, temporary Precise request, 120-case status tests and good/bad screenshot fixtures; CI pending.
-- **Next:** verify overview build/tests; finish contextual route authorization flow (remove launch/route automatic Always requests), precise-start guidance and usage-string updates, then Phase6 acceptance. Delete all three ROUND files in the final commit.
+- `8556265` build42: live registration/access/accuracy overview implemented with contextual guidance, temporary Precise request, 60-case status tests and good/bad screenshot fixtures; CI pending.
+- Build43: contextual WhenInUse route requests; no launch/automatic Always requests; retained keepalive through pause/repeat, route-access notice and accurate usage strings. Engine suite now runs with WhenInUse; status detail UI test added.
+- **Next:** verify both CI runs, inspect good/bad status screenshots and signed build43; resolve any failures before Phase6 acceptance. Physical background/Resume and registration checks remain. Delete all three ROUND files in the final commit.
 
 ## Decisions already approved
 

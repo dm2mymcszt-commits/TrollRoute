@@ -566,8 +566,7 @@ class RouteSimulator: NSObject, ObservableObject, CLLocationManagerDelegate {
         progress = 0
         previewPosition = nil
         seekFraction = nil
-        locationManager.requestAlwaysAuthorization()
-        locationManager.startUpdatingLocation()
+        updateBackgroundLocationAccess()
         startBackgroundTask()
         updateLocation()
         if isSimulating { startTimer() }
@@ -783,6 +782,27 @@ class RouteSimulator: NSObject, ObservableObject, CLLocationManagerDelegate {
         let start = track.coordinates[0]
         let jumped = previous.map { $0.latitude != start.latitude || $0.longitude != start.longitude } ?? true
         updateLocation(reason: jumped ? .jump : .stateChange)
+    }
+
+    private func updateBackgroundLocationAccess() {
+        guard isSimulating else { return }
+        let status = LocationAccessStatus(registration: nil,
+            authorization: locationManager.authorizationStatus,
+            accuracy: locationManager.accuracyAuthorization,
+            servicesEnabled: CLLocationManager.locationServicesEnabled())
+        let foreground = UIApplication.shared.applicationState != .background
+        if status.authorization == .notDetermined && status.servicesEnabled && foreground {
+            locationManager.requestWhenInUseAuthorization()
+        }
+        if status.canStartUpdates(inForeground: foreground) {
+            locationManager.startUpdatingLocation()
+        }
+    }
+
+    func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
+        // Start the keepalive after a permission response. Pause/Resume retains
+        // this stream; only terminal finish/Stop ends it. Never prompt from background.
+        updateBackgroundLocationAccess()
     }
 
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {

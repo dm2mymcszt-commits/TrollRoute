@@ -19,7 +19,7 @@ with open(sys.argv[2], 'wb') as f:
 PY
 xcrun --sdk iphonesimulator swiftc -target arm64-apple-ios17.0-simulator \
   -sdk "$(xcrun --sdk iphonesimulator --show-sdk-path)" \
-  TrollRoute/Storage/SharedPreferences.swift TrollRoute/LocSim/RouteSimulator.swift \
+  TrollRoute/Storage/SharedPreferences.swift TrollRoute/LocSim/RouteSimulator.swift TrollRoute/LocationAccess.swift \
   TrollRoute/LocSim/RouteFinish.swift TrollRoute/LocSim/RouteStop.swift TrollRoute/LocSim/CoordTransform.swift \
   TrollRoute/LocSim/RouteElevation.swift TrollRoute/LocSim/Altitude.swift \
   TrollRoute/LocSim/LocationSession.swift "$QA_DIR/RouteLocationSample.swift" \
@@ -30,7 +30,7 @@ trap 'xcrun simctl shutdown "$DEVICE" || true; xcrun simctl delete "$DEVICE" || 
 xcrun simctl boot "$DEVICE"
 xcrun simctl bootstatus "$DEVICE" -b
 xcrun simctl install "$DEVICE" "$PREVIEW_APP"
-xcrun simctl privacy "$DEVICE" grant location-always local.trollroute.enginetests
+xcrun simctl privacy "$DEVICE" grant location local.trollroute.enginetests
 CONTAINER=$(xcrun simctl get_app_container "$DEVICE" local.trollroute.enginetests data)
 xcrun simctl launch --stdout="$QA_DIR/stdout.log" --stderr="$QA_DIR/stderr.log" "$DEVICE" local.trollroute.enginetests
 for attempt in $(seq 1 30); do

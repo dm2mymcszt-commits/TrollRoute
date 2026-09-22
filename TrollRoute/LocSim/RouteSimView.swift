@@ -40,6 +40,7 @@ struct RouteSimSheet: View {
         NavigationView {
             ScrollView {
                 VStack(spacing: 16) {
+                    RouteLocationAccessNotice()
                     // MARK: - Route Status (when simulating)
                     if routeSimulator.isSimulating {
                         simulationStatusCard
