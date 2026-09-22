@@ -3,13 +3,10 @@
 ## Resume
 
 - Source of truth: [ROUND-PLAN.md](ROUND-PLAN.md); detailed evidence and prior failures: [ROUND-AUDIT.md](ROUND-AUDIT.md).
-- Branch `experiment/route-motion`, origin `dm2mymcszt-commits/TrollRoute`. Phases0-4 accepted; Phase5 in progress; 6-8 not started.
-- Latest verified package: build40 `53fb546`, CI35223404858 build job SUCCESS (all model/live tests, Favorites concurrency, direct Go, migration, signing and previews), route-session UI SUCCESS. Downloaded signatures and shared-endpoint screenshots verified. Phone checklist `216de2c`.
-- Phase5 implementation: endpoints/Darwin `cd1d979`, cross-process authority `53e200e`, direct Go `0d4a093`, Favorites `634d0ed` + compiler fix `81aa5a5`. Injection changes still need phone Bitmoji checks.
-- Lifecycle harness `c31e6ec`: background/cold/no-replay/edited Favorite PASS. Prior active test found second share consumed <1s but UI retained old fields; build39 first launch timed out. `84e1b3e` build40 fixes revision/reload and stale writes; all lifecycle UI tests PASS in CI35223404858 (`53fb546`), including active <1s and repeated endpoints.
-- Build41 `23afaf6`: original hold/double zoom/single regression now PASS (all nine map tests, CI35735308615); route and share UI PASS. `dcf83cb` adds the pan-with-hold-enabled regression; CI35735453902 pending.
-- Removed temporary recognizer-isolation variants/raw tracing after the original regression passed. QA now copies gesture code unchanged, with only map-region accessibility observation. No production/injection change in this cleanup.
-- **Next:** verify the cleaned-up actual gesture suite including panning, full CI and signed build41; accept Phase5 before Phase6. Delete all three ROUND files in the final commit.
+- Branch `experiment/route-motion`, origin `dm2mymcszt-commits/TrollRoute`. Phases0-5 accepted; Phase6 in progress; 7-8 not started.
+- Phase5 acceptance: `0f03411`, full CI35737111085 SUCCESS. Eight actual-map touch tests (hold/double/single + panning), share lifecycle <1s/repeated/background/cold/Favorite, route UI and all model/live checks PASS. Downloaded build41 signature/identity verified; details in audit.
+- Phase5 phone checks remain: private automatic open and real injection, including saved altitude and Snapchat Bitmoji. Code/CI acceptance complete.
+- **Next:** Phase6 R29-R32: document actual registration/authorization behavior and evidence, then implement live status overview + appropriate request/accuracy guidance, model tests and good/bad screenshots. Delete all three ROUND files in the final commit.
 
 ## Decisions already approved
 
@@ -46,9 +43,9 @@
 | 4 R11, R12, R13 | Done; phone checks remain | `1976d8a`, `08eb495`; full engine/action matrix and actual Navigation/panel UI pass |
 | 4 R15, R16, R17 | Done; phone checks remain | `369ef15`, `b0fdc0b`; both sets, all outcomes, three Stop entry points pass; phone Bitmoji check |
 | 4 R14, F3 + acceptance | Done; phone checks remain | `c0962af`, `6d4fa2e`, `e1f3cac`; credits reviewed, moving/paused scrub metadata pass; signed build28; phone Bitmoji check |
-| 5 R7, R8, R9, R10, F4 | In progress | R10/ledger full CI29-30; automatic endpoints and approved keys `cd1d979`; shared quota `5188d2c`. Direct Go/lease and lifecycle UI acceptance remain |
-| 5 acceptance | In progress | Model/package and repeated-share lifecycle PASS; build41 hold/zoom + pan regression pending; phone checklist recorded |
-| 6 R29, R30, R31, R32 | Not started | Registration/access/accuracy status, evidence-based onboarding |
+| 5 R7, R8, R9, R10, F4 | Done; phone checks remain | Endpoint/open `cd1d979`, lease `53e200e`, direct Go `0d4a093`, Favorites `634d0ed`, repeated draft `84e1b3e`; full CI35737111085 |
+| 5 acceptance | Done | `0f03411` full CI35737111085 SUCCESS; signed build41 verified; physical checks in BUILD guide |
+| 6 R29, R30, R31, R32 | In progress | Registration/access/accuracy status, evidence-based onboarding |
 | 6 acceptance | Not started | Status model tests, good/bad screenshots, documented permission decision |
 | 7 R22, R23, R24 | Not started | Optional Live Activity, exact content/Stop, two notification toggles |
 | 7 R25, R26, R27, R28 | Not started | Accurate explanations, runtime capability, external DynamicCow note, honest testing |
