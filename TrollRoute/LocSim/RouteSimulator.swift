@@ -787,8 +787,8 @@ class RouteSimulator: NSObject, ObservableObject, CLLocationManagerDelegate {
     private func updateBackgroundLocationAccess() {
         guard isSimulating else { return }
         let status = LocationAccessStatus(registration: nil,
-            authorization: locationManager.authorizationStatus,
-            accuracy: locationManager.accuracyAuthorization,
+            coreAuthorization: locationManager.authorizationStatus,
+            coreAccuracy: locationManager.accuracyAuthorization,
             servicesEnabled: CLLocationManager.locationServicesEnabled())
         let foreground = UIApplication.shared.applicationState != .background
         if status.authorization == .notDetermined && status.servicesEnabled && foreground {

@@ -1,7 +1,5 @@
-import CoreLocation
-
-let authorizations: [CLAuthorizationStatus] = [.notDetermined, .restricted, .denied, .authorizedAlways, .authorizedWhenInUse]
-let accuracies: [CLAccuracyAuthorization] = [.fullAccuracy, .reducedAccuracy]
+let authorizations: [LocationAuthorization] = [.notDetermined, .restricted, .denied, .authorizedAlways, .authorizedWhenInUse]
+let accuracies: [LocationAccuracy] = [.fullAccuracy, .reducedAccuracy]
 var cases = 0
 for registration in ["System", "User", "unrecognized"] {
     for authorization in authorizations {
@@ -24,10 +22,10 @@ for registration in ["System", "User", "unrecognized"] {
     }
 }
 let unknown = LocationAccessStatus(registration: nil,
-    authorization: CLAuthorizationStatus(rawValue: 99)!, accuracy: CLAccuracyAuthorization(rawValue: 99)!, servicesEnabled: true)
+    authorization: .unknown, accuracy: .unknown, servicesEnabled: true)
 assert(unknown.registrationText == "Unknown" && unknown.accessText == "Unknown")
 assert(!unknown.authorized && !unknown.precise)
 let unknownAccuracy = LocationAccessStatus(registration: "System", authorization: .authorizedWhenInUse,
-    accuracy: CLAccuracyAuthorization(rawValue: 99)!, servicesEnabled: true)
+    accuracy: .unknown, servicesEnabled: true)
 assert(unknownAccuracy.accuracyText == "Unknown" && !unknownAccuracy.precise)
 print("PASS: \(cases) registration/authorization/accuracy/service combinations and future unknown values")

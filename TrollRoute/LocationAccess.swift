@@ -1,11 +1,17 @@
 import Foundation
-import CoreLocation
+
+enum LocationAuthorization: CaseIterable {
+    case notDetermined, restricted, denied, authorizedAlways, authorizedWhenInUse, unknown
+}
+enum LocationAccuracy: CaseIterable {
+    case fullAccuracy, reducedAccuracy, unknown
+}
 
 /// Permission facts, independent of spoofing authority or route motion.
 struct LocationAccessStatus {
     let registration: String?
-    let authorization: CLAuthorizationStatus
-    let accuracy: CLAccuracyAuthorization
+    let authorization: LocationAuthorization
+    let accuracy: LocationAccuracy
     let servicesEnabled: Bool
 
     var registrationText: String {
@@ -28,7 +34,7 @@ struct LocationAccessStatus {
         case .denied: return "Never"
         case .authorizedAlways: return "Always"
         case .authorizedWhenInUse: return "While Using the App"
-        @unknown default: return "Unknown"
+        case .unknown: return "Unknown"
         }
     }
     var precise: Bool { authorized && accuracy == .fullAccuracy }
@@ -37,7 +43,7 @@ struct LocationAccessStatus {
         switch accuracy {
         case .fullAccuracy: return "On"
         case .reducedAccuracy: return "Off"
-        @unknown default: return "Unknown"
+        case .unknown: return "Unknown"
         }
     }
     /// Existing foreground-started updates also continue during route pauses.
@@ -49,6 +55,30 @@ struct LocationAccessStatus {
 #if canImport(UIKit)
 import UIKit
 import SwiftUI
+import CoreLocation
+
+extension LocationAccessStatus {
+    init(registration: String?, coreAuthorization: CLAuthorizationStatus,
+         coreAccuracy: CLAccuracyAuthorization, servicesEnabled: Bool) {
+        let authorization: LocationAuthorization
+        switch coreAuthorization {
+        case .notDetermined: authorization = .notDetermined
+        case .restricted: authorization = .restricted
+        case .denied: authorization = .denied
+        case .authorizedAlways: authorization = .authorizedAlways
+        case .authorizedWhenInUse: authorization = .authorizedWhenInUse
+        @unknown default: authorization = .unknown
+        }
+        let accuracy: LocationAccuracy
+        switch coreAccuracy {
+        case .fullAccuracy: accuracy = .fullAccuracy
+        case .reducedAccuracy: accuracy = .reducedAccuracy
+        @unknown default: accuracy = .unknown
+        }
+        self.init(registration: registration, authorization: authorization,
+                  accuracy: accuracy, servicesEnabled: servicesEnabled)
+    }
+}
 
 final class LocationAccessController: NSObject, ObservableObject, CLLocationManagerDelegate {
     @Published private(set) var status: LocationAccessStatus
@@ -69,7 +99,7 @@ final class LocationAccessController: NSObject, ObservableObject, CLLocationMana
     func refresh() {
         guard let manager = manager else { return }
         status = LocationAccessStatus(registration: Self.registration(),
-            authorization: manager.authorizationStatus, accuracy: manager.accuracyAuthorization,
+            coreAuthorization: manager.authorizationStatus, coreAccuracy: manager.accuracyAuthorization,
             servicesEnabled: CLLocationManager.locationServicesEnabled())
         canOpenTrollStore = Self.proxy("com.opa334.TrollStore") != nil
             && UIApplication.shared.canOpenURL(Self.trollStoreURL)
