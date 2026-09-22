@@ -45,12 +45,8 @@ struct SettingsView: View {
                 }
                 Section {
                     Toggle("Confirm before stopping location spoofing", isOn: $confirmBeforeStoppingSpoofing)
-                    Button("Location permissions") {
-                        if let url = URL(string: UIApplication.openSettingsURLString) { UIApplication.shared.open(url) }
-                    }
-                } header: { Text("Location") } footer: {
-                    Text("Allow location access to use Current Location. Route simulation can continue while this settings panel is open.")
-                }
+                } header: { Text("Location") }
+                LocationAccessOverview()
                 Section("Default action when a route finishes") {
                     Picker("Action", selection: Binding(get: { finishSettings.action }, set: { action in
                         if action == .goToPlace && finishSettings.destination == nil {

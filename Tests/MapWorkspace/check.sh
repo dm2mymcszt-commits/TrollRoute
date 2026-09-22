@@ -23,7 +23,7 @@ python3 Tests/RoutePicker/bookmark-support.py "$QA_DIR/Bookmarks.swift"
 xcrun --sdk iphonesimulator swiftc TrollRoute/Storage/SharedPreferences.swift TrollRoute/Storage/FavoritesStore.swift -target arm64-apple-ios17.0-simulator \
   -sdk "$(xcrun --sdk iphonesimulator --show-sdk-path)" \
   "$QA_DIR/CustomMapView.swift" TrollRoute/LocSim/FloatingQuickMenu.swift \
-  TrollRoute/LocSim/RouteLocationPicker.swift TrollRoute/LocSim/FavoritePlaceEditor.swift TrollRoute/LocSim/PlaceModels.swift TrollRoute/LocSim/PlaceInput.swift TrollRoute/LocSim/AddressQuery.swift TrollRoute/LocSim/PlaceSearch.swift TrollRoute/SettingsView.swift \
+  TrollRoute/LocSim/RouteLocationPicker.swift TrollRoute/LocSim/FavoritePlaceEditor.swift TrollRoute/LocSim/PlaceModels.swift TrollRoute/LocSim/PlaceInput.swift TrollRoute/LocSim/AddressQuery.swift TrollRoute/LocSim/PlaceSearch.swift TrollRoute/SettingsView.swift TrollRoute/LocationAccess.swift \
   TrollRoute/LocSim/MapMoveConfirmation.swift TrollRoute/LocSim/MainStopConfirmation.swift "$QA_DIR/LongPressRoute.swift" \
   TrollRoute/LocSim/RouteElevation.swift TrollRoute/LocSim/Altitude.swift TrollRoute/LocSim/AltitudeSheet.swift \
   TrollRoute/LocSim/CoordTransform.swift TrollRoute/LocSim/RouteFinish.swift TrollRoute/LocSim/RouteStop.swift TrollRoute/LocSim/LocationSession.swift "$QA_DIR/Bookmarks.swift" \
@@ -58,7 +58,7 @@ cat "$QA_DIR/gestures.log"
 xcrun xcresulttool export attachments --path "$QA_DIR/Gestures.xcresult" --output-path "$QA_DIR/attachments"
 for appearance in dark light; do
   xcrun simctl ui "$DEVICE" appearance "$appearance"
-  for screen in map settings settings-enabled confirmation search altitude-automatic altitude-custom altitude-negative; do
+  for screen in map settings settings-enabled access-good access-bad confirmation search altitude-automatic altitude-custom altitude-negative; do
     xcrun simctl terminate "$DEVICE" local.trollroute.workspacepreview 2>/dev/null || true
     xcrun simctl launch "$DEVICE" local.trollroute.workspacepreview --screen "$screen" --appearance "$appearance"
     if test "$screen" = search; then sleep 20; else sleep 5; fi

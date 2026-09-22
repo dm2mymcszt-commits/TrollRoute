@@ -6,7 +6,9 @@
 - Branch `experiment/route-motion`, origin `dm2mymcszt-commits/TrollRoute`. Phases0-5 accepted; Phase6 in progress; 7-8 not started.
 - Phase5 acceptance: `0f03411`, full CI35737111085 SUCCESS. Eight actual-map touch tests (hold/double/single + panning), share lifecycle <1s/repeated/background/cold/Favorite, route UI and all model/live checks PASS. Downloaded build41 signature/identity verified; details in audit.
 - Phase5 phone checks remain: private automatic open and real injection, including saved altitude and Snapchat Bitmoji. Code/CI acceptance complete.
-- **Next:** Phase6 R29-R32: document actual registration/authorization behavior and evidence, then implement live status overview + appropriate request/accuracy guidance, model tests and good/bad screenshots. Delete all three ROUND files in the final commit.
+- Phase6 evidence `2daac84`: WhenInUse supports foreground-started updates retained during pause/return; fresh background service start differs. No automatic Always requirement. Phone background/Resume check remains.
+- Live registration/access/accuracy overview implemented with contextual guidance, temporary Precise request, 120-case status tests and good/bad screenshot fixtures; CI pending.
+- **Next:** verify overview build/tests; finish contextual route authorization flow (remove launch/route automatic Always requests), precise-start guidance and usage-string updates, then Phase6 acceptance. Delete all three ROUND files in the final commit.
 
 ## Decisions already approved
 

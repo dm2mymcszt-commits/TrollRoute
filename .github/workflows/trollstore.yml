@@ -159,6 +159,9 @@ jobs:
       - name: Check saved altitude, motion preservation, and worldwide elevation
         run: bash Tests/Altitude/check.sh
 
+      - name: Check location access and registration status
+        run: bash Tests/LocationAccess/check.sh
+
       - name: Check safe map moves and confirmation
         run: bash Tests/MapMoveSafety/check.sh
 

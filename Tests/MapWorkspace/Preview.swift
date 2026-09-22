@@ -129,8 +129,19 @@ struct WorkspacePreview: View {
     }
     var body: some Scene {
         WindowGroup {
-            WorkspacePreview(screen: argument("--screen", fallback: "map"),
-                             appearance: argument("--appearance", fallback: "dark"))
+            if argument("--screen", fallback: "map").hasPrefix("access-") {
+                let good = argument("--screen", fallback: "map") == "access-good"
+                NavigationView {
+                    Form {
+                        LocationAccessOverview(preview: LocationAccessStatus(registration: "System",
+                            authorization: good ? .authorizedWhenInUse : .denied,
+                            accuracy: good ? .fullAccuracy : .reducedAccuracy, servicesEnabled: true))
+                    }.navigationTitle("Settings").navigationBarTitleDisplayMode(.inline)
+                }.preferredColorScheme(argument("--appearance", fallback: "dark") == "dark" ? .dark : .light)
+            } else {
+                WorkspacePreview(screen: argument("--screen", fallback: "map"),
+                                 appearance: argument("--appearance", fallback: "dark"))
+            }
         }
     }
 }
