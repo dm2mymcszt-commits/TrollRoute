@@ -16,7 +16,7 @@ for removed in ['HomeView.swift', 'DaemonView.swift', 'CleanerView.swift', 'Supe
     assert removed not in project, f'{removed} remains in the build'
 print('PASS: full-screen map entry and unused feature sources removed from the build')
 PY
-python3 Tests/MapWorkspace/diagnostics.py "$QA_DIR"
+python3 Tests/MapWorkspace/prepare.py "$QA_DIR"
 PREVIEW_APP="$QA_DIR/MapWorkspacePreview.app"
 mkdir -p "$PREVIEW_APP"
 python3 Tests/RoutePicker/bookmark-support.py "$QA_DIR/Bookmarks.swift"
@@ -45,19 +45,15 @@ xcrun simctl boot "$DEVICE"
 xcrun simctl bootstatus "$DEVICE" -b
 xcrun simctl status_bar "$DEVICE" override --time '9:41' --batteryState charged --batteryLevel 100
 xcrun simctl install "$DEVICE" "$PREVIEW_APP"
-CONTAINER=$(xcrun simctl get_app_container "$DEVICE" local.trollroute.workspacepreview data)
 python3 Tests/MapWorkspace/ui-project.py "$QA_DIR"
 xcodebuild test -project "$QA_DIR/MapGestureTests.xcodeproj" -scheme MapGestureTests \
   -destination "platform=iOS Simulator,id=$DEVICE" -parallel-testing-enabled NO \
   -derivedDataPath "$QA_DIR/DerivedData" -resultBundlePath "$QA_DIR/Gestures.xcresult" \
   CODE_SIGNING_ALLOWED=NO > "$QA_DIR/gestures.log" 2>&1 || {
     xcrun xcresulttool export attachments --path "$QA_DIR/Gestures.xcresult" --output-path "$QA_DIR/attachments" || true
-    cp "$CONTAINER/Documents/workspace-trace.log" "$QA_DIR/workspace-trace.log" || true
-    cat "$QA_DIR/workspace-trace.log" || true
     cat "$QA_DIR/gestures.log"
     exit 1
   }
-cp "$CONTAINER/Documents/workspace-trace.log" "$QA_DIR/workspace-trace.log" || true
 cat "$QA_DIR/gestures.log"
 xcrun xcresulttool export attachments --path "$QA_DIR/Gestures.xcresult" --output-path "$QA_DIR/attachments"
 for appearance in dark light; do

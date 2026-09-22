@@ -1223,3 +1223,9 @@ The hold-only control plus native recognizer states confirm a prevention conflic
 ### Completed isolation matrix
 
 CI35734494554/a7bbdb9: share-lifecycle UI and route-session UI SUCCESS again. Map original hold/double/single still fails on build40 as expected. Standalone observations now complete without XCTest exception: hold-only and taps-only both keep latitude span .097111 unchanged; coexist-hold zooms to .046445 with presses=1,taps=0. Together with native-only success, this supports letting native MapKit gestures coexist with our hold. Build41 23afaf6 tests asymmetric prevention (our hold cannot prevent native gestures; native gestures may prevent it); dcf83cb adds actual pan-with-hold-enabled regression. CI35735308615 and CI35735453902 pending. No original acceptance assertion changed.
+
+### Build41 map regression passes; remove diagnostic experiments
+
+CI35735308615 map job106770928972 SUCCESS: all9 tests, including the original immediate hold -> double-tap zoom -> single location tap regression, five Cancel/Create cycles and fresh double tap. Isolation variants now all zoom (.097111 to .046445); hold counts remain correct. Share lifecycle and route UI also SUCCESS. The asymmetric canPrevent fix is therefore supported by actual touch evidence. Native panning with the route hold remains a separate retained regression in dcf83cb.
+
+Remove diagnostic-only native/isolation tests, launch flags, raw touch recognizer subclasses, per-event traces, trace artifact handling and old diagnostics.py. New prepare.py copies production recognizers unchanged, adding only the event-driven map-region observation required by accessibility assertions; copies LongPressRoute verbatim. Keep hold/double/single, fresh double and native-pan regressions plus existing UI checks. Local generation, shell syntax and whitespace checks pass. Cleaned suite CI pending; no app-code/injection change.

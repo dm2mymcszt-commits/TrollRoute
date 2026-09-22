@@ -52,7 +52,6 @@ jobs:
           path: |
             build/map-workspace-qa/*.png
             build/map-workspace-qa/gestures.log
-            build/map-workspace-qa/workspace-trace.log
             build/map-workspace-qa/Gestures.xcresult
             build/map-workspace-qa/attachments
           if-no-files-found: ignore

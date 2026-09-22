@@ -1,9 +1,9 @@
 import XCTest
 
 final class MapGestureTests: XCTestCase {
-    private func launch(_ screen: String = "gestures", labels: Bool = true, arguments: [String] = []) -> XCUIApplication {
+    private func launch(_ screen: String = "gestures", labels: Bool = true) -> XCUIApplication {
         let app = XCUIApplication(bundleIdentifier: "local.trollroute.workspacepreview")
-        app.launchArguments = ["--screen", screen, "--labels", labels ? "yes" : "no"] + arguments
+        app.launchArguments = ["--screen", screen, "--labels", labels ? "yes" : "no"]
         app.launch()
         XCTAssertTrue(app.buttons["Search"].waitForExistence(timeout: 15))
         let ready = NSPredicate { _, _ in self.mapState(app).count == 4 }
@@ -158,47 +158,6 @@ final class MapGestureTests: XCTestCase {
         }, evaluatedWith: app)
         waitForExpectations(timeout: 5)
         XCTAssertEqual(app.staticTexts["gesture-counts"].label, "presses=0,taps=0")
-    }
-
-    func testNativeMapHoldThenDoubleTapBaseline() {
-        // Diagnostic control: same MapKit view, but no TrollRoute recognizers.
-        // Retain the original production assertions in the test above.
-        let app = launch("gestures-native")
-        let spot = app.coordinate(withNormalizedOffset: CGVector(dx: 0.3, dy: 0.65))
-        spot.press(forDuration: 1)
-        let before = mapState(app)
-        spot.doubleTap()
-        let zoomed = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
-            let after = self.mapState(app)
-            return after.count == 4 && after[2] < before[2] * 0.9
-        }, object: app)
-        let result = XCTWaiter.wait(for: [zoomed], timeout: 5)
-        let observation = XCTAttachment(string: "Native hold/double result: \(result.rawValue); before=\(before); after=\(mapState(app))")
-        observation.name = "native-hold-double-baseline"
-        observation.lifetime = .keepAlways
-        add(observation)
-    }
-
-    func testRecognizerIsolationObservations() {
-        // Isolate our recognizers in the QA copy only. The full production
-        // hold/double/single regression above remains the acceptance test.
-        for variant in ["--hold-only", "--taps-only", "--coexist-hold"] {
-            let app = launch("gestures-long", arguments: [variant])
-            let spot = app.coordinate(withNormalizedOffset: CGVector(dx: 0.3, dy: 0.65))
-            spot.press(forDuration: 1)
-            let before = mapState(app)
-            spot.doubleTap()
-            let zoomed = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
-                let after = self.mapState(app)
-                return after.count == 4 && after[2] < before[2] * 0.9
-            }, object: app)
-            let result = XCTWaiter.wait(for: [zoomed], timeout: 5)
-            let detail = "\(variant): result=\(result.rawValue); before=\(before); after=\(mapState(app)); \(app.staticTexts["gesture-counts"].label)"
-            print(detail)
-            let attachment = XCTAttachment(string: detail)
-            attachment.name = variant; attachment.lifetime = .keepAlways; add(attachment)
-            app.terminate()
-        }
     }
 
     private func renameAndSave(_ app: XCUIApplication, to name: String) {
