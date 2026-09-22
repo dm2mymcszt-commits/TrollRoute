@@ -132,10 +132,9 @@ struct CustomMapView: UIViewRepresentable {
             singleTap = tap
             doubleTapGuard = doubleTap
             tap.require(toFail: doubleTap)
-            let press = UILongPressGestureRecognizer(target: self, action: #selector(handleLongPress(_:)))
+            let press = RouteLongPressRecognizer(target: self, action: #selector(handleLongPress(_:)))
             press.minimumPressDuration = 0.5
-            // Keep MapKit's touch stream intact after the route hold. Cancelling
-            // the underlying view's touches disrupts its next double-tap sequence.
+            // Observe the hold without cancelling the underlying view's touches.
             press.cancelsTouchesInView = false
             press.delegate = self
             press.isEnabled = parent.onLongPress != nil
@@ -428,6 +427,13 @@ struct CustomMapView: UIViewRepresentable {
             return nil
         }
     }
+}
+
+// A route hold observes the map; it must not leave MapKit's tap/zoom recognizers
+// failed through the next touch sequence. Native gestures may still prevent this
+// recognizer (e.g. a pan), and our single tap explicitly waits for the hold to fail.
+final class RouteLongPressRecognizer: UILongPressGestureRecognizer {
+    override func canPrevent(_ preventedGestureRecognizer: UIGestureRecognizer) -> Bool { false }
 }
 
 class MovingAnnotation: NSObject, MKAnnotation {
