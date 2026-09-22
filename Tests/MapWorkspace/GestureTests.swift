@@ -153,10 +153,10 @@ final class MapGestureTests: XCTestCase {
         spot.press(forDuration: 1)
         let before = mapState(app)
         spot.doubleTap()
-        let zoomed = expectation(for: NSPredicate { _, _ in
+        let zoomed = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
             let after = self.mapState(app)
             return after.count == 4 && after[2] < before[2] * 0.9
-        }, evaluatedWith: app)
+        }, object: app)
         let result = XCTWaiter.wait(for: [zoomed], timeout: 5)
         let observation = XCTAttachment(string: "Native hold/double result: \(result.rawValue); before=\(before); after=\(mapState(app))")
         observation.name = "native-hold-double-baseline"
@@ -173,10 +173,10 @@ final class MapGestureTests: XCTestCase {
             spot.press(forDuration: 1)
             let before = mapState(app)
             spot.doubleTap()
-            let zoomed = expectation(for: NSPredicate { _, _ in
+            let zoomed = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
                 let after = self.mapState(app)
                 return after.count == 4 && after[2] < before[2] * 0.9
-            }, evaluatedWith: app)
+            }, object: app)
             let result = XCTWaiter.wait(for: [zoomed], timeout: 5)
             let detail = "\(variant): result=\(result.rawValue); before=\(before); after=\(mapState(app)); \(app.staticTexts["gesture-counts"].label)"
             print(detail)

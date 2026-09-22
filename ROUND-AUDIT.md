@@ -1205,3 +1205,9 @@ Build39 cancelsTouchesInView=false did not resolve hold-then-zoom. Fresh double 
 ### Map recognizer isolation checks
 
 Repeat-share revision fix is84e1b3e/build40. Add QA-only hold-only, taps-only and simultaneous-hold variants, exercising the same hold/double sequence and recording zoom/count outcomes. Log native recognizer class/state pairs and long-press state around SwiftUI updateUIView. This distinguishes failure dependencies, native prevention and representable updates without another speculative production change. The original combined zoom/no-location-change assertions remain mandatory.
+
+### Resumed CI results (2026-09-22)
+
+CI35223404858 at53fb546: build/package/all model and live checks, route-session UI, icon and all four share lifecycle UI tests SUCCESS. The repeated endpoint revision fix is verified by active delivery under1s, both displayed endpoints and source labels; background/cold/no replay/Favorite remain passing. Build39 screenshots inspected: cold shared Start, background Destination with Google source and Saved to Favorites correctly displayed. First-launch timeout did not recur; its earlier video shows a blank launch screen, not an app permission dialog.
+
+Map isolation: hold-only reproduces missing zoom (same .097111 span before/after), so the custom long press is sufficient to interfere even without our tap guards. Native UITap and MKVariableDelayTap recognizers enter failed state when it recognizes and stay failed into the next first tap. The matrix stopped after its first observation because XCTWaiter waited on a testcase-registered expectation, then launch's waitForExpectations tried to wait on that same expectation again. Use standalone XCTNSPredicateExpectation for diagnostic waits; production acceptance assertions unchanged.
