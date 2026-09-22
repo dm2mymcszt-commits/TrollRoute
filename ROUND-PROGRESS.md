@@ -4,11 +4,11 @@
 
 - Source of truth: [ROUND-PLAN.md](ROUND-PLAN.md); detailed evidence and prior failures: [ROUND-AUDIT.md](ROUND-AUDIT.md).
 - Branch `experiment/route-motion`, origin `dm2mymcszt-commits/TrollRoute`. Phases0-4 accepted; Phase5 in progress; 6-8 not started.
-- Latest verified package: build39 `66a6bf4`, CI35192018301 build job SUCCESS (all model/live tests, Favorites concurrency, direct Go, migration, signing and previews), route-session UI SUCCESS. Phone checklist pushed `216de2c`.
+- Latest verified package: build40 `53fb546`, CI35223404858 build job SUCCESS (all model/live tests, Favorites concurrency, direct Go, migration, signing and previews), route-session UI SUCCESS. Downloaded signatures and shared-endpoint screenshots verified. Phone checklist `216de2c`.
 - Phase5 implementation: endpoints/Darwin `cd1d979`, cross-process authority `53e200e`, direct Go `0d4a093`, Favorites `634d0ed` + compiler fix `81aa5a5`. Injection changes still need phone Bitmoji checks.
 - Lifecycle harness `c31e6ec`: background/cold/no-replay/edited Favorite PASS. Prior active test found second share consumed <1s but UI retained old fields; build39 first launch timed out. `84e1b3e` build40 fixes revision/reload and stale writes; all lifecycle UI tests PASS in CI35223404858 (`53fb546`), including active <1s and repeated endpoints.
 - Map: fresh double-tap and no accidental location taps pass; hold-then-zoom still fails despite build39 touch cancellation change. Native-only baseline zooms. Do not weaken the original test or claim fixed.
-- `53fb546` isolation: hold-only reproduces zoom failure; native tap recognizers are prevented by the route hold. Standalone diagnostic expectations fix XCTest reuse error; remaining comparisons pending.
+- `53fb546` isolation: hold-only reproduces zoom failure; native tap recognizers are prevented by the route hold. `a7bbdb9` fixes XCTest expectation reuse; CI35734494554 comparisons pending.
 - **Next:** inspect remaining recognizer-isolation results and fix long-press prevention; finish Phase5 acceptance before Phase6. Keep long evidence in audit. Delete all three ROUND files in the final commit.
 
 ## Decisions already approved
