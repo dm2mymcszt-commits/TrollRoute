@@ -8,8 +8,8 @@
 - Phase5 implementation: endpoints/Darwin `cd1d979`, cross-process authority `53e200e`, direct Go `0d4a093`, Favorites `634d0ed` + compiler fix `81aa5a5`. Injection changes still need phone Bitmoji checks.
 - Lifecycle harness `c31e6ec`: background/cold/no-replay/edited Favorite PASS. Prior active test found second share consumed <1s but UI retained old fields; build39 first launch timed out. `84e1b3e` build40 fixes revision/reload and stale writes; all lifecycle UI tests PASS in CI35223404858 (`53fb546`), including active <1s and repeated endpoints.
 - Map: fresh double-tap and no accidental location taps pass; hold-then-zoom still fails despite build39 touch cancellation change. Native-only baseline zooms. Do not weaken the original test or claim fixed.
-- `53fb546` isolation: hold-only reproduces zoom failure; native tap recognizers are prevented by the route hold. `a7bbdb9` fixes XCTest expectation reuse; CI35734494554 comparisons pending.
-- `23afaf6` build41 makes route holds unable to prevent native MapKit gestures; native pan can still prevent the hold. No injection change. Original full touch test required; added pan-with-hold-enabled regression to verify native panning still cancels route creation.
+- `53fb546` isolation: hold-only reproduces zoom failure; native tap recognizers are prevented by the route hold. `a7bbdb9` comparisons complete: coexist-hold zooms; hold-only/taps-only fail. Share lifecycle and route UI pass again.
+- `23afaf6` build41 makes route holds unable to prevent native MapKit gestures; native pan can still prevent the hold. No injection change. Original full touch test required; `dcf83cb` added pan-with-hold-enabled regression to verify native panning still cancels route creation.
 - **Next:** verify build41 full touch regression and isolation results; finish Phase5 acceptance before Phase6. Keep long evidence in audit. Delete all three ROUND files in the final commit.
 
 ## Decisions already approved
@@ -48,7 +48,7 @@
 | 4 R15, R16, R17 | Done; phone checks remain | `369ef15`, `b0fdc0b`; both sets, all outcomes, three Stop entry points pass; phone Bitmoji check |
 | 4 R14, F3 + acceptance | Done; phone checks remain | `c0962af`, `6d4fa2e`, `e1f3cac`; credits reviewed, moving/paused scrub metadata pass; signed build28; phone Bitmoji check |
 | 5 R7, R8, R9, R10, F4 | In progress | R10/ledger full CI29-30; automatic endpoints and approved keys `cd1d979`; shared quota `5188d2c`. Direct Go/lease and lifecycle UI acceptance remain |
-| 5 acceptance | In progress | Model tests/package pass; repeated-share UI and held-touch zoom fixes pending; phone checklist recorded |
+| 5 acceptance | In progress | Model/package and repeated-share lifecycle PASS; build41 hold/zoom + pan regression pending; phone checklist recorded |
 | 6 R29, R30, R31, R32 | Not started | Registration/access/accuracy status, evidence-based onboarding |
 | 6 acceptance | Not started | Status model tests, good/bad screenshots, documented permission decision |
 | 7 R22, R23, R24 | Not started | Optional Live Activity, exact content/Stop, two notification toggles |
