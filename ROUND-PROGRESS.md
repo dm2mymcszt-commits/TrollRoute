@@ -9,8 +9,8 @@
 - Phase6 evidence `2daac84`: WhenInUse supports foreground-started updates retained during pause/return; fresh background service start differs. No automatic Always requirement. Phone background/Resume check remains.
 - `8556265` build42: live registration/access/accuracy overview implemented with contextual guidance, temporary Precise request, 60-case status tests and good/bad screenshot fixtures; CI pending.
 - `8f56f71` build43: contextual WhenInUse route requests; no launch/automatic Always requests; retained keepalive through pause/repeat, route-access notice and accurate usage strings. Engine suite now runs with WhenInUse; status detail UI test added.
-- Build42 app/package builds; macOS status test exposed platform-unavailable CLAuthorizationStatus.authorizedWhenInUse. Separate pure enums from the iOS adapter; preserve every test case.
-- **Next:** verify corrected CI runs, inspect good/bad status screenshots and signed build43; resolve any failures before Phase6 acceptance. Physical background/Resume and registration checks remain. Delete all three ROUND files in the final commit.
+- Build42 app/package builds; macOS status test exposed platform-unavailable CLAuthorizationStatus.authorizedWhenInUse. `8a8fa70` separates pure enums from the iOS adapter; preserve every test case.
+- **Next:** verify corrected CI runs, inspect good/bad status screenshots and signed build43; resolve any failures before Phase6 acceptance. Actual engine harness now asserts WhenInUse and each iOS adapter mapping. Physical background/Resume and registration checks remain. Delete all three ROUND files in the final commit.
 
 ## Decisions already approved
 

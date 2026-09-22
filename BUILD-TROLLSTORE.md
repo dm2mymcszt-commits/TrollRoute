@@ -15,6 +15,9 @@ This round is in progress. The repository and application identity have been ren
 - Share "Go there now" while idle and during a moving or paused route: confirm the location changes before success, the old route cannot move it back, and TrollRoute stays closed. Check Custom altitude and Automatic altitude, then start another route and recheck Snapchat's driving Bitmoji.
 - Edit a shared place's name and save it as a Favorite without opening TrollRoute. Check it in Favorites, Search and both route pickers; confirm existing/imported Favorites remain.
 
+- Check Settings: registration is informational; location access and Precise Location refresh after changing iOS Settings. If the app page is missing, follow the User-registration instructions, then switch back to System.
+- Grant While Using the App, start a route, switch apps/lock, pause and resume; verify continuous motion and Snapchat. Check the access notice with permission denied, and the temporary Precise Location request with approximate access.
+
 ## Release policy
 
 Create a GitHub Release only when explicitly requested by the owner. Attach the `.tipa` produced by the successful GitHub Actions run, and write added / changed / fixed notes. No Release is created for this round unless separately requested.

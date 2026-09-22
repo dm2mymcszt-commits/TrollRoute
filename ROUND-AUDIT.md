@@ -1257,3 +1257,5 @@ The actual engine regression harness now grants WhenInUse rather than Always, ex
 ### Status test portability correction
 
 8556265 CI35780450363 app/share build succeeded, then native macOS model compile rejected CLAuthorizationStatus.authorizedWhenInUse (unavailable on macOS). Separate pure authorization/accuracy enums from a UIKit-only CoreLocation adapter with exhaustive switches and unknown handling. Keep all 60 matrix cases and unknown cases; no weakened expectation or behavior change. iOS simulator UI and app compilation validate the real adapter.
+
+Actual engine harness also asserts its real simulator authorization is WhenInUse and checks all iOS authorization/accuracy conversions before the existing engine scenarios. This prevents a fixture silently exercising Always instead. Phase6 device checks added to the short BUILD guide.

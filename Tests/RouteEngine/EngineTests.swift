@@ -305,6 +305,22 @@ func testSharedMoveRevokesEngine() {
     }
 }
 
+func testLocationPermissionAdapter() {
+    precondition(CLLocationManager().authorizationStatus == .authorizedWhenInUse,
+                 "The engine suite must exercise foreground-started routes with WhenInUse")
+    let pairs: [(CLAuthorizationStatus, LocationAuthorization)] = [
+        (.notDetermined, .notDetermined), (.restricted, .restricted), (.denied, .denied),
+        (.authorizedAlways, .authorizedAlways), (.authorizedWhenInUse, .authorizedWhenInUse)]
+    for (system, expected) in pairs {
+        for accuracy in [CLAccuracyAuthorization.fullAccuracy, .reducedAccuracy] {
+            let model = LocationAccessStatus(registration: "System", coreAuthorization: system,
+                coreAccuracy: accuracy, servicesEnabled: true)
+            precondition(model.authorization == expected)
+            precondition(model.accuracy == (accuracy == .fullAccuracy ? .fullAccuracy : .reducedAccuracy))
+        }
+    }
+}
+
 @main final class EngineApp: UIResponder, UIApplicationDelegate {
     var window: UIWindow?
     func application(_ application: UIApplication, didFinishLaunchingWithOptions options: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
@@ -313,6 +329,7 @@ func testSharedMoveRevokesEngine() {
         window.makeKeyAndVisible()
         self.window = window
         DispatchQueue.main.async {
+            testLocationPermissionAdapter()
             testRouteFinishEngine()
             testRouteStopEngine()
             testMovingScrubEngine()
