@@ -145,6 +145,21 @@ final class MapGestureTests: XCTestCase {
         XCTAssertEqual(app.staticTexts["gesture-counts"].label, "presses=0,taps=0")
     }
 
+    func testPanWithRouteHoldEnabledDoesNotCreateRouteOrSelectLocation() {
+        let app = launch("gestures-long")
+        let before = mapState(app)
+        let start = app.coordinate(withNormalizedOffset: CGVector(dx: 0.3, dy: 0.65))
+        let end = app.coordinate(withNormalizedOffset: CGVector(dx: 0.3, dy: 0.4))
+        start.press(forDuration: 0.05, thenDragTo: end)
+        expectation(for: NSPredicate { _, _ in
+            let after = self.mapState(app)
+            return before.count == 4 && after.count == 4
+                && abs(after[0] - before[0]) + abs(after[1] - before[1]) > 0.0001
+        }, evaluatedWith: app)
+        waitForExpectations(timeout: 5)
+        XCTAssertEqual(app.staticTexts["gesture-counts"].label, "presses=0,taps=0")
+    }
+
     func testNativeMapHoldThenDoubleTapBaseline() {
         // Diagnostic control: same MapKit view, but no TrollRoute recognizers.
         // Retain the original production assertions in the test above.

@@ -9,7 +9,7 @@
 - Lifecycle harness `c31e6ec`: background/cold/no-replay/edited Favorite PASS. Prior active test found second share consumed <1s but UI retained old fields; build39 first launch timed out. `84e1b3e` build40 fixes revision/reload and stale writes; all lifecycle UI tests PASS in CI35223404858 (`53fb546`), including active <1s and repeated endpoints.
 - Map: fresh double-tap and no accidental location taps pass; hold-then-zoom still fails despite build39 touch cancellation change. Native-only baseline zooms. Do not weaken the original test or claim fixed.
 - `53fb546` isolation: hold-only reproduces zoom failure; native tap recognizers are prevented by the route hold. `a7bbdb9` fixes XCTest expectation reuse; CI35734494554 comparisons pending.
-- Build41 makes route holds unable to prevent native MapKit gestures; native pan can still prevent the hold. No injection change. Original full touch test required.
+- `23afaf6` build41 makes route holds unable to prevent native MapKit gestures; native pan can still prevent the hold. No injection change. Original full touch test required; added pan-with-hold-enabled regression to verify native panning still cancels route creation.
 - **Next:** verify build41 full touch regression and isolation results; finish Phase5 acceptance before Phase6. Keep long evidence in audit. Delete all three ROUND files in the final commit.
 
 ## Decisions already approved
