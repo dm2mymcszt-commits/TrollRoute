@@ -54,6 +54,10 @@ struct LocSimView: View {
     var body: some View {
         LocSimMainView()
     }
+    private var mapLongPressHandler: ((CLLocationCoordinate2D) -> Void)? {
+        guard longPressToCreateRoute else { return nil }
+        return { coordinate in requestLongPressRoute(coordinate) }
+    }
     private var mapLayers: some View {
             ZStack(alignment: .topTrailing) {
                 // MARK: - Main Map
@@ -70,7 +74,7 @@ struct LocSimView: View {
                               }, mapStyle: mapStyle,
                               proposedPosition: mapMove.pendingRequest?.coordinate ?? routeSimulator.previewPosition,
                               proposalIsRoutePreview: mapMove.pendingRequest == nil && routeSimulator.previewPosition != nil,
-                              onLongPress: longPressToCreateRoute ? requestLongPressRoute : nil)
+                              onLongPress: mapLongPressHandler)
                     .onChange(of: tappedCoordinate) { newCoord in
                         guard let coord = newCoord else { return }
                         tappedCoordinate = nil

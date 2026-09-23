@@ -9,7 +9,7 @@
 - Phase6 accepted `d3001cd` build44: full CI35828097056 SUCCESS; nine map UI tests including repeated permission-sheet interactions; all status/engine checks pass. Overview/details visually reviewed; downloaded package signing verified.
 - Phase7 R24 `d375dbb` build45 full CI35829967199 SUCCESS; notification policy/persistence and actual iOS content tests pass. Focus remains a phone check.
 - Live Activity state/commands `30c282c` build46 full CI35860370489 SUCCESS.
-- Integration `d9562c2` build48 CI35862169138 fails app/share compilation in the large map view; the named URL handler alone was insufficient. Split into bounded view expressions, preserving modifier order.
+- Integration `d9562c2` build48 CI35862169138 fails app/share compilation in the large map view; the named URL handler alone was insufficient. Split `ad543cc` narrows the error to map layers; explicitly type the optional long-press closure after adding MainActor isolation.
 - Actual system ActivityKit/intent test host added; no native presentation or interaction claimed yet.
 - **Next:** run the compiler correction/system UI CI; resolve failures, inspect actual Lock Screen/Island/picker presentations, verify package weak links and iOS15 compatibility. Delete all three ROUND files in the final commit.
 
