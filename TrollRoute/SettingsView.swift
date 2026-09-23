@@ -17,6 +17,8 @@ struct SettingsView: View {
     @State private var showFinishPlacePicker = false
     @State private var selectGoAfterPicking = false
     @AppStorage("routeStopDefault", store: SharedPreferences.defaults) private var routeStopDefault = RouteStopAction.previous.rawValue
+    @AppStorage(RouteNotificationPreferences.finishedKey, store: SharedPreferences.defaults) private var routeFinishedNotifications = true
+    @AppStorage(RouteNotificationPreferences.timeSensitiveKey, store: SharedPreferences.defaults) private var routeTimeSensitiveNotifications = false
 
     var body: some View {
         NavigationView {
@@ -70,7 +72,7 @@ struct SettingsView: View {
                             }
                         }
                     }
-                    Text("The starting choice for each new route. Route-specific choices do not change this default. Notifications are requested when you first start a route.")
+                    Text("The starting choice for each new route. Route-specific choices do not change this default.")
                         .font(.caption).foregroundColor(.secondary)
                 }
                 Section("Default action when stopping a route") {
@@ -79,6 +81,13 @@ struct SettingsView: View {
                     }
                     Text("Preselects a choice only. Stopping a route always asks what should happen to your location. If Return to previous spoofed location is unavailable, Stay at current location is selected instead.")
                         .font(.caption).foregroundColor(.secondary)
+                }
+                Section {
+                    Toggle("Route finished", isOn: $routeFinishedNotifications)
+                    Toggle("Time Sensitive", isOn: $routeTimeSensitiveNotifications)
+                        .disabled(!routeFinishedNotifications)
+                } header: { Text("Notifications") } footer: {
+                    Text("Permission is requested when you start a route with notifications enabled. Repeating routes notify only on the first arrival. Time Sensitive can notify during Focus or Do Not Disturb when allowed by iOS. If alerts are blocked, check TrollRoute's notification settings and Allow Time Sensitive Notifications in your Focus settings.")
                 }
                 Section("About") {
                     HStack {

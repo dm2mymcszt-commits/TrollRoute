@@ -1,5 +1,27 @@
 import UIKit
 import MapKit
+import UserNotifications
+
+func testNotificationContent() {
+    let suite = "notification-adapter-\(UUID().uuidString)"
+    let defaults = UserDefaults(suiteName: suite)!
+    defer { defaults.removePersistentDomain(forName: suite) }
+    let preferences = RouteNotificationPreferences(defaults: defaults)
+    for finished in [false, true] {
+        for sensitive in [false, true] {
+            preferences.finished = finished
+            preferences.timeSensitive = sensitive
+            let content = RouteNotifications.content("Returning to start", preferences: preferences)
+            precondition((content != nil) == finished)
+            if let content = content {
+                precondition(content.title == "Route complete" && content.body == "Returning to start")
+                precondition(content.sound != nil)
+                precondition(content.interruptionLevel == (sensitive ? .timeSensitive : .active))
+            }
+        }
+    }
+    print("PASS: actual iOS notification content, suppression and interruption levels")
+}
 
 // Only the privileged output is replaced. The full production RouteSimulator,
 // LocationSession, geometry, altitude and finish code execute in the simulator.
@@ -330,6 +352,7 @@ func testLocationPermissionAdapter() {
         self.window = window
         DispatchQueue.main.async {
             testLocationPermissionAdapter()
+            testNotificationContent()
             testRouteFinishEngine()
             testRouteStopEngine()
             testMovingScrubEngine()

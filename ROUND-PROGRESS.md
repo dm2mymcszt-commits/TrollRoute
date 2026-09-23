@@ -7,8 +7,8 @@
 - Phase5 accepted `0f03411`, full CI35737111085 and signed build41. Private opening/injection still require phone checks.
 - Phase6 permission decision: WhenInUse supports foreground-started continuous updates, retained through pause/return. Fresh background starts differ; Phase7 must respect this. Evidence `2daac84`; phone background/Resume check remains.
 - Phase6 accepted `d3001cd` build44: full CI35828097056 SUCCESS; nine map UI tests including repeated permission-sheet interactions; all status/engine checks pass. Overview/details visually reviewed; downloaded package signing verified.
-- Phase6 acceptance recorded `45996f0`. Phase7 R24 audit complete: filter existing notification delivery using two saved toggles; preserve arrival/repeat rules. App Time Sensitive entitlement is required explicitly by the plan.
-- **Next:** implement/test R24, then audit Live Activity state/commands/extension and compatibility. Physical permission/registration checks remain. Delete all three ROUND files in the final commit.
+- Phase6 acceptance `45996f0`. Phase7 audit `97401e2`; build45 implements R24's saved Route finished/Time Sensitive toggles and requested app entitlement, with policy/persistence and actual iOS content tests. CI pending.
+- **Next:** verify build45; audit Live Activity state/commands/extension and compatibility before implementation. Physical permission/registration/Focus checks remain. Delete all three ROUND files in the final commit.
 
 ## Decisions already approved
 

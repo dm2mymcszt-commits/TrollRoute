@@ -193,3 +193,25 @@ for action in RouteFinishAction.allCases {
     }
 }
 print("PASS: per-trip finish value, unchanged defaults, valid destination and six current-return-leg transitions")
+
+let notificationSuite = "notification-tests-\(UUID().uuidString)"
+let notificationDefaults = UserDefaults(suiteName: notificationSuite)!
+let notificationPreferences = RouteNotificationPreferences(defaults: notificationDefaults)
+require(notificationPreferences.finished && !notificationPreferences.timeSensitive, "Notification defaults must preserve current behavior")
+for enabled in [false, true] {
+    for sensitive in [false, true] {
+        notificationPreferences.finished = enabled
+        notificationPreferences.timeSensitive = sensitive
+        let restored = RouteNotificationPreferences(defaults: UserDefaults(suiteName: notificationSuite)!)
+        require(restored.finished == enabled && restored.timeSensitive == sensitive, "Notification choices persist independently")
+        require(restored.delivery == (!enabled ? .disabled : (sensitive ? .timeSensitive : .active)), "Disabled overrides Time Sensitive")
+    }
+}
+var mutedLoop = RouteFinishState(action: .loop)
+notificationPreferences.finished = false
+require(mutedLoop.arrive().notification != nil && notificationPreferences.delivery == .disabled, "Mute filters delivery, not arrival state")
+notificationPreferences.finished = true
+require(mutedLoop.arrive().notification == nil, "Enabling midway must not replay a repeating route's first arrival")
+require(notificationPreferences.delivery != .disabled, "Existing preference readers must observe mid-route changes")
+notificationDefaults.removePersistentDomain(forName: notificationSuite)
+print("PASS: notification defaults, persistence, all toggle combinations and mid-trip changes")

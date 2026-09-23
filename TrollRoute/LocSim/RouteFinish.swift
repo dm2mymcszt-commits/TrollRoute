@@ -107,6 +107,24 @@ struct RouteFinishState {
     }
 }
 
+/// Read at delivery time so changing a preference also affects an active trip.
+struct RouteNotificationPreferences {
+    static let finishedKey = "routeFinishedNotifications"
+    static let timeSensitiveKey = "routeTimeSensitiveNotifications"
+    let defaults: UserDefaults
+    init(defaults: UserDefaults = SharedPreferences.defaults) { self.defaults = defaults }
+    var finished: Bool {
+        get { defaults.object(forKey: Self.finishedKey) as? Bool ?? true }
+        nonmutating set { defaults.set(newValue, forKey: Self.finishedKey) }
+    }
+    var timeSensitive: Bool {
+        get { defaults.object(forKey: Self.timeSensitiveKey) as? Bool ?? false }
+        nonmutating set { defaults.set(newValue, forKey: Self.timeSensitiveKey) }
+    }
+    enum Delivery: Equatable { case disabled, active, timeSensitive }
+    var delivery: Delivery { !finished ? .disabled : (timeSensitive ? .timeSensitive : .active) }
+}
+
 #if os(iOS)
 import UserNotifications
 
@@ -118,21 +136,28 @@ final class RouteNotifications: NSObject, UNUserNotificationCenterDelegate {
         center.delegate = self
     }
     func requestPermissionIfNeeded() async {
+        guard RouteNotificationPreferences().finished else { return }
         let settings = await center.notificationSettings()
-        if settings.authorizationStatus == .notDetermined {
+        if settings.authorizationStatus == .notDetermined && RouteNotificationPreferences().finished {
             _ = try? await center.requestAuthorization(options: [.alert, .sound])
         }
     }
     func complete(_ message: String) {
+        guard let content = Self.content(message, preferences: RouteNotificationPreferences()) else { return }
+        center.add(UNNotificationRequest(identifier: UUID().uuidString, content: content, trigger: nil))
+    }
+    static func content(_ message: String, preferences: RouteNotificationPreferences) -> UNMutableNotificationContent? {
+        guard preferences.delivery != .disabled else { return nil }
         let content = UNMutableNotificationContent()
         content.title = "Route complete"
         content.body = message
         content.sound = .default
-        center.add(UNNotificationRequest(identifier: UUID().uuidString, content: content, trigger: nil))
+        content.interruptionLevel = preferences.delivery == .timeSensitive ? .timeSensitive : .active
+        return content
     }
     func userNotificationCenter(_ center: UNUserNotificationCenter, willPresent notification: UNNotification,
                                 withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void) {
-        completionHandler([.banner, .list, .sound])
+        completionHandler(RouteNotificationPreferences().finished ? [.banner, .list, .sound] : [])
     }
 }
 #endif
