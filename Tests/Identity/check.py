@@ -41,13 +41,22 @@ if len(sys.argv) > 1:
                     'CFBundleShortVersionString', 'CFBundleVersion']:
             assert built[key] == app[key], (key, built[key], app[key])
         extensions = [n for n in package.namelist() if n.endswith('.appex/Info.plist')]
-        assert extensions == [prefix + 'PlugIns/TrollRouteShare.appex/Info.plist'], extensions
-        share = info(extensions[0])
+        assert sorted(extensions) == sorted([prefix + 'PlugIns/TrollRouteShare.appex/Info.plist',
+            prefix + 'PlugIns/TrollRouteActivity.appex/Info.plist']), extensions
+        widget = info(prefix + 'PlugIns/TrollRouteActivity.appex/Info.plist')
+        assert widget['CFBundleIdentifier'] == 'com.dm2mymcszt.trollroute.activity'
+        assert widget['CFBundleExecutable'] == 'TrollRouteActivity'
+        assert widget['CFBundleVersion'] == app['CFBundleVersion']
+        assert widget['MinimumOSVersion'] == '16.1'
+        assert widget['NSExtension']['NSExtensionPointIdentifier'] == 'com.apple.widgetkit-extension'
+        assert built['NSSupportsLiveActivities'] is True
+        share = info(prefix + 'PlugIns/TrollRouteShare.appex/Info.plist')
         assert share['CFBundleIdentifier'] == 'com.dm2mymcszt.trollroute.share'
         assert share['CFBundleDisplayName'] == 'TrollRoute'
         assert share['CFBundleExecutable'] == 'TrollRouteShare'
         assert share['CFBundleVersion'] == app['CFBundleVersion']
 print('PASS: TrollRoute identity, shared groups and package components')
+assert plistlib.loads((root / 'TrollRouteActivity/entitlements.plist').read_bytes()) == {}, 'Widget has no extra privileges'
 
 # Exact Phase5 four-key extension proposal approved by the owner at997ebc9.
 share_privileges = plistlib.loads((root / 'TrollRouteShare/entitlements.plist').read_bytes())

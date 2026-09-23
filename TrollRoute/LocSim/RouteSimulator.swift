@@ -351,6 +351,7 @@ class RouteSimulator: NSObject, ObservableObject, CLLocationManagerDelegate {
     private var tripID: UUID?
     private var activityStartName = ""
     private var activityEndName = ""
+    private var activityRevision: UInt64 = 0
     private let stopDefaults: UserDefaults
     private let finishDefaults: RouteFinishSettings
     private let now: () -> TimeInterval
@@ -358,6 +359,7 @@ class RouteSimulator: NSObject, ObservableObject, CLLocationManagerDelegate {
 
     func configureFinish(_ configuration: RouteFinishConfiguration) {
         guard configuration.isValid else { return }
+        activityRevision &+= 1
         finishConfiguration = configuration
         if isSimulating { finishState.changeAction(configuration.action) }
     }
@@ -374,7 +376,7 @@ class RouteSimulator: NSObject, ObservableObject, CLLocationManagerDelegate {
             speedKmh: journey.speedKmh,
             destination: finishState.returning ? activityStartName : activityEndName,
             paused: isPaused, stop: stop, leg: finishState.completedLegs + 1,
-            finishAction: finishConfiguration.action.rawValue)
+            finishAction: finishConfiguration.action.rawValue, revision: activityRevision)
     }
 
     /// Intents must run on the app's main thread and use this active engine.
@@ -601,6 +603,7 @@ class RouteSimulator: NSObject, ObservableObject, CLLocationManagerDelegate {
             return
         }
         tripID = UUID()
+        activityRevision = 0
         func endpointLabel(_ coordinate: CLLocationCoordinate2D) -> String {
             String(format: "%.5f, %.5f", coordinate.latitude, coordinate.longitude)
         }
@@ -632,6 +635,7 @@ class RouteSimulator: NSObject, ObservableObject, CLLocationManagerDelegate {
 
     func togglePause() {
         guard isSimulating else { return }
+        activityRevision &+= 1
         if isPaused {
             isPaused = false
             startBackgroundTask()
@@ -651,6 +655,7 @@ class RouteSimulator: NSObject, ObservableObject, CLLocationManagerDelegate {
         guard isSimulating, kmh.isFinite else { return }
         advanceRoute() // Account for time at the previous speed first.
         guard isSimulating else { return }
+        activityRevision &+= 1
         journey?.changeSpeed(kmh)
         updateLocation()
     }
@@ -680,6 +685,7 @@ class RouteSimulator: NSObject, ObservableObject, CLLocationManagerDelegate {
         // committing the single instantaneous jump when the finger is released.
         advanceRoute()
         guard isSimulating else { previewPosition = nil; return }
+        activityRevision &+= 1
         journey?.seek(fraction)
         previewPosition = nil
         seekFraction = nil

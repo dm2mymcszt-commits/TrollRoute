@@ -63,6 +63,7 @@ echo "Adding entitlements"
 ldid -S"$WORKING_LOCATION/entitlements.plist" "$TARGET_APP/$APPLICATION_NAME"
 # Sign the share extension
 ldid -S"$WORKING_LOCATION/TrollRouteShare/entitlements.plist" "$TARGET_APP/PlugIns/TrollRouteShare.appex/TrollRouteShare"
+ldid -S"$WORKING_LOCATION/TrollRouteActivity/entitlements.plist" "$TARGET_APP/PlugIns/TrollRouteActivity.appex/TrollRouteActivity"
 
 # Package .ipa
 rm -rf Payload

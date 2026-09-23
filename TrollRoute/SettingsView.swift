@@ -1,5 +1,6 @@
 import SwiftUI
 
+@MainActor
 struct SettingsView: View {
     @Environment(\.dismiss) private var dismiss
     @AppStorage("mapAppearance", store: SharedPreferences.defaults) private var mapAppearance = "system"
@@ -89,6 +90,7 @@ struct SettingsView: View {
                 } header: { Text("Notifications") } footer: {
                     Text("Permission is requested when you start a route with notifications enabled. Repeating routes notify only on the first arrival. Time Sensitive can notify during Focus or Do Not Disturb when allowed by iOS. If alerts are blocked, check TrollRoute's notification settings and Allow Time Sensitive Notifications in your Focus settings.")
                 }
+                RouteActivitySettings()
                 Section("About") {
                     HStack {
                         Text("TrollRoute")

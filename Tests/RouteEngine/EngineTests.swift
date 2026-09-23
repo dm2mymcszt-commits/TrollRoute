@@ -98,6 +98,11 @@ func testActivityStateAndCommands() {
     let f = EngineFixture()
     defer { f.close() }
     precondition(f.engine.activitySnapshot == nil)
+    let preference = RouteActivityPreference(defaults: f.defaults)
+    precondition(!preference.enabled, "Live Activity is opt-in")
+    preference.enabled = true
+    precondition(RouteActivityPreference(defaults: UserDefaults(suiteName: f.suite)!).enabled)
+    preference.enabled = false
     f.prepare()
     f.engine.configureFinish(RouteFinishConfiguration(action: .backAndForth))
     f.engine.startSimulation(startName: "Original start", destinationName: "Destination")
@@ -145,6 +150,21 @@ func testActivityStateAndCommands() {
     precondition(send(.pause) == .applied && send(.pause) == .applied)
     precondition(f.engine.activitySnapshot!.paused && f.owner.current!.speed == 0)
     let paused = f.engine.activitySnapshot!
+    var policy = RouteActivityUpdatePolicy()
+    precondition(policy.accept(initial, at: 0))
+    precondition(!policy.accept(moving, at: 1), "Normal motion updates are coalesced")
+    precondition(policy.accept(moving, at: 5))
+    precondition(policy.accept(afterSpeed, at: 5.1), "Speed changes update immediately")
+    precondition(policy.accept(paused, at: 5.2), "Pause updates immediately")
+    precondition(!policy.accept(paused, at: 15), "Identical frozen content needs no update")
+    precondition(policy.accept(nil, at: 15.1), "End immediately")
+    for supported in [false, true] {
+        for enabled in [false, true] {
+            let value = RouteActivityAvailability.evaluate(systemSupportsActivities: supported, activitiesEnabled: enabled)
+            precondition((value == .supported) == (supported && enabled))
+            precondition((value.reason == nil) == (supported && enabled))
+        }
+    }
     f.clock += 20; f.engine.advanceRoute()
     precondition(f.engine.activitySnapshot == paused, "Paused content must remain frozen")
     f.engine.seek(to: 0.1)

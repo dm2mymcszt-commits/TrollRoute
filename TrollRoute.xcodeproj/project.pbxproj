@@ -7,6 +7,14 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+CDA7000300000000000000D2 /* TrollRouteActivity.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = CDA70003000000000000000A; settings = {ATTRIBUTES = (RemoveHeadersOnCopy,); }; };
+CDA7000300000000000000CC = {isa = PBXBuildFile; fileRef = CDA700010000000000000101; };
+CDA7000300000000000000CB = {isa = PBXBuildFile; fileRef = CDA700030000000000000004; };
+CDA7000300000000000000CA = {isa = PBXBuildFile; fileRef = CDA700030000000000000003; };
+CDA7000300000000000000C9 = {isa = PBXBuildFile; fileRef = CDA700030000000000000001; };
+CDA700030000000000000067 /* RouteActivityIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = CDA700030000000000000003; };
+CDA700030000000000000066 /* RouteActivityController.swift in Sources */ = {isa = PBXBuildFile; fileRef = CDA700030000000000000002; };
+CDA700030000000000000065 /* RouteActivityAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = CDA700030000000000000001; };
         CDA700020000000000000201 /* RouteRuntime.swift in Sources */ = {isa = PBXBuildFile; fileRef = CDA700020000000000000101 /* RouteRuntime.swift */; };
         CDA700010000000000000201 /* RouteActivityState.swift in Sources */ = {isa = PBXBuildFile; fileRef = CDA700010000000000000101 /* RouteActivityState.swift */; };
         CDA600010000000000000201 /* LocationAccess.swift in Sources */ = {isa = PBXBuildFile; fileRef = CDA600010000000000000101 /* LocationAccess.swift */; };
@@ -76,6 +84,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
+CDA70003000000000000000B = {isa = PBXContainerItemProxy; containerPortal = FAA456C92B265FEA00FC7287; proxyType = 1; remoteGlobalIDString = CDA700030000000000000014; remoteInfo = TrollRouteActivity; };
 		796072EA2B4F4FAE00737B5D /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = FAA456C92B265FEA00FC7287 /* Project object */;
@@ -107,6 +116,7 @@
 			dstSubfolderSpec = 13;
 			files = (
 				796072EC2B4F4FAE00737B5D /* TrollRouteShare.appex in Embed Foundation Extensions */,
+                CDA7000300000000000000D2,
 			);
 			name = "Embed Foundation Extensions";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -115,6 +125,11 @@
 
 
 /* Begin PBXFileReference section */
+CDA70003000000000000000A /* TrollRouteActivity.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = TrollRouteActivity.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+CDA700030000000000000004 /* TrollRouteActivity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TrollRouteActivity/TrollRouteActivity.swift"; sourceTree = SOURCE_ROOT; };
+CDA700030000000000000003 /* RouteActivityIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TrollRoute/LiveActivity/RouteActivityIntent.swift"; sourceTree = SOURCE_ROOT; };
+CDA700030000000000000002 /* RouteActivityController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TrollRoute/LiveActivity/RouteActivityController.swift"; sourceTree = SOURCE_ROOT; };
+CDA700030000000000000001 /* RouteActivityAttributes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TrollRoute/LiveActivity/RouteActivityAttributes.swift"; sourceTree = SOURCE_ROOT; };
         CDA700020000000000000101 /* RouteRuntime.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TrollRoute/LiveActivity/RouteRuntime.swift"; sourceTree = SOURCE_ROOT; };
         CDA700010000000000000101 /* RouteActivityState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TrollRoute/LiveActivity/RouteActivityState.swift"; sourceTree = SOURCE_ROOT; };
         CDA600010000000000000101 /* LocationAccess.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationAccess.swift; sourceTree = "<group>"; };
@@ -181,6 +196,7 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
+CDA700030000000000000017 = {isa = PBXFrameworksBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
 		796072DB2B4F4FAE00737B5D /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -290,6 +306,7 @@
 				FAA456E12B265FED00FC7287 /* TrollRouteTests.xctest */,
 				FAA456EB2B265FED00FC7287 /* TrollRouteUITests.xctest */,
 				796072DE2B4F4FAE00737B5D /* TrollRouteShare.appex */,
+                CDA70003000000000000000A /* TrollRouteActivity.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -315,6 +332,10 @@
                 CDA600010000000000000101 /* LocationAccess.swift */,
                 CDA700010000000000000101 /* RouteActivityState.swift */,
                 CDA700020000000000000101 /* RouteRuntime.swift */,
+                CDA700030000000000000004,
+                CDA700030000000000000003,
+                CDA700030000000000000002,
+                CDA700030000000000000001,
 				79DF26982B31C90C005D81D2 /* WelcomeView.swift */,
 				799488A42B347E1100AFFDCF /* LocSim */,
 				790301BF2B377E850044E30A /* Translations */,
@@ -343,6 +364,7 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
+CDA700030000000000000014 /* TrollRouteActivity */ = {isa = PBXNativeTarget; buildConfigurationList = CDA700030000000000000015; buildPhases = (CDA700030000000000000016, CDA700030000000000000017, CDA700030000000000000018,); buildRules = (); dependencies = (); name = TrollRouteActivity; productName = TrollRouteActivity; productReference = CDA70003000000000000000A; productType = "com.apple.product-type.app-extension"; };
 		796072DD2B4F4FAE00737B5D /* TrollRouteShare */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 796072F02B4F4FAE00737B5D /* Build configuration list for PBXNativeTarget "TrollRouteShare" */;
@@ -373,6 +395,7 @@
 			);
 			dependencies = (
 				796072EB2B4F4FAE00737B5D /* PBXTargetDependency */,
+                CDA70003000000000000000C,
 			);
 			name = TrollRoute;
 			packageProductDependencies = (
@@ -482,11 +505,13 @@
 				FAA456E02B265FED00FC7287 /* TrollRouteTests */,
 				FAA456EA2B265FED00FC7287 /* TrollRouteUITests */,
 				796072DD2B4F4FAE00737B5D /* TrollRouteShare */,
+                CDA700030000000000000014 /* TrollRouteActivity */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+CDA700030000000000000018 = {isa = PBXResourcesBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
 		796072DC2B4F4FAE00737B5D /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -522,6 +547,7 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+CDA700030000000000000016 = {isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (CDA7000300000000000000C9, CDA7000300000000000000CA, CDA7000300000000000000CB, CDA7000300000000000000CC,); runOnlyForDeploymentPostprocessing = 0; };
 		796072DA2B4F4FAE00737B5D /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -578,6 +604,9 @@
                 CDA400020000000000000101 /* RouteStop.swift in Sources */,
                 CDA700010000000000000201 /* RouteActivityState.swift in Sources */,
                 CDA700020000000000000201 /* RouteRuntime.swift in Sources */,
+                CDA700030000000000000067,
+                CDA700030000000000000066,
+                CDA700030000000000000065,
                 CDA400030000000000000101 /* RouteStopDialog.swift in Sources */,
                 CDA400010000000000000101 /* RouteFinishControls.swift in Sources */,
 				CDA300020000000000000101 /* LongPressRoute.swift in Sources */,
@@ -611,6 +640,7 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
+CDA70003000000000000000C = {isa = PBXTargetDependency; target = CDA700030000000000000014; targetProxy = CDA70003000000000000000B; };
 		796072EB2B4F4FAE00737B5D /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = 796072DD2B4F4FAE00737B5D /* TrollRouteShare */;
@@ -632,13 +662,47 @@
 /* End PBXVariantGroup section */
 
 /* Begin XCBuildConfiguration section */
+CDA70003000000000000001F = {isa = XCBuildConfiguration; buildSettings = {
+ APPLICATION_EXTENSION_API_ONLY = YES;
+ CODE_SIGN_ENTITLEMENTS = TrollRouteActivity/entitlements.plist;
+ CODE_SIGN_STYLE = Automatic;
+ CURRENT_PROJECT_VERSION = 48;
+ GENERATE_INFOPLIST_FILE = YES;
+ INFOPLIST_FILE = TrollRouteActivity/Info.plist;
+ IPHONEOS_DEPLOYMENT_TARGET = 16.1;
+ LD_RUNPATH_SEARCH_PATHS = ("$(inherited)", "@executable_path/Frameworks", "@executable_path/../../Frameworks",);
+ MARKETING_VERSION = 3.0.0;
+ PRODUCT_BUNDLE_IDENTIFIER = com.dm2mymcszt.trollroute.activity;
+ PRODUCT_NAME = "$(TARGET_NAME)";
+ SDKROOT = iphoneos;
+ SKIP_INSTALL = YES;
+ SWIFT_VERSION = 5.0;
+ TARGETED_DEVICE_FAMILY = "1,2";
+ }; name = Release; };
+CDA70003000000000000001E = {isa = XCBuildConfiguration; buildSettings = {
+ APPLICATION_EXTENSION_API_ONLY = YES;
+ CODE_SIGN_ENTITLEMENTS = TrollRouteActivity/entitlements.plist;
+ CODE_SIGN_STYLE = Automatic;
+ CURRENT_PROJECT_VERSION = 48;
+ GENERATE_INFOPLIST_FILE = YES;
+ INFOPLIST_FILE = TrollRouteActivity/Info.plist;
+ IPHONEOS_DEPLOYMENT_TARGET = 16.1;
+ LD_RUNPATH_SEARCH_PATHS = ("$(inherited)", "@executable_path/Frameworks", "@executable_path/../../Frameworks",);
+ MARKETING_VERSION = 3.0.0;
+ PRODUCT_BUNDLE_IDENTIFIER = com.dm2mymcszt.trollroute.activity;
+ PRODUCT_NAME = "$(TARGET_NAME)";
+ SDKROOT = iphoneos;
+ SKIP_INSTALL = YES;
+ SWIFT_VERSION = 5.0;
+ TARGETED_DEVICE_FAMILY = "1,2";
+ }; name = Debug; };
 		796072EE2B4F4FAE00737B5D /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = "TrollRouteShare/TrollRouteShare.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 47;
+				CURRENT_PROJECT_VERSION = 48;
 				DEVELOPMENT_TEAM = 7G89J82G2A;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "TrollRouteShare/Info.plist";
@@ -667,7 +731,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = "TrollRouteShare/TrollRouteShare.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 47;
+				CURRENT_PROJECT_VERSION = 48;
 				DEVELOPMENT_TEAM = 7G89J82G2A;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "TrollRouteShare/Info.plist";
@@ -818,8 +882,10 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = TrollRoute/TrollRoute.entitlements;
+                SWIFT_ACTIVE_COMPILATION_CONDITIONS = "$(inherited) TROLLROUTE_APP";
+                OTHER_LDFLAGS = "$(inherited) -weak_framework ActivityKit -weak_framework AppIntents";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 47;
+				CURRENT_PROJECT_VERSION = 48;
 				DEVELOPMENT_ASSET_PATHS = "\"TrollRoute/Preview Content\"";
 				DEVELOPMENT_TEAM = 7G89J82G2A;
 				ENABLE_PREVIEWS = YES;
@@ -857,8 +923,10 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = TrollRoute/TrollRoute.entitlements;
+                SWIFT_ACTIVE_COMPILATION_CONDITIONS = "$(inherited) TROLLROUTE_APP";
+                OTHER_LDFLAGS = "$(inherited) -weak_framework ActivityKit -weak_framework AppIntents";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 47;
+				CURRENT_PROJECT_VERSION = 48;
 				DEVELOPMENT_ASSET_PATHS = "\"TrollRoute/Preview Content\"";
 				DEVELOPMENT_TEAM = 7G89J82G2A;
 				ENABLE_PREVIEWS = YES;
@@ -895,7 +963,7 @@
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 47;
+				CURRENT_PROJECT_VERSION = 48;
 				DEVELOPMENT_TEAM = 7G89J82G2A;
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
@@ -915,7 +983,7 @@
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 47;
+				CURRENT_PROJECT_VERSION = 48;
 				DEVELOPMENT_TEAM = 7G89J82G2A;
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
@@ -934,7 +1002,7 @@
 			buildSettings = {
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 47;
+				CURRENT_PROJECT_VERSION = 48;
 				DEVELOPMENT_TEAM = 7G89J82G2A;
 				GENERATE_INFOPLIST_FILE = YES;
 				MARKETING_VERSION = 3.0.0;
@@ -952,7 +1020,7 @@
 			buildSettings = {
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 47;
+				CURRENT_PROJECT_VERSION = 48;
 				DEVELOPMENT_TEAM = 7G89J82G2A;
 				GENERATE_INFOPLIST_FILE = YES;
 				MARKETING_VERSION = 3.0.0;
@@ -968,6 +1036,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+CDA700030000000000000015 = {isa = XCConfigurationList; buildConfigurations = (CDA70003000000000000001E, CDA70003000000000000001F,); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release; };
 		796072F02B4F4FAE00737B5D /* Build configuration list for PBXNativeTarget "TrollRouteShare" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (

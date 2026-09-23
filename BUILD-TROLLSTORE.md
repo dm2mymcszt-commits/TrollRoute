@@ -18,6 +18,7 @@ This round is in progress. The repository and application identity have been ren
 - Check Settings: registration is informational; location access and Precise Location refresh after changing iOS Settings. If the app page is missing, follow the User-registration instructions, then switch back to System.
 - Grant While Using the App, start a route, switch apps/lock, pause and resume; verify continuous motion and Snapchat. Check the access notice with permission denied, and the temporary Precise Location request with approximate access.
 - Check Route finished off/on, then Time Sensitive off/on during Focus (allow it in iOS notification and Focus settings). Repeating trips notify only on their first arrival; a one-time return notifies at both ends.
+- Live Activity is optional and off by default. On supported iOS, test Lock Screen progress, live speed/seek changes, Pause/Resume, all Stop choices and the specific-place picker. Check the current leg's destination during a return. Test iOS 16 controls opening the app and iOS 17 controls acting in place. Native Dynamic Island presentation and interaction have not been tested on physical TrollStore hardware. iOS 15 launch and locked-screen behavior still require device verification.
 
 ## Release policy
 

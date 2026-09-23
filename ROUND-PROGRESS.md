@@ -9,7 +9,8 @@
 - Phase6 accepted `d3001cd` build44: full CI35828097056 SUCCESS; nine map UI tests including repeated permission-sheet interactions; all status/engine checks pass. Overview/details visually reviewed; downloaded package signing verified.
 - Phase7 R24 `d375dbb` build45 full CI35829967199 SUCCESS; notification policy/persistence and actual iOS content tests pass. Focus remains a phone check.
 - Live Activity state/commands `30c282c` build46 engine tests pass; full CI pending. Runtime/handoff `83f7c02` build47 hits LocSimMainView type-check complexity; named handler correction follows.
-- **Next:** verify compiler correction; finish local ActivityKit/widget/settings integration, then actual system/picker UI and compatibility checks. Delete all three ROUND files in the final commit.
+- Compiler correction `262e786` pushed. Build48 integrates ActivityKit, widget/intents, settings and empty widget signing privileges; acceptance pending.
+- **Next:** verify build48 CI; add actual system/picker UI and intent tests, inspect all required presentations, verify package weak links and iOS15 compatibility. Delete all three ROUND files in the final commit.
 
 ## Decisions already approved
 

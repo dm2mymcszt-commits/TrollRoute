@@ -51,6 +51,7 @@ with zipfile.ZipFile(package) as archive:
 
     inspect_binary(app+'TrollRoute', 'entitlements.plist')
     inspect_binary(app+'PlugIns/TrollRouteShare.appex/TrollRouteShare', 'TrollRouteShare/entitlements.plist')
+    inspect_binary(app+'PlugIns/TrollRouteActivity.appex/TrollRouteActivity', 'TrollRouteActivity/entitlements.plist')
 
 print('SHA256:', hashlib.sha256(package.read_bytes()).hexdigest())
 print('Package inspection passed:', package.resolve())

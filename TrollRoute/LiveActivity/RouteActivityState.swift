@@ -24,6 +24,7 @@ struct RouteActivityState: Codable, Hashable {
     // Used to identify leg/configuration changes, never extra visible content.
     let leg: Int
     let finishAction: String
+    var revision: UInt64 = 0
 
     /// Bound by UTF-8 bytes, including pathological combining-character names.
     /// This leaves room under ActivityKit's 4 KB attributes + content limit.
@@ -39,6 +40,46 @@ struct RouteActivityState: Codable, Hashable {
             bytes += size
         }
         return result
+    }
+}
+
+enum RouteActivityAvailability: Equatable {
+    case supported, oldSystem, systemDisabled
+    static func evaluate(systemSupportsActivities: Bool, activitiesEnabled: Bool) -> Self {
+        !systemSupportsActivities ? .oldSystem : (activitiesEnabled ? .supported : .systemDisabled)
+    }
+    var reason: String? {
+        switch self {
+        case .supported: return nil
+        case .oldSystem: return "Live Activity requires iOS 16.1 or later."
+        case .systemDisabled: return "Live Activities are turned off or unavailable in iOS Settings."
+        }
+    }
+}
+
+struct RouteActivityPreference {
+    static let key = "routeLiveActivity"
+    let defaults: UserDefaults
+    var enabled: Bool {
+        get { defaults.bool(forKey: Self.key) }
+        nonmutating set { defaults.set(newValue, forKey: Self.key) }
+    }
+}
+
+struct RouteActivityUpdatePolicy {
+    private(set) var lastState: RouteActivityState?
+    private(set) var lastTime: TimeInterval?
+
+    mutating func accept(_ state: RouteActivityState?, at time: TimeInterval) -> Bool {
+        guard state != lastState else { return false }
+        let immediate = state?.tripID != lastState?.tripID || state?.revision != lastState?.revision
+            || state?.paused != lastState?.paused || state?.stop != lastState?.stop
+            || state?.leg != lastState?.leg || state?.finishAction != lastState?.finishAction
+            || state?.speedKmh != lastState?.speedKmh
+        guard immediate || time - (lastTime ?? -.infinity) >= 5 else { return false }
+        lastState = state
+        lastTime = time
+        return true
     }
 }
 

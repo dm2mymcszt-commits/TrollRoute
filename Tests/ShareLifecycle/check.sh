@@ -16,7 +16,7 @@ xcrun --sdk iphonesimulator swiftc -target arm64-apple-ios17.0-simulator \
   TrollRoute/LocSim/CustomMapView.swift TrollRoute/LocSim/FloatingQuickMenu.swift \
   TrollRoute/LocSim/MapMoveConfirmation.swift TrollRoute/LocSim/MainStopConfirmation.swift \
   TrollRoute/LocSim/LongPressRoute.swift TrollRoute/LocSim/GPXParser.swift TrollRoute/LocSim/JoystickView.swift \
-  TrollRoute/LocSim/RouteLocationPicker.swift TrollRoute/LocSim/FavoritePlaceEditor.swift TrollRoute/SettingsView.swift TrollRoute/LocationAccess.swift \
+  TrollRoute/LocSim/RouteLocationPicker.swift TrollRoute/LocSim/FavoritePlaceEditor.swift TrollRoute/LiveActivity/RouteActivityAttributes.swift TrollRoute/LiveActivity/RouteActivityController.swift TrollRoute/SettingsView.swift TrollRoute/LocationAccess.swift \
   "$QA_DIR/RouteLocationSample.swift" "$QA_DIR/EngineFixture.swift" "$QA_DIR/Bookmarks.swift" \
   "$QA_DIR/SharedPlace.swift" "$QA_DIR/SharePlaceView.swift" "$QA_DIR/LocSimView.swift" \
   "$QA_DIR/RouteSimView.swift" "$QA_DIR/FavoritesView.swift" Tests/ShareLifecycle/Host.swift \
