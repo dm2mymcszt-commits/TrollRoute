@@ -23,9 +23,16 @@ hdiutil attach -nobrowse -readonly -plist "$QA_DIR/runtime.dmg" > "$QA_DIR/mount
 MOUNT=$(python3 -c 'import plistlib,sys; print(next(x["mount-point"] for x in plistlib.load(open(sys.argv[1],"rb"))["system-entities"] if "mount-point" in x))' "$QA_DIR/mount.plist")
 PACKAGE=$(find "$MOUNT" -maxdepth 2 -name '*.pkg' -print -quit)
 test -n "$PACKAGE"
-sudo installer -pkg "$PACKAGE" -target /
+# The legacy installer targets the sealed system volume. Install its unchanged
+# runtime bundle in CoreSimulator's supported runtime directory instead.
+pkgutil --expand-full "$PACKAGE" "$QA_DIR/expanded-runtime"
+BUNDLE=$(find "$QA_DIR/expanded-runtime" -type d -name '*.simruntime' -print -quit)
+test -n "$BUNDLE"
+sudo mkdir -p /Library/Developer/CoreSimulator/Profiles/Runtimes
+sudo ditto "$BUNDLE" "/Library/Developer/CoreSimulator/Profiles/Runtimes/$(basename "$BUNDLE")"
 hdiutil detach "$MOUNT"
 xcrun simctl list runtimes -j > "$QA_DIR/runtimes.json"
+python3 -c 'import json,sys; print([{k:r.get(k) for k in ("name","version","isAvailable","availabilityError")} for r in json.load(open(sys.argv[1]))["runtimes"] if r.get("version") == "15.5"])' "$QA_DIR/runtimes.json"
 RUNTIME=$(python3 -c 'import json,sys; print(next(r["identifier"] for r in json.load(open(sys.argv[1]))["runtimes"] if r["isAvailable"] and r["version"] == "15.5"))' "$QA_DIR/runtimes.json")
 DEVICE=$(xcrun simctl create TrollRoute15QA com.apple.CoreSimulator.SimDeviceType.iPhone-13 "$RUNTIME")
 trap 'xcrun simctl shutdown "$DEVICE" || true; xcrun simctl delete "$DEVICE" || true' EXIT

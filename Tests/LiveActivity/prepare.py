@@ -9,6 +9,13 @@ import sys
 
 out = Path(sys.argv[1]).resolve()
 runpy.run_path('Tests/ShareLifecycle/prepare.py', run_name='__main__')
+# Leave enough route distance for actual system animations and speed/return
+# interactions; the short engine-unit fixture would finish mid-UI test.
+fixture = (out / 'EngineFixture.swift').read_text(encoding='utf-8')
+old = 'let b = CLLocationCoordinate2D(latitude: 44.81, longitude: -0.59)'
+assert fixture.count(old) == 1
+(out / 'EngineFixture.swift').write_text(fixture.replace(old,
+    'let b = CLLocationCoordinate2D(latitude: 44.9, longitude: -0.5)'), encoding='utf-8')
 runtime = Path('TrollRoute/LiveActivity/RouteRuntime.swift').read_text(encoding='utf-8')
 assert runtime.count('simulator = RouteSimulator()') == 1
 (out / 'RouteRuntime.swift').write_text(runtime.replace('simulator = RouteSimulator()',

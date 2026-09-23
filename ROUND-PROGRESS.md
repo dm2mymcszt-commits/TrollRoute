@@ -11,6 +11,7 @@
 - Live Activity state/commands `30c282c` build46 full CI35860370489 SUCCESS.
 - Map callback correction `c9a2203`: full CI35888093297 SUCCESS, all six jobs. Actual system tests pass Pause/Resume, both Stop sets/Cancel/outcomes, compact/minimal/expanded/Lock Screen capture. Downloaded and visually reviewed expanded/Stop: all choices fit. Lock Screen needs normal post-Allow capture.
 - Phase7 integration/widget `d9562c2` builds after `c9a2203`. No new widget privileges. `caf8e95` adds picker/speed/return/toggle tests and iOS15 workflow. Binary checks confirm app weak links but expose old share minimum16; correct to15 in build49.
+- iOS15 probe35896461537 stopped at legacy installer system-volume path; retry unchanged runtime in CoreSimulator directory. Build49 `38f11ad` CI35896865716 pending.
 - **Next:** run extended system CI and the separate iOS15 launch workflow; inspect screenshots/package, resolve failures. No Phase7 acceptance yet. Delete all three ROUND files in the final commit.
 
 ## Decisions already approved
