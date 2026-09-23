@@ -1263,3 +1263,9 @@ Actual engine harness also asserts its real simulator authorization is WhenInUse
 ### Phase6 UI query correction
 
 Build43 CI35781124443 map test failed only at the new registration explanation query. Its retained video (build/phase6-status-ui, frame120) shows the sheet and exact text correctly. The XCTest query used `staticTexts.containing`, searching descendants inside text nodes; use `staticTexts.matching` to match the text itself. Preserve the assertion, add retained screenshots of both details, and rerun. Good dark and denied light overview images from CI35780450363 were visually reviewed: System remains informational; authorization and precision show correct green/warning states without clipping. Actual engine authorization checks are committed in a49f025; no app behavior changes in this test correction.
+
+### Phase6 detail presentation root cause (2026-09-23)
+
+44152e9 CI35784291767 still fails both detail assertions: screenshots/hierarchies at assertion time show only Settings, whereas the earlier recording briefly shows the detail. Correcting the query was necessary but insufficient. LocationAccessOverview attaches its sheet to a SwiftUI Section, a non-rendering collection of rows, distributing the presentation modifier across multiple Form children. Those competing presenters share one selection; dismissal can clear it immediately. Move the sheet to one stable row presenter, retain the text/button assertions, and exercise repeated open/Done cycles for all three rows. No delay/retry workaround or motion change. Status matrix, app package, engine WhenInUse assertions and the other UI suites already pass; Phase6 is not accepted until the detail regression passes.
+
+Downloaded 8a8fa70 build43 verified locally: arm64 app/share, expected entitlements, iOS15 minimum, SHA256 b4aae2f679121bf0868330b61720106ad12bdcce49d56189eaad6a6aba7527a0. All four good/bad light/dark overview screenshots reviewed and legible.
