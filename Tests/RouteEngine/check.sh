@@ -19,7 +19,7 @@ with open(sys.argv[2], 'wb') as f:
 PY
 xcrun --sdk iphonesimulator swiftc -target arm64-apple-ios17.0-simulator \
   -sdk "$(xcrun --sdk iphonesimulator --show-sdk-path)" \
-  TrollRoute/Storage/SharedPreferences.swift TrollRoute/LocSim/RouteSimulator.swift TrollRoute/LocationAccess.swift \
+  TrollRoute/Storage/SharedPreferences.swift TrollRoute/LocSim/RouteSimulator.swift TrollRoute/LiveActivity/RouteActivityState.swift TrollRoute/LocationAccess.swift \
   TrollRoute/LocSim/RouteFinish.swift TrollRoute/LocSim/RouteStop.swift TrollRoute/LocSim/CoordTransform.swift \
   TrollRoute/LocSim/RouteElevation.swift TrollRoute/LocSim/Altitude.swift \
   TrollRoute/LocSim/LocationSession.swift "$QA_DIR/RouteLocationSample.swift" \

@@ -600,7 +600,7 @@ struct RouteSimSheet: View {
             guard startRequestID == request else { return }
             isStarting = false
             guard isPresented, routeReady, !routeSimulator.availableRoutes.isEmpty else { return }
-            routeSimulator.startSimulation()
+            routeSimulator.startSimulation(startName: startText, destinationName: endText)
             guard routeSimulator.isSimulating else {
                 UIApplication.shared.alert(body: routeSimulator.startError ?? "Unable to start this route.")
                 return

@@ -9,7 +9,7 @@ COMMON=(TrollRoute/Storage/SharedPreferences.swift TrollRoute/Storage/FavoritesS
   TrollRoute/LocSim/AddressQuery.swift TrollRoute/LocSim/PlaceSearch.swift TrollRoute/LocSim/CoordTransform.swift)
 xcrun --sdk iphonesimulator swiftc -target arm64-apple-ios17.0-simulator \
   -sdk "$(xcrun --sdk iphonesimulator --show-sdk-path)" "${COMMON[@]}" \
-  TrollRoute/LocSim/RouteSimulator.swift TrollRoute/LocSim/LocationSession.swift \
+  TrollRoute/LocSim/RouteSimulator.swift TrollRoute/LiveActivity/RouteActivityState.swift TrollRoute/LocSim/LocationSession.swift \
   TrollRoute/LocSim/RouteFinish.swift TrollRoute/LocSim/RouteStop.swift \
   TrollRoute/LocSim/RouteElevation.swift TrollRoute/LocSim/Altitude.swift TrollRoute/LocSim/AltitudeSheet.swift \
   TrollRoute/LocSim/RouteFinishControls.swift TrollRoute/LocSim/RouteStopDialog.swift \

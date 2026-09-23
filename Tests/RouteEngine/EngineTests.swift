@@ -94,6 +94,131 @@ final class EngineFixture {
     }
 }
 
+func testActivityStateAndCommands() {
+    let f = EngineFixture()
+    defer { f.close() }
+    precondition(f.engine.activitySnapshot == nil)
+    f.prepare()
+    f.engine.configureFinish(RouteFinishConfiguration(action: .backAndForth))
+    f.engine.startSimulation(startName: "Original start", destinationName: "Destination")
+    let initial = f.engine.activitySnapshot!
+    precondition(initial.destination == "Destination" && initial.progress == 0 && initial.leg == 1)
+    precondition(!initial.paused && initial.speedKmh == 50 && initial.stop == nil)
+    precondition(initial.remainingMeters > 0 && initial.remainingSeconds > 0)
+    let sampleCount = f.driver.samples.count
+    for _ in 0..<10 { _ = f.engine.activitySnapshot }
+    precondition(f.driver.samples.count == sampleCount, "Display snapshots must never inject")
+    let trip = initial.tripID
+    func send(_ action: RouteActivityCommand.Action) -> RouteActivityCommand.Outcome {
+        f.engine.performActivityCommand(.init(tripID: trip, action: action))
+    }
+    precondition(f.engine.performActivityCommand(.init(tripID: UUID(), action: .pause)) == .unavailable)
+    precondition(!f.engine.isPaused)
+    f.clock += 1; f.engine.advanceRoute()
+    let moving = f.engine.activitySnapshot!
+    precondition(moving.progress > initial.progress && moving.remainingMeters < initial.remainingMeters)
+    f.engine.previewSeek(0.8)
+    precondition(f.engine.activitySnapshot!.progress < 0.1, "Show actual motion, not finger preview")
+    f.engine.seek(to: 0.46)
+    precondition(abs(f.engine.activitySnapshot!.progress - 0.46) < 0.000001)
+    let beforeSpeed = f.engine.activitySnapshot!
+    f.engine.updateLiveSpeed(120)
+    let afterSpeed = f.engine.activitySnapshot!
+    precondition(afterSpeed.speedKmh == 120 && afterSpeed.remainingSeconds < beforeSpeed.remainingSeconds)
+    precondition(afterSpeed.remainingMeters == beforeSpeed.remainingMeters)
+    precondition(send(.pause) == .applied && send(.pause) == .applied)
+    precondition(f.engine.activitySnapshot!.paused && f.owner.current!.speed == 0)
+    let paused = f.engine.activitySnapshot!
+    f.clock += 20; f.engine.advanceRoute()
+    precondition(f.engine.activitySnapshot == paused, "Paused content must remain frozen")
+    f.engine.seek(to: 0.1)
+    precondition(f.engine.activitySnapshot!.paused && abs(f.engine.activitySnapshot!.progress - 0.1) < 0.000001)
+    precondition(send(.resume) == .applied && send(.resume) == .applied)
+    precondition(!f.engine.activitySnapshot!.paused && f.owner.current!.speed == 120 / 3.6)
+    f.engine.seek(to: 1)
+    let returning = f.engine.activitySnapshot!
+    precondition(returning.tripID == trip && returning.destination == "Original start" && returning.leg == 2)
+    precondition(returning.progress == 0 && returning.speedKmh == 120)
+    f.engine.configureFinish(RouteFinishConfiguration(action: .stay))
+    precondition(f.engine.activitySnapshot!.finishAction == "stay")
+    precondition(f.engine.activitySnapshot!.destination == "Original start")
+    precondition(send(.requestStop) == .applied)
+    let capture = f.engine.stopRequest!
+    precondition(send(.requestStop) == .applied && f.engine.stopRequest!.id == capture.id,
+                 "Repeated Stop must not replace the press-time point")
+    let content = f.engine.activitySnapshot!
+    precondition(content.stop!.choices.map(\.id) == ["current", "start", "specific", "real"])
+    precondition(content.stop!.preselection == "current")
+    let encoded = try! JSONEncoder().encode(content)
+    precondition(try! JSONDecoder().decode(RouteActivityState.self, from: encoded) == content)
+    precondition(encoded.count < 3000, "Leave room for ActivityKit dates and attributes")
+    precondition(f.engine.performActivityCommand(.init(tripID: trip, action: .cancelStop, requestID: UUID())) == .unavailable)
+    precondition(f.engine.performActivityCommand(.init(tripID: trip, action: .cancelStop, requestID: capture.id)) == .applied)
+    precondition(f.engine.activitySnapshot!.stop == nil && !f.engine.isPaused)
+    precondition(f.engine.performActivityCommand(.init(tripID: trip, action: .chooseStop,
+        requestID: capture.id, choice: "real")) == .unavailable)
+    f.engine.seek(to: 1)
+    precondition(f.engine.activitySnapshot == nil && f.at(f.a))
+    precondition(send(.resume) == .unavailable)
+    f.prepare(); f.engine.startSimulation()
+    precondition(f.engine.activitySnapshot!.tripID != trip && send(.requestStop) == .unavailable)
+    precondition(f.engine.activitySnapshot!.destination == String(format: "%.5f, %.5f", f.b.latitude, f.b.longitude))
+    let longName = String(repeating: "\u{1F4CD}\u{0301}", count: 2000)
+    precondition(RouteActivityState.destinationName(longName, fallback: "Fallback").utf8.count <= 384)
+    precondition(RouteActivityState.destinationName(" \n", fallback: "Fallback") == "Fallback")
+
+    for previous in [false, true] {
+        let choices: [RouteStopAction] = previous ? RouteStopAction.defaults : [.current, .start, .specific, .real]
+        for choice in choices {
+            let test = EngineFixture()
+            defer { test.close() }
+            if previous {
+                test.altitude.setCustom(-12.5)
+                test.owner.receive(RouteLocationSample.make(coordinate: test.c, course: 0, speed: 0,
+                    timestamp: Date()), kind: .stationary, newIntent: true)
+            }
+            test.defaults.set(RouteStopAction.start.rawValue, forKey: "routeStopDefault")
+            test.prepare(); test.engine.startSimulation()
+            test.altitude.setCustom(250)
+            let id = test.engine.activitySnapshot!.tripID
+            test.clock += 2
+            precondition(test.engine.performActivityCommand(.init(tripID: id, action: .requestStop)) == .applied)
+            let request = test.engine.stopRequest!
+            let state = test.engine.activitySnapshot!
+            precondition(state.stop!.preselection == "start" && state.stop!.choices.map(\.id) == choices.map(\.rawValue))
+            precondition(state.stop!.choices.map(\.title) == choices.map(\.title))
+            test.clock += 5; test.engine.advanceRoute()
+            let command = RouteActivityCommand(tripID: id, action: .chooseStop,
+                requestID: request.id, choice: choice.rawValue)
+            let result = test.engine.performActivityCommand(command)
+            if choice == .specific {
+                precondition(result == .openPlacePicker(request.id) && test.engine.isSimulating)
+                test.engine.confirmRouteStop(request.id, action: .specific,
+                    place: RouteFinishDestination(name: "Picked", address: "", coordinate: test.c))
+            } else { precondition(result == .applied) }
+            precondition(test.engine.activitySnapshot == nil)
+            switch choice {
+            case .previous: precondition(test.at(test.c) && test.owner.current!.meters == -12.5)
+            case .current: precondition(test.owner.current!.location.distance(from: request.current.location) < 0.001)
+            case .start: precondition(test.at(test.a))
+            case .specific: precondition(test.at(test.c))
+            case .real: precondition(!test.owner.isActive && test.driver.stops == 1)
+            }
+            if choice != .real { precondition(test.owner.current!.speed == 0 && test.driver.stops == 0) }
+            precondition(test.engine.performActivityCommand(command) == .unavailable, "Never replay a Stop outcome")
+        }
+    }
+    // A shared move wins even if an old Live Activity is still on screen.
+    let id = f.engine.activitySnapshot!.tripID
+    let external = SessionLocation(RouteLocationSample.make(coordinate: f.c, altitude: 123,
+        course: 0, speed: 0, timestamp: Date()))
+    try! f.lease.move(UUID(), sample: external) { _ in }
+    let count = f.driver.samples.count
+    precondition(f.engine.performActivityCommand(.init(tripID: id, action: .pause)) == .unavailable)
+    precondition(f.engine.activitySnapshot == nil && f.at(f.c) && f.driver.samples.count == count)
+    print("PASS: Live Activity engine snapshots, current-leg endpoint, commands, both Stop matrices and stale lease rejection")
+}
+
 func testRouteFinishEngine() {
     let fixture = EngineFixture()
     defer { fixture.close() }
@@ -353,6 +478,7 @@ func testLocationPermissionAdapter() {
         DispatchQueue.main.async {
             testLocationPermissionAdapter()
             testNotificationContent()
+            testActivityStateAndCommands()
             testRouteFinishEngine()
             testRouteStopEngine()
             testMovingScrubEngine()

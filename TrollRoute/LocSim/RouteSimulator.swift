@@ -348,6 +348,8 @@ class RouteSimulator: NSObject, ObservableObject, CLLocationManagerDelegate {
     @Published private(set) var finishConfiguration: RouteFinishConfiguration
     @Published private(set) var stopRequest: RouteStopRequest?
     private var tripID: UUID?
+    private var activityStartName = ""
+    private var activityEndName = ""
     private let stopDefaults: UserDefaults
     private let finishDefaults: RouteFinishSettings
     private let now: () -> TimeInterval
@@ -359,6 +361,47 @@ class RouteSimulator: NSObject, ObservableObject, CLLocationManagerDelegate {
         if isSimulating { finishState.changeAction(configuration.action) }
     }
     var legName: String { finishState.legName }
+    var activitySnapshot: RouteActivityState? {
+        guard isSimulating, let tripID = tripID, let journey = journey else { return nil }
+        let stop = stopRequest.map { request in
+            RouteActivityState.Stop(id: request.id,
+                choices: request.choices.map { .init(id: $0.rawValue, title: $0.title) },
+                preselection: request.preselection.rawValue)
+        }
+        return RouteActivityState(tripID: tripID, progress: journey.progress,
+            remainingSeconds: journey.remainingSeconds, remainingMeters: journey.remainingDistance,
+            speedKmh: journey.speedKmh,
+            destination: finishState.returning ? activityStartName : activityEndName,
+            paused: isPaused, stop: stop, leg: finishState.completedLegs + 1,
+            finishAction: finishConfiguration.action.rawValue)
+    }
+
+    /// Intents must run on the app's main thread and use this active engine.
+    /// They never create a route, bypass Route Stop, or reclaim a newer lease.
+    func performActivityCommand(_ command: RouteActivityCommand) -> RouteActivityCommand.Outcome {
+        if locationSession.refreshShared() { return .unavailable }
+        guard isSimulating, command.tripID == tripID else { return .unavailable }
+        switch command.action {
+        case .pause, .resume:
+            let pause = command.action == .pause
+            if isPaused != pause { togglePause() }
+            return isSimulating ? .applied : .unavailable
+        case .requestStop:
+            requestRouteStop()
+            return stopRequest == nil ? .unavailable : .applied
+        case .cancelStop:
+            guard let id = command.requestID, stopRequest?.id == id else { return .unavailable }
+            cancelRouteStop(id)
+            return .applied
+        case .chooseStop:
+            guard let request = stopRequest, request.id == command.requestID,
+                  let rawChoice = command.choice, let choice = RouteStopAction(rawValue: rawChoice),
+                  request.choices.contains(choice) else { return .unavailable }
+            if choice == .specific { return .openPlacePicker(request.id) }
+            confirmRouteStop(request.id, action: choice)
+            return isSimulating ? .unavailable : .applied
+        }
+    }
     var displayedPolylines: [MKPolyline] { isSimulating ? routePolyline.map { [$0] } ?? [] : allRoutePolylines }
     
     @Published var availableRoutes: [RouteOption] = []
@@ -545,7 +588,7 @@ class RouteSimulator: NSObject, ObservableObject, CLLocationManagerDelegate {
         progress = 0
     }
     
-    func startSimulation() {
+    func startSimulation(startName: String? = nil, destinationName: String? = nil) {
         guard !isSimulating, let track = track else { return }
         startError = nil
         guard finishConfiguration.isValid else {
@@ -557,6 +600,11 @@ class RouteSimulator: NSObject, ObservableObject, CLLocationManagerDelegate {
             return
         }
         tripID = UUID()
+        func endpointLabel(_ coordinate: CLLocationCoordinate2D) -> String {
+            String(format: "%.5f, %.5f", coordinate.latitude, coordinate.longitude)
+        }
+        activityStartName = RouteActivityState.destinationName(startName, fallback: endpointLabel(track.coordinates[0]))
+        activityEndName = RouteActivityState.destinationName(destinationName, fallback: endpointLabel(track.coordinates.last!))
         stopRequest = nil
         finishState = RouteFinishState(action: finishConfiguration.action)
         timer?.invalidate()
