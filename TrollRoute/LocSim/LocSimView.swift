@@ -156,23 +156,7 @@ struct LocSimView: View {
         .onReceive(locationSession.$error) { error in
             if let error = error { sharedPlaceError = error }
         }
-        .onOpenURL { url in
-            if SharedCommandURL.requestID(url) != nil { sharedChannel.wake() }
-            if let command = RouteActivityCommand.fromForegroundURL(url) {
-                let outcome = routeSimulator.performActivityCommand(command)
-                if outcome != .unavailable && (command.action == .requestStop || command.action == .chooseStop) {
-                    showRouteSheet = false
-                    showSettings = false
-                    showSearchBar = false
-                    showFavorites = false
-                    showAltitude = false
-                    showRouteFinish = false
-                }
-                if case .openPlacePicker(let id) = outcome {
-                    routeSimulator.presentActivityStopPicker(id)
-                }
-            }
-        }
+        .onOpenURL(perform: handleOpenURL)
         .onChange(of: routeSimulator.isSimulating) { running in
             if !running { showRouteFinish = false }
         }
@@ -309,6 +293,24 @@ struct LocSimView: View {
         }
     }
     
+    private func handleOpenURL(_ url: URL) {
+        if SharedCommandURL.requestID(url) != nil { sharedChannel.wake() }
+        guard let command = RouteActivityCommand.fromForegroundURL(url) else { return }
+        let outcome = routeSimulator.performActivityCommand(command)
+        guard outcome != .unavailable else { return }
+        if command.action == .requestStop || command.action == .chooseStop {
+            showRouteSheet = false
+            showSettings = false
+            showSearchBar = false
+            showFavorites = false
+            showAltitude = false
+            showRouteFinish = false
+        }
+        if case .openPlacePicker(let id) = outcome {
+            routeSimulator.presentActivityStopPicker(id)
+        }
+    }
+
     private func startSimulation(at gcjCoordinate: CLLocationCoordinate2D) {
         longPressRoute.cancel()
         mapMove.cancel()

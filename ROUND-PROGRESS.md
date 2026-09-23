@@ -8,8 +8,8 @@
 - Phase6 permission decision: WhenInUse supports foreground-started continuous updates, retained through pause/return. Fresh background starts differ; Phase7 must respect this. Evidence `2daac84`; phone background/Resume check remains.
 - Phase6 accepted `d3001cd` build44: full CI35828097056 SUCCESS; nine map UI tests including repeated permission-sheet interactions; all status/engine checks pass. Overview/details visually reviewed; downloaded package signing verified.
 - Phase7 R24 `d375dbb` build45 full CI35829967199 SUCCESS; notification policy/persistence and actual iOS content tests pass. Focus remains a phone check.
-- Live Activity audit `84c3833`; state/commands `30c282c` build46 CI35860370489 pending. Build47 adds the shared runtime and strict foreground/picker handoff; widget not connected yet.
-- **Next:** verify builds46/47; add ActivityKit transport, intents, widget/settings, then actual system/picker UI and compatibility checks. Delete all three ROUND files in the final commit.
+- Live Activity state/commands `30c282c` build46 engine tests pass; full CI pending. Runtime/handoff `83f7c02` build47 hits LocSimMainView type-check complexity; named handler correction follows.
+- **Next:** verify compiler correction; finish local ActivityKit/widget/settings integration, then actual system/picker UI and compatibility checks. Delete all three ROUND files in the final commit.
 
 ## Decisions already approved
 
