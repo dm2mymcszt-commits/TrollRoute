@@ -1,0 +1,35 @@
+name: iOS 15 launch compatibility
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  actual-app-launch:
+    runs-on: macos-15
+    timeout-minutes: 40
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_16.4.app/Contents/Developer
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - name: Install Apple runtime and launch unmodified app on iOS 15
+        run: |
+          set -o pipefail
+          mkdir -p build/ios15-qa
+          bash Tests/iOS15/check.sh 2>&1 | tee build/ios15-qa/check.log
+      - name: Upload compatibility evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: ios15-launch
+          path: |
+            build/ios15-qa/check.log
+            build/ios15-qa/build.log
+            build/ios15-qa/tests.log
+            build/ios15-qa/runtime-source.json
+            build/ios15-qa/runtimes.json
+            build/ios15-qa/attachments
+            build/ios15-qa/Launch.xcresult
+          if-no-files-found: ignore
+          retention-days: 14

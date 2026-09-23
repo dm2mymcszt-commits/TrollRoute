@@ -9,9 +9,9 @@
 - Phase6 accepted `d3001cd` build44: full CI35828097056 SUCCESS; nine map UI tests including repeated permission-sheet interactions; all status/engine checks pass. Overview/details visually reviewed; downloaded package signing verified.
 - Phase7 R24 `d375dbb` build45 full CI35829967199 SUCCESS; notification policy/persistence and actual iOS content tests pass. Focus remains a phone check.
 - Live Activity state/commands `30c282c` build46 full CI35860370489 SUCCESS.
-- Integration `d9562c2` build48 CI35862169138 fails app/share compilation in the large map view; the named URL handler alone was insufficient. Split `ad543cc` narrows the error to map layers; explicitly type the optional long-press closure after adding MainActor isolation.
-- Actual system ActivityKit/intent test host added; no native presentation or interaction claimed yet.
-- **Next:** run the compiler correction/system UI CI; resolve failures, inspect actual Lock Screen/Island/picker presentations, verify package weak links and iOS15 compatibility. Delete all three ROUND files in the final commit.
+- Map callback correction `c9a2203`: full CI35888093297 SUCCESS, all six jobs. Actual system tests pass Pause/Resume, both Stop sets/Cancel/outcomes, compact/minimal/expanded/Lock Screen capture. Artifact download is timing out; visual inspection still pending.
+- Phase7 integration/widget `d9562c2` builds after `c9a2203`. No new widget privileges. Specific-picker, speed/return/toggle system tests and binary weak-link checks added next.
+- **Next:** run extended system CI and the separate iOS15 launch workflow; inspect screenshots/package, resolve failures. No Phase7 acceptance yet. Delete all three ROUND files in the final commit.
 
 ## Decisions already approved
 
@@ -52,9 +52,9 @@
 | 5 acceptance | Done | `0f03411` full CI35737111085 SUCCESS; signed build41 verified; physical checks in BUILD guide |
 | 6 R29, R30, R31, R32 | Done; phone checks remain | `8556265`, `8f56f71`, `8a8fa70`, `a49f025`, `d3001cd`; status + contextual permissions, repeated details UI |
 | 6 acceptance | Done | `d3001cd` full CI35828097056 SUCCESS; signed build44, status/screenshots verified |
-| 7 R22, R23, R24 | In progress | R24 `d375dbb` full CI green. Live Activity state/commands build46; runtime/widget next |
-| 7 R25, R26, R27, R28 | Not started | Accurate explanations, runtime capability, external DynamicCow note, honest testing |
-| 7 acceptance | Not started | Intent/state/compatibility tests, native system screenshots, signed widget, iOS 15 launch |
+| 7 R22, R23, R24 | In progress | R24 `d375dbb` full CI green. State/commands build46; runtime/widget build48 compile and initial system tests pass |
+| 7 R25, R26, R27, R28 | In progress | Accurate explanations, runtime capability, external DynamicCow note, honest testing |
+| 7 acceptance | In progress | Intent/state/compatibility tests, native system screenshots, signed widget, iOS 15 launch |
 | 8 documentation | Not started | README rewrite; short BUILD guide, migration/release policy/phone checklist |
 | 8 regression + delivery | Not started | All Part D + phase checks; version 3.0.0 suggested, increasing build; final per-ID report |
 | 8 cleanup | Not started | Delete ROUND-PLAN.md, ROUND-PROGRESS.md, ROUND-AUDIT.md last; no Release |

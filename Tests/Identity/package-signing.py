@@ -13,7 +13,7 @@ with zipfile.ZipFile(package) as archive:
     app = 'Payload/TrollRoute.app/'
     info = plistlib.loads(archive.read(app + 'Info.plist'))
     assert info['CFBundleIdentifier'] == 'com.dm2mymcszt.trollroute'
-    assert tuple(map(int, info['MinimumOSVersion'].split('.'))) <= (17, 0)
+    assert tuple(map(int, info['MinimumOSVersion'].split('.'))) == (15, 0)
     print('App:', info['CFBundleDisplayName'], info['CFBundleShortVersionString'], 'minimum iOS', info['MinimumOSVersion'])
 
     def inspect_binary(path, expected_plist):
@@ -31,8 +31,19 @@ with zipfile.ZipFile(package) as archive:
         commands = struct.unpack_from('<I', data, 16)[0]
         pos = 32
         entitlements = None
+        dependencies = {}
+        minimum = None
         for _ in range(commands):
             command, size = struct.unpack_from('<II', data, pos)
+            if command in (0xc, 0x80000018):  # LC_LOAD_DYLIB / LC_LOAD_WEAK_DYLIB
+                name_offset = struct.unpack_from('<I', data, pos+8)[0]
+                name = data[pos+name_offset:pos+size].split(b'\0', 1)[0].decode('utf-8')
+                dependencies[name] = command
+            if command == 0x32:  # LC_BUILD_VERSION
+                platform, minimum, sdk = struct.unpack_from('<III', data, pos+8)
+                assert platform == 2, path + ' is not an iOS device binary'
+            elif command == 0x25:  # LC_VERSION_MIN_IPHONEOS
+                minimum = struct.unpack_from('<I', data, pos+8)[0]
             if command == 0x1d:  # LC_CODE_SIGNATURE
                 offset, length = struct.unpack_from('<II', data, pos+8)
                 signature = data[offset:offset+length]
@@ -47,6 +58,13 @@ with zipfile.ZipFile(package) as archive:
             pos += size
         expected = plistlib.loads(Path(expected_plist).read_bytes(), fmt=plistlib.FMT_XML)
         assert entitlements == expected, path + ' entitlements mismatch'
+        expected_minimum = (16 << 16 | 1 << 8) if 'TrollRouteActivity.appex' in path else 15 << 16
+        assert minimum == expected_minimum, path + ' binary deployment target mismatch'
+        if path == app+'TrollRoute':
+            for framework in ('ActivityKit', 'AppIntents'):
+                library = '/System/Library/Frameworks/' + framework + '.framework/' + framework
+                assert dependencies.get(library) == 0x80000018, framework + ' must be weak-linked for iOS 15'
+            print('App: ActivityKit/AppIntents weak-linked; binary minimum iOS 15 (launch test still separate)')
         print(path, ': arm64, executable, expected entitlements present')
 
     inspect_binary(app+'TrollRoute', 'entitlements.plist')

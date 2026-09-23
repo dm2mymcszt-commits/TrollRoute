@@ -79,4 +79,50 @@ final class LiveActivitySystemTests: XCTestCase {
         XCTAssertTrue(board.staticTexts["Test destination"].waitForExistence(timeout: 10), board.debugDescription)
         capture("system-lock-screen")
     }
+
+    func testSpecificPlaceOpensPickerAndAppliesFavorite() throws {
+        let app = try app()
+        defer { app.terminate() }
+        app.buttons["Start real"].tap()
+        XCTAssertTrue(app.staticTexts["QA activity ready"].waitForExistence(timeout: 10))
+        XCUIDevice.shared.press(.home); expand()
+        XCTAssertTrue(board.buttons["Stop"].waitForExistence(timeout: 10))
+        board.buttons["Stop"].tap()
+        XCTAssertTrue(board.buttons["Go to a specific location"].waitForExistence(timeout: 10))
+        board.buttons["Go to a specific location"].tap()
+        // Do not activate the app from the test: the production Link must do it.
+        XCTAssertTrue(app.wait(for: .runningForeground, timeout: 10))
+        XCTAssertTrue(app.navigationBars["After stopping"].waitForExistence(timeout: 10), app.debugDescription)
+        capture("specific-place-picker")
+        let favorite = app.buttons.matching(NSPredicate(format: "label CONTAINS %@", "Activity test favorite")).firstMatch
+        XCTAssertTrue(favorite.waitForExistence(timeout: 10), app.debugDescription)
+        favorite.tap()
+        XCTAssertTrue(app.staticTexts["QA stopped"].waitForExistence(timeout: 10), app.debugDescription)
+        XCTAssertTrue(app.staticTexts["QA at favorite"].exists)
+        XCTAssertTrue(app.staticTexts["QA no activity"].waitForExistence(timeout: 10))
+    }
+
+    func testSpeedSeekReturnAndToggleDoNotStopRoute() throws {
+        let app = try app()
+        defer { app.terminate() }
+        app.buttons["Start real"].tap()
+        XCTAssertTrue(app.staticTexts["QA activity ready"].waitForExistence(timeout: 10))
+        app.buttons["Seek 46"].tap()
+        app.buttons["Speed 120"].tap()
+        XCUIDevice.shared.press(.home); expand()
+        XCTAssertTrue(board.staticTexts["120 km/h"].waitForExistence(timeout: 10), board.debugDescription)
+        capture("system-speed-seek")
+        app.activate()
+        app.buttons["Return leg"].tap()
+        XCUIDevice.shared.press(.home); expand()
+        XCTAssertTrue(board.staticTexts["Original start"].waitForExistence(timeout: 10), board.debugDescription)
+        capture("system-return-destination")
+        app.activate()
+        app.buttons["Disable activity"].tap()
+        XCTAssertTrue(app.staticTexts["QA no activity"].waitForExistence(timeout: 10))
+        XCTAssertTrue(app.staticTexts["QA moving"].exists)
+        app.buttons["Enable activity"].tap()
+        XCTAssertTrue(app.staticTexts["QA activity ready"].waitForExistence(timeout: 10))
+        XCTAssertTrue(app.staticTexts["QA moving"].exists)
+    }
 }
