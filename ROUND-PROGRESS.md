@@ -2,17 +2,13 @@
 
 ## Resume
 
-- Source of truth: [ROUND-PLAN.md](ROUND-PLAN.md); detailed evidence and prior failures: [ROUND-AUDIT.md](ROUND-AUDIT.md).
+- Source of truth: [ROUND-PLAN.md](ROUND-PLAN.md); detailed evidence: [ROUND-AUDIT.md](ROUND-AUDIT.md).
 - Branch `experiment/route-motion`, origin `dm2mymcszt-commits/TrollRoute`. Phases0-5 accepted; Phase6 in progress; 7-8 not started.
-- Phase5 acceptance: `0f03411`, full CI35737111085 SUCCESS. Eight actual-map touch tests (hold/double/single + panning), share lifecycle <1s/repeated/background/cold/Favorite, route UI and all model/live checks PASS. Downloaded build41 signature/identity verified; details in audit.
-- Phase5 phone checks remain: private automatic open and real injection, including saved altitude and Snapchat Bitmoji. Code/CI acceptance complete.
-- Phase6 evidence `2daac84`: WhenInUse supports foreground-started updates retained during pause/return; fresh background service start differs. No automatic Always requirement. Phone background/Resume check remains.
-- `8556265` build42: live registration/access/accuracy overview implemented with contextual guidance, temporary Precise request, 60-case status tests and good/bad screenshot fixtures; CI pending.
-- `8f56f71` build43: contextual WhenInUse route requests; no launch/automatic Always requests; retained keepalive through pause/repeat, route-access notice and accurate usage strings. Engine suite now runs with WhenInUse; status detail UI test added.
-- Build42 app/package builds; macOS status test exposed platform-unavailable CLAuthorizationStatus.authorizedWhenInUse. `8a8fa70` separates pure enums from the iOS adapter; preserve every test case.
-- `a49f025` engine/permission checks pass; signed build43 and all four overview screenshots verified. `44152e9` fixes the query but CI35784291767 exposes immediate sheet dismissal: presentation attached to a multi-row Section. Detail assertions remain failing; phase not accepted.
-- Build44 anchors the details sheet to one stable row; test now repeats open/Done across all three rows. Root cause recorded at `15b1b51`.
-- **Next:** verify build44 full CI and detail screenshots, then accept Phase6. Physical background/Resume and registration checks remain. Delete all three ROUND files in the final commit.
+- Phase5 accepted `0f03411`, full CI35737111085 and signed build41. Private opening/injection still require phone checks.
+- Phase6 permission decision: WhenInUse supports foreground-started continuous updates, retained through pause/return. Fresh background starts differ; Phase7 must respect this. Evidence `2daac84`; phone background/Resume check remains.
+- Phase6 status model, real permission adapter, route engine and signed build43 pass. All four overview screenshots reviewed. Details sheet immediately dismissed when attached to a Section; earlier query-only fix was insufficient (audit `15b1b51`).
+- `d3001cd` build44 gives details one presenter and tests three open/Done cycles for all rows. CI35828097056 pending.
+- **Next:** inspect build44 detail test/screenshots and full CI; accept Phase6 only when green, then Phase7. Keep physical permission/registration checks pending. Delete all three ROUND files in the final commit.
 
 ## Decisions already approved
 
