@@ -4,16 +4,18 @@ struct RouteStopDialog: View {
     let request: RouteStopRequest
     let cancel: () -> Void
     let confirm: (RouteStopAction, RouteFinishDestination?) -> Void
+    let choosePlaceImmediately: Bool
     @State private var selection: RouteStopAction
     @State private var place: RouteFinishDestination?
     @State private var showPicker = false
     @StateObject private var recents = RouteRecentPlaces()
 
-    init(request: RouteStopRequest, cancel: @escaping () -> Void,
+    init(request: RouteStopRequest, choosePlaceImmediately: Bool = false, cancel: @escaping () -> Void,
          confirm: @escaping (RouteStopAction, RouteFinishDestination?) -> Void) {
         self.request = request
         self.cancel = cancel
         self.confirm = confirm
+        self.choosePlaceImmediately = choosePlaceImmediately
         _selection = State(initialValue: request.preselection)
     }
 
@@ -66,7 +68,12 @@ struct RouteStopDialog: View {
                             coordinate: CoordTransform.gcj02ToWgs84(picked.coordinate))
                         selection = .specific
                         recents.remember(picked)
+                        if choosePlaceImmediately { confirm(.specific, place) }
                     }
+            }
+            .onAppear { if choosePlaceImmediately { showPicker = true } }
+            .onChange(of: choosePlaceImmediately) { requested in
+                if requested { showPicker = true }
             }
         }
     }
@@ -80,7 +87,9 @@ struct RouteStopPresentation: ViewModifier {
         content.sheet(item: Binding(get: { enabled ? simulator.stopRequest : nil }, set: { value in
             if value == nil, let request = simulator.stopRequest { simulator.cancelRouteStop(request.id) }
         })) { request in
-            RouteStopDialog(request: request, cancel: { simulator.cancelRouteStop(request.id) },
+            RouteStopDialog(request: request,
+                choosePlaceImmediately: simulator.activityStopPickerID == request.id,
+                cancel: { simulator.cancelRouteStop(request.id) },
                 confirm: { simulator.confirmRouteStop(request.id, action: $0, place: $1) })
         }
     }

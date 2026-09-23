@@ -347,6 +347,7 @@ class RouteSimulator: NSObject, ObservableObject, CLLocationManagerDelegate {
     @Published private(set) var startError: String?
     @Published private(set) var finishConfiguration: RouteFinishConfiguration
     @Published private(set) var stopRequest: RouteStopRequest?
+    @Published private(set) var activityStopPickerID: UUID?
     private var tripID: UUID?
     private var activityStartName = ""
     private var activityEndName = ""
@@ -706,6 +707,13 @@ class RouteSimulator: NSObject, ObservableObject, CLLocationManagerDelegate {
     func cancelRouteStop(_ id: UUID) {
         guard stopRequest?.id == id else { return }
         stopRequest = nil
+        activityStopPickerID = nil
+    }
+
+    func presentActivityStopPicker(_ id: UUID) {
+        guard isSimulating, let request = stopRequest, request.id == id,
+              request.tripID == tripID, request.choices.contains(.specific) else { return }
+        activityStopPickerID = id
     }
 
     func confirmRouteStop(_ id: UUID, action: RouteStopAction, place: RouteFinishDestination? = nil) {
@@ -745,6 +753,7 @@ class RouteSimulator: NSObject, ObservableObject, CLLocationManagerDelegate {
         isPaused = false
         tripID = nil
         stopRequest = nil
+        activityStopPickerID = nil
         clearCalculatedRoutes()
         locationManager.stopUpdatingLocation()
         endBackgroundTask()
@@ -803,6 +812,7 @@ class RouteSimulator: NSObject, ObservableObject, CLLocationManagerDelegate {
         locationSession.finishHolding()
         tripID = nil
         stopRequest = nil
+        activityStopPickerID = nil
         // The final sample has already published exact destination and zero speed.
         timer?.invalidate()
         timer = nil

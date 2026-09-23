@@ -24,7 +24,7 @@ save('EngineFixture.swift', fixture)
 
 # Keep production presentation, lifecycle handlers, queue consumption and receipts.
 view = source('TrollRoute/LocSim/LocSimView.swift').replace('import AlertKit', '')
-view = replace(view, 'RouteSimulator()', 'QAFixture.shared.engine!')
+view = replace(view, 'RouteRuntime.shared.simulator', 'QAFixture.shared.engine!')
 view = replace(view, 'LocSimManager.session', 'QAFixture.shared.owner')
 view = view.replace('SharedPlaceInbox()', 'SharedPlaceInbox(container: qaRoot)')
 view = replace(view, 'sharedEndpoint = saved\n                    base = nil', '''sharedEndpoint = saved

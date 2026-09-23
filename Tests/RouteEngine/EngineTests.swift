@@ -109,6 +109,22 @@ func testActivityStateAndCommands() {
     for _ in 0..<10 { _ = f.engine.activitySnapshot }
     precondition(f.driver.samples.count == sampleCount, "Display snapshots must never inject")
     let trip = initial.tripID
+    for action in [RouteActivityCommand.Action.pause, .resume, .requestStop] {
+        let command = RouteActivityCommand(tripID: trip, action: action)
+        precondition(RouteActivityCommand.fromForegroundURL(command.foregroundURL!) == command)
+    }
+    let specific = RouteActivityCommand(tripID: trip, action: .chooseStop, requestID: UUID(), choice: "specific")
+    precondition(RouteActivityCommand.fromForegroundURL(specific.foregroundURL!) == specific)
+    let root = "trollroute://route/" + trip.uuidString
+    for text in [root + "/pause/", root + "/pause?extra=1", root + "/pause#fragment",
+                 root + "/cancelStop", root + "/chooseStop?choice=real&request=" + UUID().uuidString,
+                 specific.foregroundURL!.absoluteString + "&choice=specific",
+                 "https://route/" + trip.uuidString + "/pause",
+                 "trollroute://user@route/" + trip.uuidString + "/pause",
+                 "trollroute://route/not-a-trip/pause"] {
+        precondition(RouteActivityCommand.fromForegroundURL(URL(string: text)!) == nil)
+    }
+    precondition(RouteActivityCommand(tripID: trip, action: .chooseStop, requestID: UUID(), choice: "real").foregroundURL == nil)
     func send(_ action: RouteActivityCommand.Action) -> RouteActivityCommand.Outcome {
         f.engine.performActivityCommand(.init(tripID: trip, action: action))
     }
@@ -193,10 +209,15 @@ func testActivityStateAndCommands() {
             let result = test.engine.performActivityCommand(command)
             if choice == .specific {
                 precondition(result == .openPlacePicker(request.id) && test.engine.isSimulating)
+                test.engine.presentActivityStopPicker(UUID())
+                precondition(test.engine.activityStopPickerID == nil)
+                test.engine.presentActivityStopPicker(request.id)
+                precondition(test.engine.activityStopPickerID == request.id)
                 test.engine.confirmRouteStop(request.id, action: .specific,
                     place: RouteFinishDestination(name: "Picked", address: "", coordinate: test.c))
             } else { precondition(result == .applied) }
             precondition(test.engine.activitySnapshot == nil)
+            precondition(test.engine.activityStopPickerID == nil)
             switch choice {
             case .previous: precondition(test.at(test.c) && test.owner.current!.meters == -12.5)
             case .current: precondition(test.owner.current!.location.distance(from: request.current.location) < 0.001)

@@ -58,4 +58,45 @@ struct RouteActivityCommand: Equatable {
         case openPlacePicker(UUID)
         case unavailable
     }
+
+    /// Older iOS controls open the app. The specific-place handoff also opens
+    /// UI on iOS17; no link is allowed to skip directly to a destructive choice.
+    var foregroundURL: URL? {
+        var parts = URLComponents()
+        parts.scheme = "trollroute"
+        parts.host = "route"
+        parts.path = "/" + tripID.uuidString + "/" + action.rawValue
+        switch action {
+        case .pause, .resume, .requestStop:
+            guard requestID == nil, choice == nil else { return nil }
+        case .chooseStop:
+            guard let requestID = requestID, choice == "specific" else { return nil }
+            parts.queryItems = [URLQueryItem(name: "request", value: requestID.uuidString),
+                                URLQueryItem(name: "choice", value: "specific")]
+        case .cancelStop: return nil
+        }
+        return parts.url
+    }
+
+    static func fromForegroundURL(_ url: URL) -> Self? {
+        guard let parts = URLComponents(url: url, resolvingAgainstBaseURL: false),
+              parts.scheme == "trollroute", parts.host == "route",
+              parts.user == nil, parts.password == nil, parts.port == nil, parts.fragment == nil else { return nil }
+        let path = parts.path.split(separator: "/", omittingEmptySubsequences: false)
+        guard path.count == 3, path[0].isEmpty, let trip = UUID(uuidString: String(path[1])),
+              let action = Action(rawValue: String(path[2])) else { return nil }
+        let items = parts.queryItems ?? []
+        switch action {
+        case .pause, .resume, .requestStop:
+            guard items.isEmpty else { return nil }
+            return Self(tripID: trip, action: action)
+        case .chooseStop:
+            guard items.count == 2, items.filter({ $0.name == "request" }).count == 1,
+                  items.filter({ $0.name == "choice" && $0.value == "specific" }).count == 1,
+                  let value = items.first(where: { $0.name == "request" })?.value,
+                  let request = UUID(uuidString: value) else { return nil }
+            return Self(tripID: trip, action: action, requestID: request, choice: "specific")
+        case .cancelStop: return nil
+        }
+    }
 }

@@ -9,6 +9,7 @@ import CoreLocation
 import MapKit
 import AlertKit
 
+@MainActor
 struct LocSimView: View {
     @Environment(\.scenePhase) private var scenePhase
     @StateObject private var routeDraft = RouteDraft()
@@ -29,7 +30,7 @@ struct LocSimView: View {
     @AppStorage("confirmLongPressRoute", store: SharedPreferences.defaults) private var confirmLongPressRoute = false
     @AppStorage("autoStartLongPressRoute", store: SharedPreferences.defaults) private var autoStartLongPressRoute = false
     @AppStorage("confirmBeforeStoppingSpoofing", store: SharedPreferences.defaults) private var confirmBeforeStoppingSpoofing = true
-    @StateObject private var routeSimulator = RouteSimulator()
+    @StateObject private var routeSimulator = RouteRuntime.shared.simulator
     
     @ObservedObject private var locationSession = LocSimManager.session
     private var referenceCoordinate: CLLocationCoordinate2D {
@@ -157,6 +158,20 @@ struct LocSimView: View {
         }
         .onOpenURL { url in
             if SharedCommandURL.requestID(url) != nil { sharedChannel.wake() }
+            if let command = RouteActivityCommand.fromForegroundURL(url) {
+                let outcome = routeSimulator.performActivityCommand(command)
+                if outcome != .unavailable && (command.action == .requestStop || command.action == .chooseStop) {
+                    showRouteSheet = false
+                    showSettings = false
+                    showSearchBar = false
+                    showFavorites = false
+                    showAltitude = false
+                    showRouteFinish = false
+                }
+                if case .openPlacePicker(let id) = outcome {
+                    routeSimulator.presentActivityStopPicker(id)
+                }
+            }
         }
         .onChange(of: routeSimulator.isSimulating) { running in
             if !running { showRouteFinish = false }
