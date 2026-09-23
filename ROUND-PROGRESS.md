@@ -3,11 +3,12 @@
 ## Resume
 
 - Source of truth: [ROUND-PLAN.md](ROUND-PLAN.md); detailed evidence: [ROUND-AUDIT.md](ROUND-AUDIT.md).
-- Branch `experiment/route-motion`, origin `dm2mymcszt-commits/TrollRoute`. Phases0-6 accepted; Phase7 next; Phase8 not started.
+- Branch `experiment/route-motion`, origin `dm2mymcszt-commits/TrollRoute`. Phases0-6 accepted; Phase7 in progress; Phase8 not started.
 - Phase5 accepted `0f03411`, full CI35737111085 and signed build41. Private opening/injection still require phone checks.
 - Phase6 permission decision: WhenInUse supports foreground-started continuous updates, retained through pause/return. Fresh background starts differ; Phase7 must respect this. Evidence `2daac84`; phone background/Resume check remains.
 - Phase6 accepted `d3001cd` build44: full CI35828097056 SUCCESS; nine map UI tests including repeated permission-sheet interactions; all status/engine checks pass. Overview/details visually reviewed; downloaded package signing verified.
-- **Next:** Phase7 audit and implement notification preferences, then Live Activity state/commands/extension and compatibility. Physical permission/registration checks remain. Delete all three ROUND files in the final commit.
+- Phase6 acceptance recorded `45996f0`. Phase7 R24 audit complete: filter existing notification delivery using two saved toggles; preserve arrival/repeat rules. App Time Sensitive entitlement is required explicitly by the plan.
+- **Next:** implement/test R24, then audit Live Activity state/commands/extension and compatibility. Physical permission/registration checks remain. Delete all three ROUND files in the final commit.
 
 ## Decisions already approved
 
@@ -48,7 +49,7 @@
 | 5 acceptance | Done | `0f03411` full CI35737111085 SUCCESS; signed build41 verified; physical checks in BUILD guide |
 | 6 R29, R30, R31, R32 | Done; phone checks remain | `8556265`, `8f56f71`, `8a8fa70`, `a49f025`, `d3001cd`; status + contextual permissions, repeated details UI |
 | 6 acceptance | Done | `d3001cd` full CI35828097056 SUCCESS; signed build44, status/screenshots verified |
-| 7 R22, R23, R24 | Not started | Optional Live Activity, exact content/Stop, two notification toggles |
+| 7 R22, R23, R24 | In progress | R24 notification audit done; implementation next. Live Activity not started |
 | 7 R25, R26, R27, R28 | Not started | Accurate explanations, runtime capability, external DynamicCow note, honest testing |
 | 7 acceptance | Not started | Intent/state/compatibility tests, native system screenshots, signed widget, iOS 15 launch |
 | 8 documentation | Not started | README rewrite; short BUILD guide, migration/release policy/phone checklist |
