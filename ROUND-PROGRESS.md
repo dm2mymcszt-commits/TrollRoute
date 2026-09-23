@@ -11,7 +11,8 @@
 - `8f56f71` build43: contextual WhenInUse route requests; no launch/automatic Always requests; retained keepalive through pause/repeat, route-access notice and accurate usage strings. Engine suite now runs with WhenInUse; status detail UI test added.
 - Build42 app/package builds; macOS status test exposed platform-unavailable CLAuthorizationStatus.authorizedWhenInUse. `8a8fa70` separates pure enums from the iOS adapter; preserve every test case.
 - `a49f025` engine/permission checks pass; signed build43 and all four overview screenshots verified. `44152e9` fixes the query but CI35784291767 exposes immediate sheet dismissal: presentation attached to a multi-row Section. Detail assertions remain failing; phase not accepted.
-- **Next:** anchor the details sheet to one stable row; test repeated open/Done for all rows and rerun CI. Physical background/Resume and registration checks remain. Delete all three ROUND files in the final commit.
+- Build44 anchors the details sheet to one stable row; test now repeats open/Done across all three rows. Root cause recorded at `15b1b51`.
+- **Next:** verify build44 full CI and detail screenshots, then accept Phase6. Physical background/Resume and registration checks remain. Delete all three ROUND files in the final commit.
 
 ## Decisions already approved
 

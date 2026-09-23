@@ -164,6 +164,8 @@ struct LocationAccessOverview: View {
     var body: some View {
         Section {
             row(.registration, value: access.status.registrationText, symbol: "info.circle", color: .secondary)
+                // A Section distributes modifiers across its rows. One row owns presentation.
+                .sheet(item: $detail) { choice in detailSheet(choice) }
             row(.location, value: access.status.accessText,
                 symbol: access.status.authorized ? "checkmark.circle" : "exclamationmark.circle",
                 color: access.status.authorized ? .green : .orange)
@@ -175,32 +177,32 @@ struct LocationAccessOverview: View {
         }
         .onAppear { access.refresh() }
         .onReceive(NotificationCenter.default.publisher(for: UIApplication.didBecomeActiveNotification)) { _ in access.refresh() }
-        .sheet(item: $detail) { choice in
-            NavigationView {
-                Form {
-                    Section {
-                        Text(explanation(choice))
-                        if choice == .registration {
-                            if access.canOpenTrollStore { Button("Open TrollStore") { access.openTrollStore() } }
-                        } else {
-                            if choice == .location && access.status.servicesEnabled && access.status.authorization == .notDetermined {
-                                Button("Allow location access") { access.requestAccess() }
-                            }
-                            if choice == .accuracy && access.status.authorized && !access.status.precise {
-                                Button("Request Precise Location") { access.requestPrecise() }
-                            }
-                            if access.status.authorization != .restricted {
-                                Button("Open iOS Settings") { access.openSettings() }
-                            }
-                            Text("If TrollRoute's page is missing, see TrollStore registration in the status overview.")
-                                .font(.caption).foregroundColor(.secondary)
+    }
+    private func detailSheet(_ choice: Detail) -> some View {
+        NavigationView {
+            Form {
+                Section {
+                    Text(explanation(choice))
+                    if choice == .registration {
+                        if access.canOpenTrollStore { Button("Open TrollStore") { access.openTrollStore() } }
+                    } else {
+                        if choice == .location && access.status.servicesEnabled && access.status.authorization == .notDetermined {
+                            Button("Allow location access") { access.requestAccess() }
                         }
-                        if let message = access.message { Text(message).foregroundColor(.secondary) }
+                        if choice == .accuracy && access.status.authorized && !access.status.precise {
+                            Button("Request Precise Location") { access.requestPrecise() }
+                        }
+                        if access.status.authorization != .restricted {
+                            Button("Open iOS Settings") { access.openSettings() }
+                        }
+                        Text("If TrollRoute's page is missing, see TrollStore registration in the status overview.")
+                            .font(.caption).foregroundColor(.secondary)
                     }
+                    if let message = access.message { Text(message).foregroundColor(.secondary) }
                 }
-                .navigationTitle(choice.rawValue).navigationBarTitleDisplayMode(.inline)
-                .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { detail = nil } } }
             }
+            .navigationTitle(choice.rawValue).navigationBarTitleDisplayMode(.inline)
+            .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { detail = nil } } }
         }
     }
     private func row(_ detail: Detail, value: String, symbol: String, color: Color) -> some View {

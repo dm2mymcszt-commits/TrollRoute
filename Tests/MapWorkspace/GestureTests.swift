@@ -8,18 +8,31 @@ final class MapGestureTests: XCTestCase {
         XCTAssertTrue(app.staticTexts["While Using the App"].waitForExistence(timeout: 10))
         XCTAssertTrue(app.staticTexts["System"].exists)
         XCTAssertTrue(app.staticTexts["On"].exists)
-        app.buttons["access-TrollStore registration"].tap()
-        XCTAssertTrue(app.staticTexts.matching(NSPredicate(format: "label CONTAINS %@", "System registration is normal")).firstMatch.waitForExistence(timeout: 5))
-        capture(app, "system-registration-explanation")
+        for _ in 0..<3 {
+            app.buttons["access-TrollStore registration"].tap()
+            XCTAssertTrue(app.staticTexts.matching(NSPredicate(format: "label CONTAINS %@", "System registration is normal")).firstMatch.waitForExistence(timeout: 5))
+            capture(app, "system-registration-explanation")
+            app.buttons["Done"].tap()
+            XCTAssertTrue(app.buttons["access-Precise Location"].waitForExistence(timeout: 5))
+            app.buttons["access-Precise Location"].tap()
+            XCTAssertTrue(app.staticTexts.matching(NSPredicate(format: "label CONTAINS %@", "Precise Location: On")).firstMatch.waitForExistence(timeout: 5))
+            XCTAssertFalse(app.buttons["Request Precise Location"].exists)
+            app.buttons["Done"].tap()
+            XCTAssertTrue(app.buttons["access-TrollStore registration"].waitForExistence(timeout: 5))
+        }
         app.terminate()
         app.launchArguments = ["--screen", "access-bad"]
         app.launch()
         XCTAssertTrue(app.staticTexts["Never"].waitForExistence(timeout: 10))
         XCTAssertTrue(app.staticTexts["Unavailable"].exists)
-        app.buttons["access-Location access"].tap()
-        XCTAssertTrue(app.buttons["Open iOS Settings"].waitForExistence(timeout: 5))
-        XCTAssertFalse(app.buttons["Allow location access"].exists, "Denied permission requires Settings, not another system prompt")
-        capture(app, "denied-location-explanation")
+        for _ in 0..<3 {
+            app.buttons["access-Location access"].tap()
+            XCTAssertTrue(app.buttons["Open iOS Settings"].waitForExistence(timeout: 5))
+            XCTAssertFalse(app.buttons["Allow location access"].exists, "Denied permission requires Settings, not another system prompt")
+            capture(app, "denied-location-explanation")
+            app.buttons["Done"].tap()
+            XCTAssertTrue(app.buttons["access-Location access"].waitForExistence(timeout: 5))
+        }
         app.terminate()
     }
 
