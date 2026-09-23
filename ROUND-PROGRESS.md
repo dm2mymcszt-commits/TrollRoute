@@ -3,12 +3,11 @@
 ## Resume
 
 - Source of truth: [ROUND-PLAN.md](ROUND-PLAN.md); detailed evidence: [ROUND-AUDIT.md](ROUND-AUDIT.md).
-- Branch `experiment/route-motion`, origin `dm2mymcszt-commits/TrollRoute`. Phases0-5 accepted; Phase6 in progress; 7-8 not started.
+- Branch `experiment/route-motion`, origin `dm2mymcszt-commits/TrollRoute`. Phases0-6 accepted; Phase7 next; Phase8 not started.
 - Phase5 accepted `0f03411`, full CI35737111085 and signed build41. Private opening/injection still require phone checks.
 - Phase6 permission decision: WhenInUse supports foreground-started continuous updates, retained through pause/return. Fresh background starts differ; Phase7 must respect this. Evidence `2daac84`; phone background/Resume check remains.
-- Phase6 status model, real permission adapter, route engine and signed build43 pass. All four overview screenshots reviewed. Details sheet immediately dismissed when attached to a Section; earlier query-only fix was insufficient (audit `15b1b51`).
-- `d3001cd` build44 gives details one presenter and tests three open/Done cycles for all rows. CI35828097056 pending.
-- **Next:** inspect build44 detail test/screenshots and full CI; accept Phase6 only when green, then Phase7. Keep physical permission/registration checks pending. Delete all three ROUND files in the final commit.
+- Phase6 accepted `d3001cd` build44: full CI35828097056 SUCCESS; nine map UI tests including repeated permission-sheet interactions; all status/engine checks pass. Overview/details visually reviewed; downloaded package signing verified.
+- **Next:** Phase7 audit and implement notification preferences, then Live Activity state/commands/extension and compatibility. Physical permission/registration checks remain. Delete all three ROUND files in the final commit.
 
 ## Decisions already approved
 
@@ -47,8 +46,8 @@
 | 4 R14, F3 + acceptance | Done; phone checks remain | `c0962af`, `6d4fa2e`, `e1f3cac`; credits reviewed, moving/paused scrub metadata pass; signed build28; phone Bitmoji check |
 | 5 R7, R8, R9, R10, F4 | Done; phone checks remain | Endpoint/open `cd1d979`, lease `53e200e`, direct Go `0d4a093`, Favorites `634d0ed`, repeated draft `84e1b3e`; full CI35737111085 |
 | 5 acceptance | Done | `0f03411` full CI35737111085 SUCCESS; signed build41 verified; physical checks in BUILD guide |
-| 6 R29, R30, R31, R32 | In progress | Registration/access/accuracy status, evidence-based onboarding |
-| 6 acceptance | Not started | Status model tests, good/bad screenshots, documented permission decision |
+| 6 R29, R30, R31, R32 | Done; phone checks remain | `8556265`, `8f56f71`, `8a8fa70`, `a49f025`, `d3001cd`; status + contextual permissions, repeated details UI |
+| 6 acceptance | Done | `d3001cd` full CI35828097056 SUCCESS; signed build44, status/screenshots verified |
 | 7 R22, R23, R24 | Not started | Optional Live Activity, exact content/Stop, two notification toggles |
 | 7 R25, R26, R27, R28 | Not started | Accurate explanations, runtime capability, external DynamicCow note, honest testing |
 | 7 acceptance | Not started | Intent/state/compatibility tests, native system screenshots, signed widget, iOS 15 launch |

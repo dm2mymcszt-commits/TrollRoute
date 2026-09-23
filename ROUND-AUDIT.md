@@ -1272,3 +1272,8 @@ Downloaded 8a8fa70 build43 verified locally: arm64 app/share, expected entitleme
 
 
 Build44 implementation d3001cd moves only the sheet presenter from Section to its stable registration row; all rows share the same selection and detail content. Repeated UI coverage cycles registration, precision and denied-access details through Done three times. Local identity/whitespace checks pass; CI35828097056 pending. No injection or permissions policy changes.
+
+
+### Phase6 acceptance (2026-09-23)
+
+d3001cd CI35828097056 full SUCCESS, all five jobs. Map107074198660: nine tests, zero failures, including three open/Done cycles of registration, precision and denied-access sheets. Single-row presentation resolves the observed immediate dismissal without delays. Detail screenshots and good/bad light/dark overviews reviewed; text/buttons legible. Build107074198528 passes status matrix, actual engine WhenInUse/adapter assertions, all motion/session/finish/altitude/search/share checks and previews. Downloaded build44 package identity/signatures verified: SHA256 a3e2bf14b7aaf29138e51460427b7b94c71a8088ded69253b01f24b230a576e6. No entitlements changed. Physical TrollStore registration, privacy-setting return/temporary precision and locked background/pause/Resume remain phone checks. Proceed to Phase7.
