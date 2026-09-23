@@ -12,10 +12,17 @@ final class LiveActivitySystemTests: XCTestCase {
         return app
     }
     private func capture(_ name: String) {
-        let attachment = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
-        attachment.name = name; attachment.lifetime = .keepAlways; add(attachment)
         let hierarchy = XCTAttachment(string: board.debugDescription)
         hierarchy.name = name + "-hierarchy"; hierarchy.lifetime = .keepAlways; add(hierarchy)
+        let attachment = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+        attachment.name = name; attachment.lifetime = .keepAlways; add(attachment)
+    }
+    private func goHome() {
+        XCUIDevice.shared.press(.home)
+        let icon = board.icons["Activity QA"].firstMatch
+        XCTAssertTrue(icon.waitForExistence(timeout: 10), board.debugDescription)
+        let settled = XCTNSPredicateExpectation(predicate: NSPredicate(format: "hittable == true"), object: icon)
+        XCTAssertEqual(XCTWaiter.wait(for: [settled], timeout: 10), .completed)
     }
     private func expand() {
         board.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.035)).press(forDuration: 1.2)
@@ -26,7 +33,7 @@ final class LiveActivitySystemTests: XCTestCase {
         app.buttons["Start real"].tap()
         XCTAssertTrue(app.staticTexts["QA moving"].waitForExistence(timeout: 5))
         XCTAssertTrue(app.staticTexts["QA activity ready"].waitForExistence(timeout: 10), app.debugDescription)
-        XCUIDevice.shared.press(.home)
+        goHome()
         capture("system-compact")
         expand()
         capture("system-expanded")
@@ -51,7 +58,7 @@ final class LiveActivitySystemTests: XCTestCase {
         XCTAssertTrue(app.staticTexts["QA stopped"].waitForExistence(timeout: 10))
         app.buttons["Start spoof"].tap()
         XCTAssertTrue(app.staticTexts["QA activity ready"].waitForExistence(timeout: 10), app.debugDescription)
-        XCUIDevice.shared.press(.home); expand()
+        goHome(); expand()
         XCTAssertTrue(board.buttons["Stop"].waitForExistence(timeout: 10))
         board.buttons["Stop"].tap()
         XCTAssertTrue(board.buttons["Return to previous spoofed location"].waitForExistence(timeout: 10))
@@ -66,7 +73,7 @@ final class LiveActivitySystemTests: XCTestCase {
         app.buttons["Start real"].tap()
         XCTAssertTrue(app.staticTexts["QA activity ready"].waitForExistence(timeout: 10), app.debugDescription)
         app.buttons["Companion"].tap()
-        XCUIDevice.shared.press(.home)
+        goHome()
         capture("system-minimal-two-activities")
         // Test-driver capability only; never shipped in the app/widget.
         let selector = NSSelectorFromString("pressLockButton")
@@ -77,6 +84,7 @@ final class LiveActivitySystemTests: XCTestCase {
         XCUIDevice.shared.perform(selector)
         XCUIDevice.shared.press(.home)
         XCTAssertTrue(board.staticTexts["Test destination"].waitForExistence(timeout: 10), board.debugDescription)
+        if board.buttons["Allow"].exists { board.buttons["Allow"].tap() }
         capture("system-lock-screen")
     }
 
@@ -85,7 +93,7 @@ final class LiveActivitySystemTests: XCTestCase {
         defer { app.terminate() }
         app.buttons["Start real"].tap()
         XCTAssertTrue(app.staticTexts["QA activity ready"].waitForExistence(timeout: 10))
-        XCUIDevice.shared.press(.home); expand()
+        goHome(); expand()
         XCTAssertTrue(board.buttons["Stop"].waitForExistence(timeout: 10))
         board.buttons["Stop"].tap()
         XCTAssertTrue(board.buttons["Go to a specific location"].waitForExistence(timeout: 10))
@@ -109,12 +117,12 @@ final class LiveActivitySystemTests: XCTestCase {
         XCTAssertTrue(app.staticTexts["QA activity ready"].waitForExistence(timeout: 10))
         app.buttons["Seek 46"].tap()
         app.buttons["Speed 120"].tap()
-        XCUIDevice.shared.press(.home); expand()
+        goHome(); expand()
         XCTAssertTrue(board.staticTexts["120 km/h"].waitForExistence(timeout: 10), board.debugDescription)
         capture("system-speed-seek")
         app.activate()
         app.buttons["Return leg"].tap()
-        XCUIDevice.shared.press(.home); expand()
+        goHome(); expand()
         XCTAssertTrue(board.staticTexts["Original start"].waitForExistence(timeout: 10), board.debugDescription)
         capture("system-return-destination")
         app.activate()

@@ -9,8 +9,8 @@
 - Phase6 accepted `d3001cd` build44: full CI35828097056 SUCCESS; nine map UI tests including repeated permission-sheet interactions; all status/engine checks pass. Overview/details visually reviewed; downloaded package signing verified.
 - Phase7 R24 `d375dbb` build45 full CI35829967199 SUCCESS; notification policy/persistence and actual iOS content tests pass. Focus remains a phone check.
 - Live Activity state/commands `30c282c` build46 full CI35860370489 SUCCESS.
-- Map callback correction `c9a2203`: full CI35888093297 SUCCESS, all six jobs. Actual system tests pass Pause/Resume, both Stop sets/Cancel/outcomes, compact/minimal/expanded/Lock Screen capture. Artifact download is timing out; visual inspection still pending.
-- Phase7 integration/widget `d9562c2` builds after `c9a2203`. No new widget privileges. Specific-picker, speed/return/toggle system tests and binary weak-link checks added next.
+- Map callback correction `c9a2203`: full CI35888093297 SUCCESS, all six jobs. Actual system tests pass Pause/Resume, both Stop sets/Cancel/outcomes, compact/minimal/expanded/Lock Screen capture. Downloaded and visually reviewed expanded/Stop: all choices fit. Lock Screen needs normal post-Allow capture.
+- Phase7 integration/widget `d9562c2` builds after `c9a2203`. No new widget privileges. `caf8e95` adds picker/speed/return/toggle tests and iOS15 workflow. Binary checks confirm app weak links but expose old share minimum16; correct to15 in build49.
 - **Next:** run extended system CI and the separate iOS15 launch workflow; inspect screenshots/package, resolve failures. No Phase7 acceptance yet. Delete all three ROUND files in the final commit.
 
 ## Decisions already approved

@@ -21,7 +21,7 @@
 	<key>NSSupportsLiveActivities</key>
 	<true/>
 	<key>CFBundleVersion</key>
-	<string>48</string>
+	<string>49</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>MinimumOSVersion</key>
