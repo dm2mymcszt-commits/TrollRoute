@@ -54,8 +54,7 @@ struct LocSimView: View {
     var body: some View {
         LocSimMainView()
     }
-    @ViewBuilder
-        private func LocSimMainView() -> some View {
+    private var mapLayers: some View {
             ZStack(alignment: .topTrailing) {
                 // MARK: - Main Map
                 CustomMapView(tappedCoordinate: $tappedCoordinate, moveToRegion: $mapRegion,
@@ -99,7 +98,10 @@ struct LocSimView: View {
             }
             
         }
-        .modifier(MapToolbarOverlay(onAction: handleQuickMenuAction,
+    }
+
+    private var mapWithPlayback: some View {
+        mapLayers.modifier(MapToolbarOverlay(onAction: handleQuickMenuAction,
                                     joystickActive: joystickActive, routeActive: routeSimulator.isSimulating))
         .safeAreaInset(edge: .bottom) {
           VStack(spacing: 4) {
@@ -124,7 +126,10 @@ struct LocSimView: View {
             }
           }
         }
-        .modifier(MapMoveConfirmation(controller: mapMove))
+    }
+
+    private var mapWithConfirmations: some View {
+        mapWithPlayback.modifier(MapMoveConfirmation(controller: mapMove))
         .modifier(MainStopConfirmation(controller: mainStop))
         .modifier(LongPressRouteConfirmation(controller: longPressRoute))
         .modifier(RouteStopPresentation(simulator: routeSimulator, enabled: !showRouteSheet))
@@ -142,7 +147,10 @@ struct LocSimView: View {
                 }.padding(10).background(.regularMaterial, in: RoundedRectangle(cornerRadius: 12)).padding(12)
             }
         }
-        .onChange(of: longPressToCreateRoute) { _ in longPressRoute.cancel() }
+    }
+
+    private var mapWithLifecycle: some View {
+        mapWithConfirmations.onChange(of: longPressToCreateRoute) { _ in longPressRoute.cancel() }
         .onChange(of: confirmLongPressRoute) { _ in longPressRoute.cancel() }
         .onChange(of: autoStartLongPressRoute) { _ in longPressRoute.cancel() }
         .onChange(of: tapMapToSetLocation) { _ in mapMove.cancel() }
@@ -160,7 +168,10 @@ struct LocSimView: View {
         .onChange(of: routeSimulator.isSimulating) { running in
             if !running { showRouteFinish = false }
         }
-        .sheet(isPresented: $showAltitude, onDismiss: offerSharedPlace) {
+    }
+
+    private func LocSimMainView() -> some View {
+        mapWithLifecycle.sheet(isPresented: $showAltitude, onDismiss: offerSharedPlace) {
             AltitudeSheet(settings: .shared, controller: locationSession.altitudeController)
         }
         .sheet(isPresented: $showSettings, onDismiss: offerSharedPlace) { SettingsView() }

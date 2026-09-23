@@ -8,9 +8,10 @@
 - Phase6 permission decision: WhenInUse supports foreground-started continuous updates, retained through pause/return. Fresh background starts differ; Phase7 must respect this. Evidence `2daac84`; phone background/Resume check remains.
 - Phase6 accepted `d3001cd` build44: full CI35828097056 SUCCESS; nine map UI tests including repeated permission-sheet interactions; all status/engine checks pass. Overview/details visually reviewed; downloaded package signing verified.
 - Phase7 R24 `d375dbb` build45 full CI35829967199 SUCCESS; notification policy/persistence and actual iOS content tests pass. Focus remains a phone check.
-- Live Activity state/commands `30c282c` build46 engine tests pass; full CI pending. Runtime/handoff `83f7c02` build47 hits LocSimMainView type-check complexity; named handler correction follows.
-- Compiler correction `262e786` pushed. Build48 integrates ActivityKit, widget/intents, settings and empty widget signing privileges; acceptance pending.
-- **Next:** verify build48 CI; add actual system/picker UI and intent tests, inspect all required presentations, verify package weak links and iOS15 compatibility. Delete all three ROUND files in the final commit.
+- Live Activity state/commands `30c282c` build46 full CI35860370489 SUCCESS.
+- Integration `d9562c2` build48 CI35862169138 fails app/share compilation in the large map view; the named URL handler alone was insufficient. Split into bounded view expressions, preserving modifier order.
+- Actual system ActivityKit/intent test host added; no native presentation or interaction claimed yet.
+- **Next:** run the compiler correction/system UI CI; resolve failures, inspect actual Lock Screen/Island/picker presentations, verify package weak links and iOS15 compatibility. Delete all three ROUND files in the final commit.
 
 ## Decisions already approved
 

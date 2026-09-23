@@ -10,6 +10,30 @@ permissions:
   contents: read
 
 jobs:
+  live-activity-ui:
+    runs-on: macos-15
+    timeout-minutes: 25
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_16.4.app/Contents/Developer
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - name: Exercise real Live Activity surfaces and intents
+        run: bash Tests/LiveActivity/check.sh
+      - name: Upload Live Activity system evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: live-activity-ui
+          path: |
+            build/live-activity-qa/build.log
+            build/live-activity-qa/tests.log
+            build/live-activity-qa/runtimes.json
+            build/live-activity-qa/attachments
+            build/live-activity-qa/System.xcresult
+          if-no-files-found: ignore
+          retention-days: 14
   share-lifecycle-ui:
     runs-on: macos-15
     timeout-minutes: 20
