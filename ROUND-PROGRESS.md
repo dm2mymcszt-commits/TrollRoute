@@ -12,8 +12,8 @@
 - Map callback correction `c9a2203`: full CI35888093297 SUCCESS, all six jobs. Actual system tests pass Pause/Resume, both Stop sets/Cancel/outcomes, compact/minimal/expanded/Lock Screen capture. Downloaded and visually reviewed expanded/Stop: all choices fit. Lock Screen needs normal post-Allow capture.
 - Phase7 integration/widget `d9562c2` builds after `c9a2203`. No new widget privileges. `caf8e95` adds picker/speed/return/toggle tests and iOS15 workflow. Binary checks confirm app weak links but expose old share minimum16; correct to15 in build49.
 - Build49 `50ab5b9` CI35897309620: build/package and all prior UI/model checks PASS; extended Live Activity UI fails (system containers exist, controls absent). Diagnose rendering with screenshots/system logs; no acceptance yet.
-- Diagnostic checkpoint `988e15f`, CI35966127981 queued. Downloaded build49 signing/deployment/weak-link inspection PASS; hash in audit. Superseded duplicate CI35965970092 canceled.
-- iOS15 probe35965969883: PackageInfo has no install-location; no runtime registered. `b85d98d` adds shallow layout/metadata evidence; retry35966805282 running. No launch claim. Duplicate app run35966805382 canceled; 988e15f covers unchanged app/tests.
+- Diagnostic checkpoint `988e15f`, CI35966127981: all four Live Activity system tests PASS (including picker/speed/return/toggle); screenshots downloading, full run pending. Prior blank rendering remains unexplained. Signed build49 package checks PASS; hash in audit.
+- iOS15 probe35966805282 confirms Payload is the runtime bundle, no install-location. Name the verified Apple runtime bundle and retry registration/launch. No launch claim. Duplicate app runs35965970092/35966805382 canceled.
 - **Next:** inspect failed activity artifacts, diagnose system rendering; run corrected iOS15 installer probe. Keep Phase7 open until required evidence is obtained or a limitation is explicitly agreed. Delete all three ROUND files in the final commit.
 
 ## Decisions already approved

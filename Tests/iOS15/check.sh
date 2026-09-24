@@ -28,28 +28,27 @@ test -n "$PACKAGE"
 # runtime bundle in CoreSimulator's supported runtime directory instead.
 pkgutil --expand-full "$PACKAGE" "$QA_DIR/expanded-runtime"
 BUNDLE=$(find "$QA_DIR/expanded-runtime" -type d -name '*.simruntime' -print -quit)
-# Component packages can install Payload itself as the runtime bundle (the
-# .simruntime name lives in PackageInfo's install-location, not in Payload).
+# Apple's legacy component package has the runtime Contents directly in
+# Payload and no install-location. Verify the runtime identity before naming it.
 if [ -z "$BUNDLE" ]; then
   BUNDLE=$(python3 - "$QA_DIR/expanded-runtime" <<'PY'
 from pathlib import Path
-import sys, xml.etree.ElementTree as ET
+import sys, plistlib, xml.etree.ElementTree as ET
 root = Path(sys.argv[1])
 for metadata in root.rglob('PackageInfo'):
-    location = ET.parse(metadata).getroot().get('install-location', '')
+    package = ET.parse(metadata).getroot()
     payload = metadata.parent / 'Payload'
-    print(f'Component {metadata.name}: install-location={location}', file=sys.stderr)
-    if location.endswith('.simruntime') and (payload / 'Contents/Info.plist').is_file():
-        bundle = root / Path(location).name
+    info_path = payload / 'Contents/Info.plist'
+    if package.get('identifier') == 'com.apple.pkg.iPhoneSimulatorSDK15_5' and info_path.is_file():
+        info = plistlib.loads(info_path.read_bytes())
+        print('Runtime bundle metadata:', info, file=sys.stderr)
+        assert str(info.get('CFBundleIdentifier', '')).startswith('com.apple.CoreSimulator.SimRuntime.'), 'Unexpected runtime identity'
+        assert (payload / 'Contents/Resources/RuntimeRoot').is_dir(), 'Incomplete runtime'
+        bundle = root / 'iOS 15.5.simruntime'
         payload.rename(bundle)
         print(bundle)
         break
 else:
-    for path in sorted(root.rglob('*')):
-        if len(path.relative_to(root).parts) <= 4:
-            print(str(path.relative_to(root)), file=sys.stderr)
-    for metadata in root.rglob('PackageInfo'):
-        print(metadata.read_text(), file=sys.stderr)
     raise SystemExit('No complete runtime bundle in Apple package payload')
 PY
 )
