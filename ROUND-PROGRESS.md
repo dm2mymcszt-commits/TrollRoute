@@ -3,13 +3,13 @@
 ## Resume
 
 - Source of truth: [ROUND-PLAN.md](ROUND-PLAN.md); detailed evidence: [ROUND-AUDIT.md](ROUND-AUDIT.md).
-- Branch `experiment/route-motion`, origin `dm2mymcszt-commits/TrollRoute`. Phases0-6 accepted; Phase7 in progress; Phase8 not started.
-- Phase6 permission decision: WhenInUse supports foreground-started continuous updates, retained through pause/return. Fresh background starts differ; Phase7 must respect this. Evidence `2daac84`; phone background/Resume check remains.
-- Phase7 notification/state/command tests pass; signed build50 has app/share minimum15, widget16.1 and weak links. No widget privileges added. Physical Focus/intent/background checks remain.
-- `988e15f`, CI35966127981: full CI PASS, including four Live Activity system tests and picker/speed/return/toggle. Normal Lock Screen/expanded/Stop visually accepted. Prior blank renderer remains unexplained; diagnostics retained.
-- iOS15 probe35967741779: runtime boots and app installs; Xcode test driver excludes the device. `4b1e79f` direct launch/process/screenshot probe35969628430 pending; no launch claim yet.
-- Build50 `7eefbf2`, CI35968215512: four system tests PASS (180.6s); compact/minimal/Lock/expanded screenshots visually accepted. All six CI jobs PASS; signed package verified. No route/injection change.
-- **Next:** run the direct iOS15 launch probe, review its actual app screenshot, and verify the build50 signed package/full CI. Keep Phase7 open until required evidence is obtained or a limitation is explicitly agreed. Delete all three ROUND files in the final commit.
+- Branch `experiment/route-motion`, origin `dm2mymcszt-commits/TrollRoute`. Phases0-7 accepted; Phase8 in progress.
+- Phase6: WhenInUse supports foreground-started continuous updates, retained through pause/return; fresh background starts differ. Phone background/Resume check remains.
+- Build50 `7eefbf2`, full CI35968215512 SUCCESS. Four real Live Activity tests pass; compact/minimal/expanded/Stop/Lock screenshots visually accepted. Signed app/share minimum15, widget16.1 and weak links verified. No widget privileges.
+- iOS15 launch `4b1e79f`, CI35969628430 SUCCESS: unchanged app launches on actual15.5 runtime, PID survives checks, screenshot shows Welcome + map. This is simulator launch proof, not TrollStore injection proof.
+- Duplicate full CI35969595936 canceled to prioritize launch. Final regression will cover its test-only expanded-capture ordering change. Previous blank renderer failures remain unexplained; later system tests pass, diagnostics retained.
+- Physical migration, private share operations, background/Focus/native Island and Snapchat checks remain on the phone checklist.
+- **Next:** rewrite README and short BUILD guide, preserve final per-ID evidence/choices, run final full CI, then delete all three ROUND files in the last commit. No Release.
 
 ## Decisions already approved
 
@@ -50,10 +50,10 @@
 | 5 acceptance | Done | `0f03411` full CI35737111085 SUCCESS; signed build41 verified; physical checks in BUILD guide |
 | 6 R29, R30, R31, R32 | Done; phone checks remain | `8556265`, `8f56f71`, `8a8fa70`, `a49f025`, `d3001cd`; status + contextual permissions, repeated details UI |
 | 6 acceptance | Done | `d3001cd` full CI35828097056 SUCCESS; signed build44, status/screenshots verified |
-| 7 R22, R23, R24 | In progress | R24 `d375dbb` full CI green. State/commands build46; runtime/widget build48 compile and initial system tests pass |
-| 7 R25, R26, R27, R28 | In progress | Accurate explanations, runtime capability, external DynamicCow note, honest testing |
-| 7 acceptance | In progress | Intent/state/compatibility tests, native system screenshots, signed widget, iOS 15 launch |
-| 8 documentation | Not started | README rewrite; short BUILD guide, migration/release policy/phone checklist |
+| 7 R22, R23, R24 | Done; phone checks remain | `7eefbf2` full CI35968215512; actual system controls/screenshots, model/notification tests |
+| 7 R25, R26, R27, R28 | Done; phone checks remain | Runtime availability, correct wording, optional external DynamicCow note; no hardware claim |
+| 7 acceptance | Done | Signed build50; system screenshot review; `4b1e79f` actual iOS15.5 launch CI35969628430 |
+| 8 documentation | In progress | README rewrite; short BUILD guide, migration/release policy/phone checklist |
 | 8 regression + delivery | Not started | All Part D + phase checks; version 3.0.0 suggested, increasing build; final per-ID report |
 | 8 cleanup | Not started | Delete ROUND-PLAN.md, ROUND-PROGRESS.md, ROUND-AUDIT.md last; no Release |
 
