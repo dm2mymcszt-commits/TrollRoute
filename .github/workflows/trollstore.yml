@@ -30,6 +30,8 @@ jobs:
             build/live-activity-qa/build.log
             build/live-activity-qa/tests.log
             build/live-activity-qa/runtimes.json
+            build/live-activity-qa/activity-system.log
+            build/live-activity-qa/crashes
             build/live-activity-qa/attachments
             build/live-activity-qa/System.xcresult
           if-no-files-found: ignore

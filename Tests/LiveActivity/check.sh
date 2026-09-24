@@ -10,7 +10,19 @@ xcodebuild -project "$QA_DIR/LiveActivityQA.xcodeproj" -target LiveActivityQA -c
 xcrun simctl list runtimes -j > "$QA_DIR/runtimes.json"
 RUNTIME=$(python3 -c 'import json,sys; print(next(r["identifier"] for r in json.load(open(sys.argv[1]))["runtimes"] if r["isAvailable"] and "iOS" in r["name"]))' "$QA_DIR/runtimes.json")
 DEVICE=$(xcrun simctl create LiveActivityQA com.apple.CoreSimulator.SimDeviceType.iPhone-15-Pro "$RUNTIME")
-trap 'xcrun simctl shutdown "$DEVICE" || true; xcrun simctl delete "$DEVICE" || true' EXIT
+finish() {
+  # Keep renderer failures, including extension crashes, separate from XCTest
+  # assertions about missing controls. Logs come from this test's simulator.
+  xcrun simctl spawn "$DEVICE" log show --last 15m --style compact --info --debug \
+    --predicate 'process == "TrollRouteActivity" OR process == "chronod" OR process == "liveactivitiesd"' \
+    > "$QA_DIR/activity-system.log" 2>&1 || true
+  mkdir -p "$QA_DIR/crashes"
+  find "$HOME/Library/Logs/DiagnosticReports" -maxdepth 1 -name 'TrollRouteActivity*' \
+    -exec cp {} "$QA_DIR/crashes/" \; 2>/dev/null || true
+  xcrun simctl shutdown "$DEVICE" || true
+  xcrun simctl delete "$DEVICE" || true
+}
+trap finish EXIT
 xcrun simctl boot "$DEVICE"
 xcrun simctl bootstatus "$DEVICE" -b
 xcrun simctl ui "$DEVICE" appearance dark
