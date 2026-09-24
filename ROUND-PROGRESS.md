@@ -4,17 +4,11 @@
 
 - Source of truth: [ROUND-PLAN.md](ROUND-PLAN.md); detailed evidence: [ROUND-AUDIT.md](ROUND-AUDIT.md).
 - Branch `experiment/route-motion`, origin `dm2mymcszt-commits/TrollRoute`. Phases0-6 accepted; Phase7 in progress; Phase8 not started.
-- Phase5 accepted `0f03411`, full CI35737111085 and signed build41. Private opening/injection still require phone checks.
 - Phase6 permission decision: WhenInUse supports foreground-started continuous updates, retained through pause/return. Fresh background starts differ; Phase7 must respect this. Evidence `2daac84`; phone background/Resume check remains.
-- Phase6 accepted `d3001cd` build44: full CI35828097056 SUCCESS; nine map UI tests including repeated permission-sheet interactions; all status/engine checks pass. Overview/details visually reviewed; downloaded package signing verified.
-- Phase7 R24 `d375dbb` build45 full CI35829967199 SUCCESS; notification policy/persistence and actual iOS content tests pass. Focus remains a phone check.
-- Live Activity state/commands `30c282c` build46 full CI35860370489 SUCCESS.
-- Map callback correction `c9a2203`: full CI35888093297 SUCCESS, all six jobs. Actual system tests pass Pause/Resume, both Stop sets/Cancel/outcomes, compact/minimal/expanded/Lock Screen capture. Downloaded and visually reviewed expanded/Stop: all choices fit. Lock Screen needs normal post-Allow capture.
-- Phase7 integration/widget `d9562c2` builds after `c9a2203`. No new widget privileges. `caf8e95` adds picker/speed/return/toggle tests and iOS15 workflow. Binary checks confirm app weak links but expose old share minimum16; correct to15 in build49.
-- Build49 `50ab5b9` CI35897309620: build/package and all prior UI/model checks PASS; extended Live Activity UI fails (system containers exist, controls absent). Diagnose rendering with screenshots/system logs; no acceptance yet.
-- Diagnostic checkpoint `988e15f`, CI35966127981: all four Live Activity system tests PASS (including picker/speed/return/toggle); screenshots downloading, full run pending. Prior blank rendering remains unexplained. Signed build49 package checks PASS; hash in audit.
+- Phase7 notification/state/command tests pass; signed build49 has app/share minimum15, widget16.1 and weak links. No widget privileges added. Physical Focus/intent/background checks remain.
+- `988e15f`, CI35966127981: all four Live Activity system tests PASS, including picker/speed/return/toggle; full run pending. Normal Lock Screen/expanded/Stop visually accepted. Prior blank renderer remains unexplained; diagnostics retained.
 - iOS15 probe35966805282 confirms Payload is the runtime bundle, no install-location. `207bacc` registers verified bundle; retry35967741779 pending. No launch claim.
-- Visual review: normal Lock Screen, expanded and Stop PASS; compact capture occurs before content, minimal used two activities from one app (wrong setup). Build50 adds a separate companion test app and stable-content assertions; widget accessibility IDs only, no route/injection change.
+- Build50 `7eefbf2`, CI35968215512: fixes compact/minimal test setup (separate companion app + stable content); awaiting CI/visual review. Widget accessibility IDs only; no route/injection change.
 - **Next:** validate build50 compact/minimal captures; inspect iOS15 registration/launch result. Keep Phase7 open until required evidence is obtained or a limitation is explicitly agreed. Delete all three ROUND files in the final commit.
 
 ## Decisions already approved
