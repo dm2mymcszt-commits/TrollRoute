@@ -58,7 +58,7 @@ def obj(kind, **values):
     return key
 
 group = obj('PBXGroup', children=[], sourceTree='<group>')
-def target(name, files, extension=False):
+def target(name, files, extension=False, base_id='local.trollroute.activityqa', conditions=None):
     refs = [obj('PBXFileReference', lastKnownFileType='sourcecode.swift',
         path=str(Path(path).resolve()), sourceTree='<absolute>') for path in files]
     objects[group]['children'] += refs
@@ -67,9 +67,9 @@ def target(name, files, extension=False):
     product = obj('PBXFileReference', explicitFileType='wrapper.app-extension' if extension else 'wrapper.application',
         path=name + ('.appex' if extension else '.app'), sourceTree='BUILT_PRODUCTS_DIR')
     objects[group]['children'].append(product)
-    identifier = 'local.trollroute.activityqa' + ('.activity' if extension else '')
+    identifier = base_id + ('.activity' if extension else '')
     info = dict(CFBundleIdentifier='$(PRODUCT_BUNDLE_IDENTIFIER)', CFBundleExecutable='$(EXECUTABLE_NAME)',
-        CFBundleName=name, CFBundleDisplayName='Activity QA', CFBundleShortVersionString='3.0.0',
+        CFBundleName=name, CFBundleDisplayName='Activity QA' if base_id.endswith('activityqa') else 'Companion QA', CFBundleShortVersionString='3.0.0',
         CFBundleVersion='1', CFBundlePackageType='XPC!' if extension else 'APPL')
     if extension:
         info['NSExtension'] = dict(NSExtensionPointIdentifier='com.apple.widgetkit-extension')
@@ -78,12 +78,15 @@ def target(name, files, extension=False):
             UIBackgroundModes=['location'], NSLocationWhenInUseUsageDescription='Exercise route activity.',
             NSLocationAlwaysAndWhenInUseUsageDescription='Exercise route activity.',
             CFBundleURLTypes=[dict(CFBundleURLSchemes=['trollroute'])])
+        if base_id != 'local.trollroute.activityqa':
+            info.pop('CFBundleURLTypes')
+            info.pop('UIBackgroundModes')
     info_path = out / (name + '-Info.plist')
     info_path.write_bytes(plistlib.dumps(info))
     settings = dict(SDKROOT='iphoneos', IPHONEOS_DEPLOYMENT_TARGET='17.0', SWIFT_VERSION='5.0',
         TARGETED_DEVICE_FAMILY='1', GENERATE_INFOPLIST_FILE='NO', INFOPLIST_FILE=str(info_path),
         PRODUCT_BUNDLE_IDENTIFIER=identifier, PRODUCT_NAME=name, CODE_SIGNING_ALLOWED='NO',
-        SWIFT_OPTIMIZATION_LEVEL='-Onone', SWIFT_ACTIVE_COMPILATION_CONDITIONS='' if extension else 'TROLLROUTE_APP',
+        SWIFT_OPTIMIZATION_LEVEL='-Onone', SWIFT_ACTIVE_COMPILATION_CONDITIONS=conditions if conditions is not None else ('' if extension else 'TROLLROUTE_APP'),
         APPLICATION_EXTENSION_API_ONLY='YES' if extension else 'NO', ENABLE_DEBUG_DYLIB='NO',
         LD_RUNPATH_SEARCH_PATHS=['$(inherited)', '@executable_path/Frameworks', '@executable_path/../../Frameworks'])
     config = obj('XCBuildConfiguration', name='Debug', buildSettings=settings)
@@ -101,9 +104,17 @@ embed = obj('PBXCopyFilesBuildPhase', buildActionMask=2147483647, dstPath='', ds
     runOnlyForDeploymentPostprocessing=0, name='Embed Extensions')
 objects[app]['buildPhases'].append(embed)
 objects[app]['dependencies'].append(obj('PBXTargetDependency', target=widget))
+companion_widget, companion_product, _ = target('CompanionWidget', ['Tests/LiveActivity/Companion.swift'],
+    extension=True, base_id='local.trollroute.companionqa', conditions='COMPANION_WIDGET')
+companion, _, _ = target('CompanionQA', ['Tests/LiveActivity/Companion.swift'],
+    base_id='local.trollroute.companionqa', conditions='')
+objects[companion]['buildPhases'].append(obj('PBXCopyFilesBuildPhase', buildActionMask=2147483647,
+    dstPath='', dstSubfolderSpec=13, files=[obj('PBXBuildFile', fileRef=companion_product,
+        settings=dict(ATTRIBUTES=['RemoveHeadersOnCopy']))], runOnlyForDeploymentPostprocessing=0))
+objects[companion]['dependencies'].append(obj('PBXTargetDependency', target=companion_widget))
 root = obj('PBXProject', attributes=dict(LastUpgradeCheck='1640'), buildConfigurationList=configs,
     compatibilityVersion='Xcode 14.0', developmentRegion='en', hasScannedForEncodings=0,
-    knownRegions=['en'], mainGroup=group, projectDirPath='', projectRoot='', targets=[app, widget])
+    knownRegions=['en'], mainGroup=group, projectDirPath='', projectRoot='', targets=[app, widget, companion, companion_widget])
 project = out / 'LiveActivityQA.xcodeproj'
 project.mkdir(exist_ok=True)
 (project / 'project.pbxproj').write_bytes(plistlib.dumps(dict(archiveVersion='1', classes={},

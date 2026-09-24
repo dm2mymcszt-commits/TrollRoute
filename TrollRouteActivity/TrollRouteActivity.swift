@@ -22,11 +22,15 @@ struct TrollRouteActivity: Widget {
             } compactLeading: {
                 Text(context.state.route.progress, format: .percent.precision(.fractionLength(0)))
                     .monospacedDigit().font(.caption)
+                    .accessibilityIdentifier("route-activity-compact-progress")
             } compactTrailing: {
                 RouteActivityTime(content: context.state).font(.caption).frame(maxWidth: 58)
+                    .accessibilityIdentifier("route-activity-compact-time")
             } minimal: {
                 ProgressView(value: context.state.route.progress)
                     .progressViewStyle(.circular)
+                    .accessibilityLabel("Route progress")
+                    .accessibilityIdentifier("route-activity-minimal-progress")
             }
             .widgetURL(URL(string: "trollroute://route"))
             .keylineTint(.accentColor)

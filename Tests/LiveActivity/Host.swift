@@ -17,7 +17,6 @@ struct LiveActivityQAApp: App {
 @MainActor
 struct ActivityQAView: View {
     @ObservedObject private var engine = RouteRuntime.shared.simulator
-    @State private var companion: Activity<RouteActivityAttributes>?
     var body: some View {
         LocSimView().overlay(alignment: .topLeading) {
             VStack(alignment: .leading, spacing: 4) {
@@ -30,11 +29,6 @@ struct ActivityQAView: View {
                 Button("Return leg") {
                     engine.configureFinish(.init(action: .returnOnce))
                     engine.seek(to: 1)
-                }
-                Button("Companion") {
-                    guard let snapshot = engine.activitySnapshot else { return }
-                    companion = try! Activity.request(attributes: RouteActivityAttributes(tripID: UUID()),
-                        contentState: .init(route: snapshot, updatedAt: Date()), pushType: nil)
                 }
                 Text(engine.isSimulating ? (engine.isPaused ? "QA paused" : "QA moving") : "QA stopped")
                 if Activity<RouteActivityAttributes>.activities.contains(where: {

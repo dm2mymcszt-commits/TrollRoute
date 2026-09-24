@@ -13,8 +13,9 @@
 - Phase7 integration/widget `d9562c2` builds after `c9a2203`. No new widget privileges. `caf8e95` adds picker/speed/return/toggle tests and iOS15 workflow. Binary checks confirm app weak links but expose old share minimum16; correct to15 in build49.
 - Build49 `50ab5b9` CI35897309620: build/package and all prior UI/model checks PASS; extended Live Activity UI fails (system containers exist, controls absent). Diagnose rendering with screenshots/system logs; no acceptance yet.
 - Diagnostic checkpoint `988e15f`, CI35966127981: all four Live Activity system tests PASS (including picker/speed/return/toggle); screenshots downloading, full run pending. Prior blank rendering remains unexplained. Signed build49 package checks PASS; hash in audit.
-- iOS15 probe35966805282 confirms Payload is the runtime bundle, no install-location. Name the verified Apple runtime bundle and retry registration/launch. No launch claim. Duplicate app runs35965970092/35966805382 canceled.
-- **Next:** inspect failed activity artifacts, diagnose system rendering; run corrected iOS15 installer probe. Keep Phase7 open until required evidence is obtained or a limitation is explicitly agreed. Delete all three ROUND files in the final commit.
+- iOS15 probe35966805282 confirms Payload is the runtime bundle, no install-location. `207bacc` registers verified bundle; retry35967741779 pending. No launch claim.
+- Visual review: normal Lock Screen, expanded and Stop PASS; compact capture occurs before content, minimal used two activities from one app (wrong setup). Build50 adds a separate companion test app and stable-content assertions; widget accessibility IDs only, no route/injection change.
+- **Next:** validate build50 compact/minimal captures; inspect iOS15 registration/launch result. Keep Phase7 open until required evidence is obtained or a limitation is explicitly agreed. Delete all three ROUND files in the final commit.
 
 ## Decisions already approved
 

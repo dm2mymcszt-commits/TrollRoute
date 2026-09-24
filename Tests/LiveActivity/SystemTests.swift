@@ -1,6 +1,7 @@
 import XCTest
 
 final class LiveActivitySystemTests: XCTestCase {
+    override func setUp() { super.setUp(); continueAfterFailure = false }
     private let board = XCUIApplication(bundleIdentifier: "com.apple.springboard")
     private func app() throws -> XCUIApplication {
         let app = XCUIApplication(bundleIdentifier: "local.trollroute.activityqa")
@@ -27,6 +28,17 @@ final class LiveActivitySystemTests: XCTestCase {
     private func expand() {
         board.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.035)).press(forDuration: 1.2)
     }
+    private func waitForPresentation(_ identifiers: [String]) {
+        var previous: [CGRect] = []
+        let expectation = XCTNSPredicateExpectation(predicate: NSPredicate { [self] _, _ in
+            let elements = identifiers.map { board.descendants(matching: .any).matching(identifier: $0).firstMatch }
+            guard elements.allSatisfy({ $0.exists && !$0.frame.isEmpty }) else { return false }
+            let frames = elements.map(\.frame)
+            defer { previous = frames }
+            return frames == previous
+        }, object: nil)
+        XCTAssertEqual(XCTWaiter.wait(for: [expectation], timeout: 15), .completed, board.debugDescription)
+    }
     func testDynamicIslandControls() throws {
         let app = try app()
         defer { app.terminate() }
@@ -34,6 +46,7 @@ final class LiveActivitySystemTests: XCTestCase {
         XCTAssertTrue(app.staticTexts["QA moving"].waitForExistence(timeout: 5))
         XCTAssertTrue(app.staticTexts["QA activity ready"].waitForExistence(timeout: 10), app.debugDescription)
         goHome()
+        waitForPresentation(["route-activity-compact-progress", "route-activity-compact-time"])
         capture("system-compact")
         expand()
         capture("system-expanded")
@@ -72,9 +85,20 @@ final class LiveActivitySystemTests: XCTestCase {
         defer { app.terminate() }
         app.buttons["Start real"].tap()
         XCTAssertTrue(app.staticTexts["QA activity ready"].waitForExistence(timeout: 10), app.debugDescription)
-        app.buttons["Companion"].tap()
+        app.buttons["Seek 46"].tap()
+        let companion = XCUIApplication(bundleIdentifier: "local.trollroute.companionqa")
+        companion.launch()
+        companion.buttons["Start companion"].tap()
+        XCTAssertTrue(companion.staticTexts["Companion ready"].waitForExistence(timeout: 10))
         goHome()
+        waitForPresentation(["route-activity-minimal-progress", "qa-companion-minimal"])
         capture("system-minimal-two-activities")
+        companion.activate()
+        companion.buttons["End companion"].tap()
+        XCTAssertTrue(companion.staticTexts["Companion ended"].waitForExistence(timeout: 10))
+        companion.terminate()
+        app.activate()
+        goHome()
         // Test-driver capability only; never shipped in the app/widget.
         let selector = NSSelectorFromString("pressLockButton")
         guard XCUIDevice.shared.responds(to: selector) else {
