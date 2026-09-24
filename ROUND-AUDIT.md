@@ -1381,3 +1381,8 @@ Build50 full CI35968215512 SUCCESS across all six jobs. Both real-start and prev
 ### Phase7 acceptance complete
 
 Direct iOS15 launch CI35969628430 (4b1e79f) SUCCESS. Official15.5 runtime registers and boots; the unchanged app builds/installs; simctl launches com.dm2mymcszt.trollroute PID27758; launchctl confirms that same process before/after startup diagnostics and screenshot. Visual review of actual-app-ios15-launch.png shows TrollRoute Welcome, Open map, and a real map behind the sheet. No missing ActivityKit launch crash. Runtime/device JSON and startup logs retained at build/ios15-evidence-4b1e79f. This proves simulator launch without ActivityKit, not physical private injection/migration. Phase7 accepted with previously recorded build50 full regression, exact signed package and all required system presentations. Duplicate35969595936 canceled only to free CI capacity; final regression covers its test-only capture ordering change.
+
+
+### Phase8 documentation and final regression checkpoint
+
+Re-read plan/progress and confirmed clean dfc559b. Rewrote README for implemented TrollRoute behavior, compatibility, migration, Live Activity and honest physical-test limits. Replaced BUILD guide with short phase-grouped phone checklist and release policy. Corrected stale single-point-only terrain attribution description to reflect route profiles. Version3.0.0/build51 changes only package build number; no behavior/injection/privilege changes. Permanent VERIFICATION.md will preserve all R/F outcomes, causes, choices and evidence before ROUND cleanup. Final full CI pending.

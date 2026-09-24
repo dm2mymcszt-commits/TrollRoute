@@ -9,7 +9,7 @@
 - iOS15 launch `4b1e79f`, CI35969628430 SUCCESS: unchanged app launches on actual15.5 runtime, PID survives checks, screenshot shows Welcome + map. This is simulator launch proof, not TrollStore injection proof.
 - Duplicate full CI35969595936 canceled to prioritize launch. Final regression will cover its test-only expanded-capture ordering change. Previous blank renderer failures remain unexplained; later system tests pass, diagnostics retained.
 - Physical migration, private share operations, background/Focus/native Island and Snapchat checks remain on the phone checklist.
-- **Next:** rewrite README and short BUILD guide, preserve final per-ID evidence/choices, run final full CI, then delete all three ROUND files in the last commit. No Release.
+- **Next:** push build51 documentation/version checkpoint for final full CI; finish permanent per-ID report while CI runs; verify package and evidence, then delete all three ROUND files last. No Release.
 
 ## Decisions already approved
 

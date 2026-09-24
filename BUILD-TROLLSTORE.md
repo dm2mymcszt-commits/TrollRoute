@@ -1,25 +1,23 @@
-# TrollRoute - TrollStore build
+# TrollRoute: build and phone checks
 
-CI uses macOS 15 / Xcode 16.4 on `experiment/route-motion`. Download a successful run's **TrollRoute-<version>-<commit>** artifact, extract `TrollRoute.tipa`, and install with TrollStore's **+** button.
+CI uses macOS 15 / Xcode 16.4 on `experiment/route-motion`. Download a successful [build](https://github.com/dm2mymcszt-commits/TrollRoute/actions/workflows/trollstore.yml), extract `TrollRoute.tipa` from **TrollRoute-<version>-<commit>**, and install with TrollStore?s **+** button. Supported versions are listed in [README](README.md).
 
-TrollRoute uses `com.dm2mymcszt.trollroute` and installs separately from Andromeda. Keep Andromeda until the migration reports a successful import. Both share actions can appear while both apps are installed. The first launch imports saved places and settings without changing the old data; failed imports remain on a retry screen. Check the summary and imported values before deleting Andromeda. The approved TrollRoute icon is included.
+The new identity installs beside Andromeda. Keep the old app until the one-time, read-only import succeeds and you check favorites, recents, speeds, finish settings/place, altitude and map preferences. Failed imports stay retryable. Both share actions can remain while both apps are installed.
 
-This round is in progress. The repository and application identity have been renamed; map and route refinements are still in progress. Simulator/CI checks cannot verify TrollStore injection, background playback or Snapchat's driving Bitmoji on a physical device.
+This round adds the approved icon, shared location ownership, smoother injection and terrain profiles, safer map controls, per-trip finish and Stop choices, direct share actions, access guidance, notifications and Live Activity. [VERIFICATION.md](VERIFICATION.md) records evidence and remaining checks.
 
-## Device checks
+## On-device checklist
 
-- Confirm TrollRoute installs separately and its share action has the correct name.
-- Check favorites, recents, per-mode speeds, finish action/place, altitude and map settings; verify Andromeda's original data is unchanged before deleting it.
-- Recheck static moves, search, joystick, GPX, routes and Snapchat's driving Bitmoji.
-- Share a Google Maps place as Start and Destination while TrollRoute is open, backgrounded and closed: it must open Navigation with the endpoint and "From Google Maps", without a second confirmation. Reopening must not replay it.
-- Share "Go there now" while idle and during a moving or paused route: confirm the location changes before success, the old route cannot move it back, and TrollRoute stays closed. Check Custom altitude and Automatic altitude, then start another route and recheck Snapchat's driving Bitmoji.
-- Edit a shared place's name and save it as a Favorite without opening TrollRoute. Check it in Favorites, Search and both route pickers; confirm existing/imported Favorites remain.
+- [ ] **Phase 1 ? identity/import:** verify the app, icon and share title; compare imported values against Andromeda; confirm old data is unchanged and reopening does not import again.
+- [ ] **Phase 2 ? motion/altitude:** test Automatic elevation at 50?500 km/h, reverse legs and arrival; Custom 250 m, `12,5`, negative values and Reset. Recheck search, favorites, joystick, GPX and Snapchat?s driving Bitmoji after the injection changes.
+- [ ] **Phase 3 ? map:** default taps do not move you; test enabled tap confirmation and Cancel, double-tap zoom and route selection. Drag below the toolbar to pan the map. Test all long-press confirmation/auto-start combinations, real/spoofed starts, and saving/editing favorites from search and map pins.
+- [ ] **Phase 4 ? route session:** exercise all six finish actions, including changes during return legs, without changing Settings defaults. Test both Route Stop choice sets and Cancel; main Stop remains separate. Seek both ways and to 100% while moving/paused, change 50?120?50 km/h, collapse the panel and check cycling credits. Recheck Bitmoji while dragging and after jumps/holds.
+- [ ] **Phase 5 ? share:** share Start/Destination while open, backgrounded and closed: Navigation opens with the endpoint and correct source, with no second review or replay. Go there now must move before success while idle/moving/paused/closed, with no old route overwriting it. Check saved altitude. Save an edited favorite without opening TrollRoute and confirm existing favorites remain.
+- [ ] **Phase 6 ? access:** System registration is informational; if Settings is missing, follow User-registration instructions, then return to System. Check denied/reduced-accuracy guidance and temporary Precise Location. With While Using access, start a route in the foreground, switch apps/lock, pause/resume and return; check continuous motion and refreshed status after changing permissions.
+- [ ] **Phase 7 ? notifications/activity:** test Route finished and Time Sensitive off/on with Focus; a one-time return notifies at both ends, repeats only on first arrival. Enable Live Activity and check its seven fields, speed/seek updates, return-leg destination, Pause/Resume, every Stop choice and specific-place picker. Check iOS 16 app-opening controls and iOS 17 in-place controls where available. Disabling Live Activity must leave the route running.
 
-- Check Settings: registration is informational; location access and Precise Location refresh after changing iOS Settings. If the app page is missing, follow the User-registration instructions, then switch back to System.
-- Grant While Using the App, start a route, switch apps/lock, pause and resume; verify continuous motion and Snapchat. Check the access notice with permission denied, and the temporary Precise Location request with approximate access.
-- Check Route finished off/on, then Time Sensitive off/on during Focus (allow it in iOS notification and Focus settings). Repeating trips notify only on their first arrival; a one-time return notifies at both ends.
-- Live Activity is optional and off by default. On supported iOS, test Lock Screen progress, live speed/seek changes, Pause/Resume, all Stop choices and the specific-place picker. Check the current leg's destination during a return. Test iOS 16 controls opening the app and iOS 17 controls acting in place. Native Dynamic Island presentation and interaction have not been tested on physical TrollStore hardware. iOS 15 launch and locked-screen behavior still require device verification.
+## Verification limits and releases
 
-## Release policy
+CI covers models, signed packaging, live search, touch interactions and real simulator system presentations, plus an actual iOS 15.5 app launch. Physical TrollStore migration, private share opening/injection, background/locked operation, Focus, Snapchat and native Dynamic Island interaction still need the checks above. Earlier simulator widget runs intermittently rendered blank; later runs passed without a production rendering fix, and diagnostic logs were retained. Report any recurrence.
 
-Create a GitHub Release only when explicitly requested by the owner. Attach the `.tipa` produced by the successful GitHub Actions run, and write added / changed / fixed notes. No Release is created for this round unless separately requested.
+Create a GitHub Release **only when the owner explicitly requests it**. Attach the successful CI `.tipa` and added / changed / fixed notes. No Release was created for this round.
