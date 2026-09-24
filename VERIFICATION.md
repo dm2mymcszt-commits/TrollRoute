@@ -60,6 +60,8 @@ Implementation is complete through Phase 7. Build 51 is packaged and independent
 
 ## Regression and phone checklist
 
+The build 51 live address check returned first-result distances of **0 m (Talence), 42 m (Mountain View), 20 m (London), 17 m (Berlin), 39 m (Barcelona), 8 m (S?o Paulo) and 3 m (Tokyo)** from the test reference coordinates; all met the 50 m limit. These are live-service results from this run, not a guarantee of worldwide source coverage. The injection comparison delivered 140 inputs over 10 seconds: the old path made 140 starts and 140 timezone posts; the new path delivered 41 coalesced samples with one start and one timezone post, with metadata checks passing.
+
 Part D remains covered by the CI suites: safe tap/confirmation and native gestures; search parsers and seven live worldwide addresses; favorites/recents/map picking; cached modes, saved speeds, shortest-route ranking and simulated ETA; swap/current start; live speed, moving/paused seek and finish at 100%; all six finish actions and reverse geometry; altitude parsing/persistence/application; motion speed/course/accuracy and zero-speed holds; launch installation check and migration. Appearance, labels, haptics, joystick and GPX paths are retained; their end-to-end physical behavior remains on the checklist.
 
 Use the phase-grouped [on-device checklist](BUILD-TROLLSTORE.md#on-device-checklist). In particular, private injection/automatic opening, actual migration, locked/background continuation, Focus and Snapchat cannot be certified by a recording driver or simulator.
