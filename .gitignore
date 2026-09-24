@@ -8,3 +8,5 @@ build/
 *.entitlements
 !TrollRoute/TrollRoute.entitlements
 !TrollRouteShare/TrollRouteShare.entitlements
+
+__pycache__/

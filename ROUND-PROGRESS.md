@@ -5,9 +5,9 @@
 - Source of truth: [ROUND-PLAN.md](ROUND-PLAN.md); detailed evidence: [ROUND-AUDIT.md](ROUND-AUDIT.md).
 - Branch `experiment/route-motion`, origin `dm2mymcszt-commits/TrollRoute`. Phases0-6 accepted; Phase7 in progress; Phase8 not started.
 - Phase6 permission decision: WhenInUse supports foreground-started continuous updates, retained through pause/return. Fresh background starts differ; Phase7 must respect this. Evidence `2daac84`; phone background/Resume check remains.
-- Phase7 notification/state/command tests pass; signed build49 has app/share minimum15, widget16.1 and weak links. No widget privileges added. Physical Focus/intent/background checks remain.
+- Phase7 notification/state/command tests pass; signed build50 has app/share minimum15, widget16.1 and weak links. No widget privileges added. Physical Focus/intent/background checks remain.
 - `988e15f`, CI35966127981: full CI PASS, including four Live Activity system tests and picker/speed/return/toggle. Normal Lock Screen/expanded/Stop visually accepted. Prior blank renderer remains unexplained; diagnostics retained.
-- iOS15 probe35967741779: runtime boots and app installs; Xcode test driver excludes the device. Direct simctl launch/process/screenshot check prepared; no launch claim yet.
+- iOS15 probe35967741779: runtime boots and app installs; Xcode test driver excludes the device. `4b1e79f` direct launch/process/screenshot probe35969628430 pending; no launch claim yet.
 - Build50 `7eefbf2`, CI35968215512: four system tests PASS (180.6s); compact/minimal/Lock/expanded screenshots visually accepted. Main full run still finishing. No route/injection change.
 - **Next:** run the direct iOS15 launch probe, review its actual app screenshot, and verify the build50 signed package/full CI. Keep Phase7 open until required evidence is obtained or a limitation is explicitly agreed. Delete all three ROUND files in the final commit.
 
