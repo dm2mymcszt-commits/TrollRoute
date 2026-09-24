@@ -45,6 +45,11 @@ for metadata in root.rglob('PackageInfo'):
         print(bundle)
         break
 else:
+    for path in sorted(root.rglob('*')):
+        if len(path.relative_to(root).parts) <= 4:
+            print(str(path.relative_to(root)), file=sys.stderr)
+    for metadata in root.rglob('PackageInfo'):
+        print(metadata.read_text(), file=sys.stderr)
     raise SystemExit('No complete runtime bundle in Apple package payload')
 PY
 )
