@@ -1,9 +1,10 @@
 # TrollRoute 3.0.0 round verification
 
-Implementation is complete through Phase 7. Phase 8 final regression for build 51 is pending. No physical TrollStore testing is claimed: **needs phone test** below means implemented and checked in CI, with the specified hardware behavior still unverified. No item is waiting for an approval. The approved icon and privilege changes are included.
+Implementation is complete through Phase 7. Build 51 is packaged and independently checked; Phase 8 final regression is awaiting the map-job retry after an XCTest launch timeout. No physical TrollStore testing is claimed: **needs phone test** below means implemented and checked in CI, with the specified hardware behavior still unverified. No item is waiting for an approval. The approved icon and privilege changes are included.
 
 ## Evidence
 
+- [Build 51 final run](https://github.com/dm2mymcszt-commits/TrollRoute/actions/runs/36009811662), `a737fd1`: [TrollRoute 3.0.0 package](https://github.com/dm2mymcszt-commits/TrollRoute/actions/runs/36009811662/artifacts/10813201257), independently checked app/share/widget signatures, identities and minimum versions. Package SHA-256: `d82aa1d74d43cb5990c73df26cd452759fb95eeccfbb9103df82a6a41365049e`. Four Live Activity tests passed (166.838 s); all required system presentations visually reviewed again, including 120 km/h after seeking and the original-start destination during return. Final map-job status pending below.
 - [Build 50 full regression](https://github.com/dm2mymcszt-commits/TrollRoute/actions/runs/35968215512), `7eefbf2`: all six jobs passed, including four actual Live Activity system tests. Signed app/share minimum iOS 15; widget minimum 16.1; ActivityKit/AppIntents weak links verified.
 - [Actual iOS 15.5 launch](https://github.com/dm2mymcszt-commits/TrollRoute/actions/runs/35969628430), `4b1e79f`: official runtime booted, unchanged app installed and launched, same PID survived checks; screenshot shows Welcome and map. This tests launch without ActivityKit, not TrollStore injection.
 - Phase acceptance runs: [identity/migration](https://github.com/dm2mymcszt-commits/TrollRoute/actions/runs/34778446157), [injection](https://github.com/dm2mymcszt-commits/TrollRoute/actions/runs/34816390584), [terrain](https://github.com/dm2mymcszt-commits/TrollRoute/actions/runs/34849262175), [map gestures](https://github.com/dm2mymcszt-commits/TrollRoute/actions/runs/34942207636), [route controls](https://github.com/dm2mymcszt-commits/TrollRoute/actions/runs/34976588469), [share lifecycle](https://github.com/dm2mymcszt-commits/TrollRoute/actions/runs/35737111085), [access status](https://github.com/dm2mymcszt-commits/TrollRoute/actions/runs/35828097056).
@@ -87,5 +88,7 @@ The app gained `com.apple.developer.usernotifications.time-sensitive` for R24. S
 ## Approved GitHub operations and release policy
 
 The owner explicitly approved the exact list before execution: rename `dm2mymcszt-commits/Andromeda` to `TrollRoute`; description ?Location simulation and route playback for TrollStore.?; default `experiment/route-motion`; keep `main` at `bc1e1d3`; update local origin; delete tags `1.0`, `1.0-RC1`, `1.0-RC2`, `1.0.1`, `1.0.2`, `1.0.3`, `1.0.4`, `1.1`, `1.1.1`, `1.1.2`, `1.1.3`, `v2.5.0`, `v2.5.1`, `v2.5.2`.
+
+Final remote inspection on 2026-09-24 confirmed the requested name, description and default branch, preserved main commit, zero tags and zero Releases.
 
 No GitHub Release was created. Any future Release requires a new explicit owner request, the successful CI `.tipa`, and added / changed / fixed notes.
