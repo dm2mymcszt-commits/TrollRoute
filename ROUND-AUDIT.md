@@ -1394,3 +1394,8 @@ Final CI36009811662: actual LiveActivity tests4/0 failures166.838s; visually rev
 Downloaded final build51 artifact10813201257, verified identity plus signed app/share/widget binaries and exact entitlements with both Tests/Identity scripts. App/share15.0; widget16.1; ActivityKit/AppIntents weak-linked. Package SHA256d82aa1d74d43cb5990c73df26cd452759fb95eeccfbb9103df82a6a41365049e. Permanent report records artifact and current pending map retry.
 
 Main job107667302367 SUCCESS, including actual-engine models, final signed package, route-map/picker previews and live addresses (first result distances0/42/20/17/39/8/3m in requested order). Only map-workspace-ui failed. Dispatched gh run rerun --failed for36009811662: attempt2 repeats full unchanged map job, other five successes retained. No production/test edits or assertions weakened.
+
+
+### Final acceptance
+
+Resumed at clean045dac4 after approval review could not run the previous read-only status check due to usage limits. Re-read whole plan/progress. CI36009811662 now SUCCESS across all six jobs. Map attempt2 job107676152773 ran unchanged: tests9/0 failures199.823s and all previews completed; artifact10813343660. Initial launch-timeout evidence retained separately. Final package artifact10813201257 and SHA remain unchanged. Permanent report completed; only final screenshot confirmation and requested deletion of all three ROUND files remain. No GitHub Release.

@@ -3,13 +3,13 @@
 ## Resume
 
 - Source of truth: [ROUND-PLAN.md](ROUND-PLAN.md); detailed evidence: [ROUND-AUDIT.md](ROUND-AUDIT.md).
-- Branch `experiment/route-motion`, origin `dm2mymcszt-commits/TrollRoute`. Phases0-7 accepted; Phase8 in progress.
+- Branch `experiment/route-motion`, origin `dm2mymcszt-commits/TrollRoute`. Phases0-8 accepted; final documentation cleanup pending.
 - Phase6: WhenInUse supports foreground-started continuous updates, retained through pause/return; fresh background starts differ. Phone background/Resume check remains.
 - Build50 `7eefbf2`, full CI35968215512 SUCCESS. Four real Live Activity tests pass; compact/minimal/expanded/Stop/Lock screenshots visually accepted. Signed app/share minimum15, widget16.1 and weak links verified. No widget privileges.
 - iOS15 launch `4b1e79f`, CI35969628430 SUCCESS: unchanged app launches on actual15.5 runtime, PID survives checks, screenshot shows Welcome + map. This is simulator launch proof, not TrollStore injection proof.
 - Duplicate full CI35969595936 canceled to prioritize launch. Final regression will cover its test-only expanded-capture ordering change. Previous blank renderer failures remain unexplained; later system tests pass, diagnostics retained.
 - Physical migration, private share operations, background/Focus/native Island and Snapchat checks remain on the phone checklist.
-- **Next:** build51 `a737fd1` CI36009811662: icon/share/route/LiveActivity pass; system screenshots reviewed. Main build and package verification pass. Map attempt2 running unchanged after sole XCTest launch timeout before Main Stop test. Wait for map success, finish report, then ROUND cleanup last. No Release.
+- **Next:** final map screenshot check, then delete all three ROUND files in the last commit. CI36009811662 SUCCESS, build51 package verified, per-ID report complete. No Release.
 
 ## Decisions already approved
 
@@ -54,7 +54,7 @@
 | 7 R25, R26, R27, R28 | Done; phone checks remain | Runtime availability, correct wording, optional external DynamicCow note; no hardware claim |
 | 7 acceptance | Done | Signed build50; system screenshot review; `4b1e79f` actual iOS15.5 launch CI35969628430 |
 | 8 documentation | Done, `a737fd1` | README, short phase checklist, per-ID VERIFICATION report and corrected terrain notices |
-| 8 regression + delivery | In progress | `a737fd1` build51, CI36009811662; package/screenshot review next |
+| 8 regression + delivery | Done | `a737fd1` build51, CI36009811662 SUCCESS; map retry9/0, exact package/signatures checked |
 | 8 cleanup | Not started | Delete ROUND-PLAN.md, ROUND-PROGRESS.md, ROUND-AUDIT.md last; no Release |
 
 ## Carry-forward constraints
