@@ -6,10 +6,10 @@
 - Branch `experiment/route-motion`, origin `dm2mymcszt-commits/TrollRoute`. Phases0-6 accepted; Phase7 in progress; Phase8 not started.
 - Phase6 permission decision: WhenInUse supports foreground-started continuous updates, retained through pause/return. Fresh background starts differ; Phase7 must respect this. Evidence `2daac84`; phone background/Resume check remains.
 - Phase7 notification/state/command tests pass; signed build49 has app/share minimum15, widget16.1 and weak links. No widget privileges added. Physical Focus/intent/background checks remain.
-- `988e15f`, CI35966127981: all four Live Activity system tests PASS, including picker/speed/return/toggle; full run pending. Normal Lock Screen/expanded/Stop visually accepted. Prior blank renderer remains unexplained; diagnostics retained.
-- iOS15 probe35966805282 confirms Payload is the runtime bundle, no install-location. `207bacc` registers verified bundle; retry35967741779 pending. No launch claim.
-- Build50 `7eefbf2`, CI35968215512: fixes compact/minimal test setup (separate companion app + stable content); awaiting CI/visual review. Widget accessibility IDs only; no route/injection change.
-- **Next:** validate build50 compact/minimal captures; inspect iOS15 registration/launch result. Keep Phase7 open until required evidence is obtained or a limitation is explicitly agreed. Delete all three ROUND files in the final commit.
+- `988e15f`, CI35966127981: full CI PASS, including four Live Activity system tests and picker/speed/return/toggle. Normal Lock Screen/expanded/Stop visually accepted. Prior blank renderer remains unexplained; diagnostics retained.
+- iOS15 probe35967741779: runtime boots and app installs; Xcode test driver excludes the device. Direct simctl launch/process/screenshot check prepared; no launch claim yet.
+- Build50 `7eefbf2`, CI35968215512: four system tests PASS (180.6s); compact/minimal/Lock/expanded screenshots visually accepted. Main full run still finishing. No route/injection change.
+- **Next:** run the direct iOS15 launch probe, review its actual app screenshot, and verify the build50 signed package/full CI. Keep Phase7 open until required evidence is obtained or a limitation is explicitly agreed. Delete all three ROUND files in the final commit.
 
 ## Decisions already approved
 

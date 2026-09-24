@@ -68,13 +68,6 @@ xcodebuild -project TrollRoute.xcodeproj -scheme TrollRoute -configuration Debug
   -destination 'generic/platform=iOS Simulator' -derivedDataPath "$QA_DIR/DerivedData" \
   CODE_SIGNING_ALLOWED=NO ENABLE_DEBUG_DYLIB=NO > "$QA_DIR/build.log" 2>&1 || { cat "$QA_DIR/build.log"; exit 1; }
 xcrun simctl install "$DEVICE" "$QA_DIR/DerivedData/Build/Products/Debug-iphonesimulator/TrollRoute.app"
-python3 Tests/MapWorkspace/ui-project.py "$QA_DIR" Tests/iOS15/LaunchTests.swift IOS15LaunchTests
-xcodebuild test -project "$QA_DIR/IOS15LaunchTests.xcodeproj" -scheme IOS15LaunchTests \
-  -destination "platform=iOS Simulator,id=$DEVICE" -parallel-testing-enabled NO \
-  -derivedDataPath "$QA_DIR/TestDerivedData" -resultBundlePath "$QA_DIR/Launch.xcresult" \
-  CODE_SIGNING_ALLOWED=NO IPHONEOS_DEPLOYMENT_TARGET=15.0 > "$QA_DIR/tests.log" 2>&1 || {
-    xcrun xcresulttool export attachments --path "$QA_DIR/Launch.xcresult" --output-path "$QA_DIR/attachments" || true
-    cat "$QA_DIR/tests.log"; exit 1
-  }
-cat "$QA_DIR/tests.log"
-xcrun xcresulttool export attachments --path "$QA_DIR/Launch.xcresult" --output-path "$QA_DIR/attachments"
+# CoreSimulator boots this runtime, but Xcode 16's XCTest destination selector
+# excludes it. Exercise the installed, unmodified app through simctl directly.
+python3 Tests/iOS15/launch.py "$DEVICE" "$RUNTIME" "$QA_DIR"

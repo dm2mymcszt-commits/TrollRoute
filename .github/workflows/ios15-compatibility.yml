@@ -26,10 +26,12 @@ jobs:
           path: |
             build/ios15-qa/check.log
             build/ios15-qa/build.log
-            build/ios15-qa/tests.log
             build/ios15-qa/runtime-source.json
             build/ios15-qa/runtimes.json
-            build/ios15-qa/attachments
-            build/ios15-qa/Launch.xcresult
+            build/ios15-qa/launch-environment.json
+            build/ios15-qa/launch.txt
+            build/ios15-qa/processes-*.txt
+            build/ios15-qa/app-startup.log
+            build/ios15-qa/actual-app-ios15-launch.png
           if-no-files-found: ignore
           retention-days: 14
