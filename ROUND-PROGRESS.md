@@ -9,7 +9,7 @@
 - iOS15 launch `4b1e79f`, CI35969628430 SUCCESS: unchanged app launches on actual15.5 runtime, PID survives checks, screenshot shows Welcome + map. This is simulator launch proof, not TrollStore injection proof.
 - Duplicate full CI35969595936 canceled to prioritize launch. Final regression will cover its test-only expanded-capture ordering change. Previous blank renderer failures remain unexplained; later system tests pass, diagnostics retained.
 - Physical migration, private share operations, background/Focus/native Island and Snapchat checks remain on the phone checklist.
-- **Next:** push build51 documentation/version checkpoint for final full CI; finish permanent per-ID report while CI runs; verify package and evidence, then delete all three ROUND files last. No Release.
+- **Next:** final build51 `a737fd1`, CI36009811662 running. Permanent per-ID report written; verify package/current system screenshots, record final results, then delete all three ROUND files last. No Release.
 
 ## Decisions already approved
 
@@ -53,8 +53,8 @@
 | 7 R22, R23, R24 | Done; phone checks remain | `7eefbf2` full CI35968215512; actual system controls/screenshots, model/notification tests |
 | 7 R25, R26, R27, R28 | Done; phone checks remain | Runtime availability, correct wording, optional external DynamicCow note; no hardware claim |
 | 7 acceptance | Done | Signed build50; system screenshot review; `4b1e79f` actual iOS15.5 launch CI35969628430 |
-| 8 documentation | In progress | README rewrite; short BUILD guide, migration/release policy/phone checklist |
-| 8 regression + delivery | Not started | All Part D + phase checks; version 3.0.0 suggested, increasing build; final per-ID report |
+| 8 documentation | Done, `a737fd1` | README, short phase checklist, per-ID VERIFICATION report and corrected terrain notices |
+| 8 regression + delivery | In progress | `a737fd1` build51, CI36009811662; package/screenshot review next |
 | 8 cleanup | Not started | Delete ROUND-PLAN.md, ROUND-PROGRESS.md, ROUND-AUDIT.md last; no Release |
 
 ## Carry-forward constraints

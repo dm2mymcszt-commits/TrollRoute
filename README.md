@@ -42,6 +42,6 @@ GitHub Releases are created only on the owner?s explicit request, using the `.ti
 
 ## Credits and license
 
-Based on Andromeda by son3ra1n and Geranium by c22dev. GPL-3.0. See [LICENSE](LICENSE).
+Based on Andromeda by son3ra1n and Geranium by c22dev. GPL-3.0. See [LICENSE](LICENSE.md).
 
 Data: Apple Maps, ? OpenStreetMap contributors, national address and elevation services. See [data credits and licenses](THIRD-PARTY-NOTICES.md). Google result pages are not scraped and no billing-linked Google API key is required.
