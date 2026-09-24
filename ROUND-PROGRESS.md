@@ -8,7 +8,7 @@
 - Phase7 notification/state/command tests pass; signed build50 has app/share minimum15, widget16.1 and weak links. No widget privileges added. Physical Focus/intent/background checks remain.
 - `988e15f`, CI35966127981: full CI PASS, including four Live Activity system tests and picker/speed/return/toggle. Normal Lock Screen/expanded/Stop visually accepted. Prior blank renderer remains unexplained; diagnostics retained.
 - iOS15 probe35967741779: runtime boots and app installs; Xcode test driver excludes the device. `4b1e79f` direct launch/process/screenshot probe35969628430 pending; no launch claim yet.
-- Build50 `7eefbf2`, CI35968215512: four system tests PASS (180.6s); compact/minimal/Lock/expanded screenshots visually accepted. Main full run still finishing. No route/injection change.
+- Build50 `7eefbf2`, CI35968215512: four system tests PASS (180.6s); compact/minimal/Lock/expanded screenshots visually accepted. All six CI jobs PASS; signed package verified. No route/injection change.
 - **Next:** run the direct iOS15 launch probe, review its actual app screenshot, and verify the build50 signed package/full CI. Keep Phase7 open until required evidence is obtained or a limitation is explicitly agreed. Delete all three ROUND files in the final commit.
 
 ## Decisions already approved
