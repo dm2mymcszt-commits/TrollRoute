@@ -1,5 +1,6 @@
 #!/bin/bash
 set -euo pipefail
+trap 'echo "Compatibility probe failed at line $LINENO: $BASH_COMMAND" >&2' ERR
 cd "$(dirname "$0")/../.."
 QA_DIR="$PWD/build/ios15-qa"
 mkdir -p "$QA_DIR"
@@ -27,6 +28,27 @@ test -n "$PACKAGE"
 # runtime bundle in CoreSimulator's supported runtime directory instead.
 pkgutil --expand-full "$PACKAGE" "$QA_DIR/expanded-runtime"
 BUNDLE=$(find "$QA_DIR/expanded-runtime" -type d -name '*.simruntime' -print -quit)
+# Component packages can install Payload itself as the runtime bundle (the
+# .simruntime name lives in PackageInfo's install-location, not in Payload).
+if [ -z "$BUNDLE" ]; then
+  BUNDLE=$(python3 - "$QA_DIR/expanded-runtime" <<'PY'
+from pathlib import Path
+import sys, xml.etree.ElementTree as ET
+root = Path(sys.argv[1])
+for metadata in root.rglob('PackageInfo'):
+    location = ET.parse(metadata).getroot().get('install-location', '')
+    payload = metadata.parent / 'Payload'
+    print(f'Component {metadata.name}: install-location={location}', file=sys.stderr)
+    if location.endswith('.simruntime') and (payload / 'Contents/Info.plist').is_file():
+        bundle = root / Path(location).name
+        payload.rename(bundle)
+        print(bundle)
+        break
+else:
+    raise SystemExit('No complete runtime bundle in Apple package payload')
+PY
+)
+fi
 test -n "$BUNDLE"
 sudo mkdir -p /Library/Developer/CoreSimulator/Profiles/Runtimes
 sudo ditto "$BUNDLE" "/Library/Developer/CoreSimulator/Profiles/Runtimes/$(basename "$BUNDLE")"

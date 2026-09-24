@@ -55,6 +55,7 @@ if len(sys.argv) > 1:
         assert share['CFBundleDisplayName'] == 'TrollRoute'
         assert share['CFBundleExecutable'] == 'TrollRouteShare'
         assert share['CFBundleVersion'] == app['CFBundleVersion']
+        assert share['MinimumOSVersion'] == '15.0'
 print('PASS: TrollRoute identity, shared groups and package components')
 assert plistlib.loads((root / 'TrollRouteActivity/entitlements.plist').read_bytes()) == {}, 'Widget has no extra privileges'
 
