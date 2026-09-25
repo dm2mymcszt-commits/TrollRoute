@@ -10,31 +10,62 @@ struct TrollRouteActivityBundle: WidgetBundle {
 struct TrollRouteActivity: Widget {
     var body: some WidgetConfiguration {
         ActivityConfiguration(for: RouteActivityAttributes.self) { context in
-            RouteActivityBody(content: context.state)
-                .padding(12)
-                .activityBackgroundTint(Color(.systemBackground))
-                .activitySystemActionForegroundColor(.accentColor)
+            RouteLockScreenActivity(content: context.state)
         } dynamicIsland: { context in
             DynamicIsland {
                 DynamicIslandExpandedRegion(.bottom) {
-                    RouteActivityBody(content: context.state)
+                    RouteActivityBody(content: context.state, palette: .dark)
                 }
             } compactLeading: {
                 Text(context.state.route.progress, format: .percent.precision(.fractionLength(0)))
                     .monospacedDigit().font(.caption)
+                    .foregroundColor(.white)
                     .accessibilityIdentifier("route-activity-compact-progress")
             } compactTrailing: {
                 RouteActivityTime(content: context.state).font(.caption).frame(maxWidth: 58)
+                    .foregroundColor(.white)
                     .accessibilityIdentifier("route-activity-compact-time")
             } minimal: {
                 ProgressView(value: context.state.route.progress)
                     .progressViewStyle(.circular)
+                    .tint(RouteActivityPalette.dark.accent)
                     .accessibilityLabel("Route progress")
                     .accessibilityIdentifier("route-activity-minimal-progress")
             }
             .widgetURL(URL(string: "trollroute://route"))
-            .keylineTint(.accentColor)
+            .keylineTint(RouteActivityPalette.dark.accent)
         }
+    }
+}
+
+/// Use concrete SwiftUI colors from the same appearance snapshot. UIKit's
+/// dynamic systemBackground may be archived in light appearance while the
+/// system renders the Live Activity's text in dark appearance on iOS 17.
+struct RouteActivityPalette {
+    let background: Color
+    let foreground: Color
+    let accent: Color
+    let control: Color
+
+    static let dark = Self(background: Color(red: 0.10, green: 0.10, blue: 0.12),
+        foreground: .white, accent: Color(red: 0.74, green: 0.70, blue: 1),
+        control: Color(red: 0.22, green: 0.20, blue: 0.32))
+    static let light = Self(background: Color(red: 0.97, green: 0.97, blue: 0.99),
+        foreground: Color(red: 0.10, green: 0.10, blue: 0.14),
+        accent: Color(red: 0.31, green: 0.25, blue: 0.70),
+        control: Color(red: 0.88, green: 0.86, blue: 0.97))
+}
+
+struct RouteLockScreenActivity: View {
+    @Environment(\.colorScheme) private var colorScheme
+    let content: RouteActivityAttributes.ContentState
+    private var palette: RouteActivityPalette { colorScheme == .dark ? .dark : .light }
+
+    var body: some View {
+        RouteActivityBody(content: content, palette: palette)
+            .padding(14)
+            .activityBackgroundTint(palette.background)
+            .activitySystemActionForegroundColor(palette.foreground)
     }
 }
 
@@ -56,8 +87,13 @@ struct RouteActivityTime: View {
 
 struct RouteActivityBody: View {
     let content: RouteActivityAttributes.ContentState
+    let palette: RouteActivityPalette
     private var route: RouteActivityState { content.route }
     var body: some View {
+        activityContent.foregroundColor(palette.foreground).tint(palette.accent)
+    }
+
+    @ViewBuilder private var activityContent: some View {
         if #available(iOS 17.0, *), let stop = route.stop {
             stopChoices(stop)
         } else {
@@ -103,8 +139,9 @@ struct RouteActivityBody: View {
 
     private func controlLabel(_ title: String) -> some View {
         Text(title).font(.subheadline.weight(.semibold))
-            .frame(maxWidth: .infinity, minHeight: 32)
-            .background(Color.accentColor.opacity(0.18), in: RoundedRectangle(cornerRadius: 8))
+            .foregroundColor(palette.foreground)
+            .frame(maxWidth: .infinity, minHeight: 36)
+            .background(palette.control, in: RoundedRectangle(cornerRadius: 8))
     }
 
     @available(iOS 17.0, *)
@@ -136,7 +173,8 @@ struct RouteActivityBody: View {
             Spacer(minLength: 0)
         }
         .font(.caption).frame(maxWidth: .infinity, minHeight: 38).padding(.horizontal, 6)
-        .background(Color.accentColor.opacity(selected ? 0.25 : 0.12), in: RoundedRectangle(cornerRadius: 8))
+        .foregroundColor(palette.foreground)
+        .background(palette.control, in: RoundedRectangle(cornerRadius: 8))
         .accessibilityValue(selected ? "Selected" : "Not selected")
     }
 }

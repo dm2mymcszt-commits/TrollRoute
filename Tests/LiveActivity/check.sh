@@ -28,7 +28,7 @@ finish() {
 trap finish EXIT
 xcrun simctl boot "$DEVICE"
 xcrun simctl bootstatus "$DEVICE" -b
-xcrun simctl ui "$DEVICE" appearance dark
+xcrun simctl ui "$DEVICE" appearance "${ACTIVITY_APPEARANCE:-dark}"
 xcrun simctl install "$DEVICE" "$QA_DIR/Products/Debug-iphonesimulator/LiveActivityQA.app"
 xcrun simctl install "$DEVICE" "$QA_DIR/Products/Debug-iphonesimulator/CompanionQA.app"
 xcrun simctl privacy "$DEVICE" grant location local.trollroute.activityqa

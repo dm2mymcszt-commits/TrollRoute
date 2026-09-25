@@ -112,6 +112,38 @@ final class LiveActivitySystemTests: XCTestCase {
         capture("system-lock-screen")
     }
 
+    func testNotificationCentreControls() throws {
+        let app = try app()
+        defer { app.terminate() }
+        app.buttons["Start real"].tap()
+        XCTAssertTrue(app.staticTexts["QA activity ready"].waitForExistence(timeout: 10))
+        goHome()
+        // Notification Centre on an authenticated device, the reported surface.
+        // A passcode-locked device requires authentication before iOS runs buttons.
+        board.coordinate(withNormalizedOffset: CGVector(dx: 0.2, dy: 0.01))
+            .press(forDuration: 0.1, thenDragTo: board.coordinate(withNormalizedOffset: CGVector(dx: 0.2, dy: 0.8)))
+        XCTAssertTrue(board.staticTexts["Test destination"].waitForExistence(timeout: 10), board.debugDescription)
+        XCTAssertTrue(board.staticTexts["20 km/h"].exists, board.debugDescription)
+        capture("notification-centre-moving")
+        XCTAssertTrue(board.buttons["Pause"].exists)
+        board.buttons["Pause"].tap()
+        XCTAssertTrue(board.buttons["Resume"].waitForExistence(timeout: 10), board.debugDescription)
+        capture("notification-centre-paused")
+        board.buttons["Resume"].tap()
+        XCTAssertTrue(board.buttons["Pause"].waitForExistence(timeout: 10))
+        board.buttons["Stop"].tap()
+        XCTAssertTrue(board.buttons["Restore real location"].waitForExistence(timeout: 10))
+        capture("notification-centre-stop-choices")
+        board.buttons["Cancel"].tap()
+        XCTAssertTrue(board.buttons["Pause"].waitForExistence(timeout: 10))
+        board.buttons["Stop"].tap()
+        XCTAssertTrue(board.buttons["Restore real location"].waitForExistence(timeout: 10))
+        board.buttons["Restore real location"].tap()
+        app.activate()
+        XCTAssertTrue(app.staticTexts["QA stopped"].waitForExistence(timeout: 10))
+        XCTAssertTrue(app.staticTexts["QA no activity"].waitForExistence(timeout: 10))
+    }
+
     func testSpecificPlaceOpensPickerAndAppliesFavorite() throws {
         let app = try app()
         defer { app.terminate() }

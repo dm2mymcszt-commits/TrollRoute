@@ -50,6 +50,17 @@ if len(sys.argv) > 1:
         assert widget['MinimumOSVersion'] == '16.1'
         assert widget['NSExtension']['NSExtensionPointIdentifier'] == 'com.apple.widgetkit-extension'
         assert built['NSSupportsLiveActivities'] is True
+        # Source availability alone is insufficient: Xcode has emitted 17.2-only
+        # metadata for this iOS 17.0 intent. Validate what actually ships.
+        for component in [prefix, prefix + 'PlugIns/TrollRouteActivity.appex/']:
+            metadata = json.loads(package.read(component + 'Metadata.appintents/extract.actionsdata'))
+            intent = metadata['actions']['RouteActivityIntent']
+            introduced = intent.get('availabilityAnnotations', {}).get('LNPlatformNameIOS', {}).get('introducedVersion', '0')
+            assert tuple(map(int, introduced.split('.'))) <= (17, 0), (component, introduced)
+            assert intent.get('mangledTypeName'), (component, 'Missing pre-iOS-17.2 intent type lookup')
+            assert intent['openAppWhenRun'] is False
+            parameters = {p['name']: p for p in intent['parameters']}
+            assert parameters['request']['isOptional'] and parameters['choice']['isOptional']
         share = info(prefix + 'PlugIns/TrollRouteShare.appex/Info.plist')
         assert share['CFBundleIdentifier'] == 'com.dm2mymcszt.trollroute.share'
         assert share['CFBundleDisplayName'] == 'TrollRoute'

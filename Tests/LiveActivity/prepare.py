@@ -84,6 +84,7 @@ def target(name, files, extension=False, base_id='local.trollroute.activityqa', 
     info_path = out / (name + '-Info.plist')
     info_path.write_bytes(plistlib.dumps(info))
     settings = dict(SDKROOT='iphoneos', IPHONEOS_DEPLOYMENT_TARGET='17.0', SWIFT_VERSION='5.0',
+        ENABLE_APPINTENTS_DEPLOYMENT_AWARE_PROCESSING='NO',
         TARGETED_DEVICE_FAMILY='1', GENERATE_INFOPLIST_FILE='NO', INFOPLIST_FILE=str(info_path),
         PRODUCT_BUNDLE_IDENTIFIER=identifier, PRODUCT_NAME=name, CODE_SIGNING_ALLOWED='NO',
         SWIFT_OPTIMIZATION_LEVEL='-Onone', SWIFT_ACTIVE_COMPILATION_CONDITIONS=conditions if conditions is not None else ('' if extension else 'TROLLROUTE_APP'),

@@ -8,15 +8,15 @@ struct RouteActivityIntent: LiveActivityIntent {
     static var isDiscoverable: Bool = false
     @Parameter(title: "Trip") var trip: String
     @Parameter(title: "Action") var action: String
-    @Parameter(title: "Stop request") var request: String
-    @Parameter(title: "Location choice") var choice: String
+    @Parameter(title: "Stop request") var request: String?
+    @Parameter(title: "Location choice") var choice: String?
 
     init() {}
     init(_ command: RouteActivityCommand) {
         trip = command.tripID.uuidString
         action = command.action.rawValue
-        request = command.requestID?.uuidString ?? ""
-        choice = command.choice ?? ""
+        request = command.requestID?.uuidString
+        choice = command.choice
     }
 
     enum Failure: LocalizedError {
@@ -30,7 +30,7 @@ struct RouteActivityIntent: LiveActivityIntent {
             throw Failure.unavailable
         }
         let command = RouteActivityCommand(tripID: id, action: action,
-            requestID: UUID(uuidString: request), choice: choice.isEmpty ? nil : choice)
+            requestID: request.flatMap(UUID.init(uuidString:)), choice: choice)
         #if TROLLROUTE_APP
         guard await RouteRuntime.shared.performIntent(command) == .applied else { throw Failure.unavailable }
         #else
