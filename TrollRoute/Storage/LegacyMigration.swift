@@ -13,7 +13,7 @@ enum MigrationError: LocalizedError {
     case unreadable(String)
     var errorDescription: String? {
         switch self {
-        case .unreadable(let detail): return "Could not finish importing from Andromeda. \(detail) Your old data has not been changed. Keep Andromeda installed."
+        case .unreadable(let detail): return "Could not finish the optional import. \(detail) Your existing data has not been erased. You can continue using TrollRoute."
         }
     }
 }
@@ -24,12 +24,19 @@ enum LegacyMigration {
     static let completionKey = "legacyMigration.v1.completed"
     static let summaryKey = "legacyMigration.v1.summary"
     static let acknowledgedKey = "legacyMigration.v1.acknowledged"
+    static let skippedKey = "legacyMigration.v1.skipped"
+
+    static func needsImport(in target: UserDefaults) -> Bool {
+        !target.bool(forKey: completionKey) && !target.bool(forKey: acknowledgedKey) &&
+            !target.bool(forKey: skippedKey)
+    }
     static let settingsKeys = ["routeFinishAction", "routeFinishDestination", "routeRecentPlaces.v1",
         "routeSpeedKmh.walking", "routeSpeedKmh.cycling", "routeSpeedKmh.driving", "altitudeProfile",
         "mapAppearance", "mapStyle", "mapButtonLabels", "mapHaptics", "tapMapToSetLocation", "askBeforeMoving"]
 
     static func pendingSummary(in target: UserDefaults) -> MigrationSummary? {
-        guard target.bool(forKey: completionKey), !target.bool(forKey: acknowledgedKey) else { return nil }
+        guard target.bool(forKey: completionKey), !target.bool(forKey: acknowledgedKey),
+              !target.bool(forKey: skippedKey) else { return nil }
         return target.data(forKey: summaryKey).flatMap { try? JSONDecoder().decode(MigrationSummary.self, from: $0) }
     }
 
@@ -48,7 +55,10 @@ enum LegacyMigration {
 
     static func run(preferenceURLs: [URL], favoritesURL: URL?, oldAppInstalled: Bool,
                     target: UserDefaults, favoriteStore: FavoritesStore) throws -> MigrationSummary? {
-        if target.bool(forKey: completionKey) { return pendingSummary(in: target) }
+        if !needsImport(in: target) { return pendingSummary(in: target) }
+        // Uninstalling the old app ends the optional import. Do not read orphaned
+        // containers, replay a journal, or require any preference writes to open.
+        guard oldAppInstalled else { return nil }
         // The old app has no-container: its global domain takes precedence. A
         // container plist is used only if that global plist does not exist.
         var preferences: [String: Any]?

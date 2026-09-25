@@ -5,7 +5,6 @@
 @end
 @interface LSApplicationProxy : LSBundleProxy
 + (instancetype)applicationProxyForIdentifier:(NSString *)identifier;
-@property (nonatomic, readonly) NSURL *bundleURL;
 @property (nonatomic, readonly) NSDictionary *groupContainerURLs;
 @property (getter=isInstalled, nonatomic, readonly) BOOL installed;
 @end
@@ -22,7 +21,10 @@ NSDictionary<NSString *, id> *TRLegacyLocations(void) {
             return @{@"error": @"The installed-app database is unavailable."};
         }
         LSApplicationProxy *proxy = [(id)proxyClass applicationProxyForIdentifier:@"com.son3ra1n.andromeda"];
-        BOOL installed = proxy.installed || proxy.bundleURL != nil;
+        // A cached bundle URL can outlive uninstall. Only current registration
+        // enables import; old files must never become a launch dependency.
+        BOOL installed = proxy.installed;
+        if (!installed) return @{@"installed": @NO};
         NSMutableArray *paths = [NSMutableArray arrayWithObject:@"/var/mobile/Library/Preferences/com.son3ra1n.andromeda.plist"];
         NSURL *container = proxy.dataContainerURL;
         if (container) {
@@ -30,7 +32,7 @@ NSDictionary<NSString *, id> *TRLegacyLocations(void) {
         }
         NSURL *group = proxy.groupContainerURLs[@"group.live.cclerc.geraniumBookmarks"];
         if (!group) {
-            // Read-only MCM discovery also works when the old app is no longer registered.
+            // Read-only discovery of the installed old app's existing group.
             dlopen("/System/Library/PrivateFrameworks/MobileContainerManager.framework/MobileContainerManager", RTLD_LAZY);
             Class sharedClass = NSClassFromString(@"MCMSharedDataContainer");
             if ([sharedClass respondsToSelector:@selector(containerWithIdentifier:createIfNecessary:existed:error:)]) {
@@ -45,6 +47,6 @@ NSDictionary<NSString *, id> *TRLegacyLocations(void) {
         if (group) result[@"favorites"] = [[group URLByAppendingPathComponent:@"Library/Preferences/group.live.cclerc.geraniumBookmarks.plist"] path];
         return result;
     } @catch (NSException *exception) {
-        return @{@"error": @"Could not inspect Andromeda's existing containers. Keep Andromeda installed and retry."};
+        return @{@"error": @"Could not inspect the previous app's existing containers."};
     }
 }

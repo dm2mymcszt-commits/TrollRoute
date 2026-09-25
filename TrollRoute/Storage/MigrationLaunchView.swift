@@ -33,7 +33,13 @@ struct MigrationLaunchView: View {
                     Form {
                         Text(failure)
                         Button("Retry import", action: check)
-                    }.navigationTitle("Import needs attention")
+                        Button("Continue to TrollRoute") {
+                            // Opening the app never depends on successfully saving
+                            // a migration flag. The local state dismisses immediately.
+                            SharedPreferences.defaults.set(true, forKey: LegacyMigration.skippedKey)
+                            self.failure = nil
+                        }
+                    }.navigationTitle("Optional import")
                 }
             } else {
                 // Construct app models only after import, so their initial settings
@@ -46,14 +52,20 @@ struct MigrationLaunchView: View {
     private func check() {
         let defaults = SharedPreferences.defaults
         do {
-            guard let store = FavoritesStore.shared else { throw FavoritesStore.Failure.unavailable }
-            // This also upgrades Favorites from earlier TrollRoute builds once.
-            _ = try store.read()
-            if defaults.bool(forKey: LegacyMigration.completionKey) {
+            if !LegacyMigration.needsImport(in: defaults) {
                 summary = LegacyMigration.pendingSummary(in: defaults)
             } else {
                 let locations = TRLegacyLocations()
                 if let error = locations["error"] as? String { throw MigrationError.unreadable(error) }
+                // No old app means no import, even if stale files or an unfinished
+                // journal remain. No Favorites or preference write can block launch.
+                guard locations["installed"] as? Bool == true else {
+                    summary = nil
+                    failure = nil
+                    checked = true
+                    return
+                }
+                guard let store = FavoritesStore.shared else { throw FavoritesStore.Failure.unavailable }
                 let paths = (locations["preferences"] as? [String] ?? []).map { URL(fileURLWithPath: $0) }
                 let favorites = (locations["favorites"] as? String).map { URL(fileURLWithPath: $0) }
                 summary = try LegacyMigration.run(preferenceURLs: paths, favoritesURL: favorites,

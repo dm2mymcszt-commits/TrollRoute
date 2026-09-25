@@ -2,7 +2,9 @@
 
 CI uses macOS 15 / Xcode 16.4 on `experiment/route-motion`. Download a successful [build](https://github.com/dm2mymcszt-commits/TrollRoute/actions/workflows/trollstore.yml), extract `TrollRoute.tipa` from **TrollRoute-<version>-<commit>**, and install with TrollStore?s **+** button. Supported versions are listed in [README](README.md).
 
-The new identity installs beside Andromeda. Keep the old app until the one-time, read-only import succeeds and you check favorites, recents, speeds, finish settings/place, altitude and map preferences. Failed imports stay retryable. Both share actions can remain while both apps are installed.
+The new identity installs beside Andromeda. Optional import is offered only while the old app is installed. Once imported values are checked, the old app can be removed. An import error offers Retry or Continue to TrollRoute; it never requires keeping the old app to use TrollRoute.
+
+Build 52 fixes the startup lockout after removing the old app. Install over TrollRoute without uninstalling it. Check that reopening with the old app absent opens the map and keeps existing favorites/settings; repeat after force-closing. The migration regression includes a preferences-save failure followed by uninstall, stale files/journal, and continuing after an optional import error.
 
 This round adds the approved icon, shared location ownership, smoother injection and terrain profiles, safer map controls, per-trip finish and Stop choices, direct share actions, access guidance, notifications and Live Activity. [VERIFICATION.md](VERIFICATION.md) records evidence and remaining checks.
 

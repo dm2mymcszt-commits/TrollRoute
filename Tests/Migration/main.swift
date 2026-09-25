@@ -44,6 +44,14 @@ let repeated = try LegacyMigration.run(preferenceURLs: [old], favoritesURL: favo
 require(repeated == summary && target.double(forKey: "routeSpeedKmh.driving") == 120, "Completed import never replays")
 target.set(true, forKey: LegacyMigration.acknowledgedKey)
 require(LegacyMigration.pendingSummary(in: target) == nil, "Summary acknowledged once")
+// An acknowledged import must not inspect the old app, even if a completion
+// flag was lost. This covers launching after uninstall with existing new data.
+target.removeObject(forKey: LegacyMigration.completionKey)
+require(!LegacyMigration.needsImport(in: target), "Acknowledgement prevents another import")
+let acknowledged = try LegacyMigration.run(preferenceURLs: [temp], favoritesURL: temp,
+    oldAppInstalled: true, target: target, favoriteStore: store)
+require(acknowledged == nil && target.double(forKey: "routeSpeedKmh.driving") == 120,
+        "Acknowledged import ignores unreadable legacy paths and preserves current settings")
 
 resetTarget()
 target.set("dark", forKey: "mapAppearance")
@@ -95,7 +103,43 @@ require(storedFavorites().count == 3 && storedFavorites().contains { $0["name"] 
 resetTarget()
 let absent = temp.appendingPathComponent("absent.plist")
 let none = try LegacyMigration.run(preferenceURLs: [absent], favoritesURL: nil, oldAppInstalled: false, target: target, favoriteStore: store)
-require(none == nil && target.bool(forKey: LegacyMigration.completionKey), "Fresh installation completes without a false imported-data summary")
+require(none == nil && !target.bool(forKey: LegacyMigration.completionKey),
+        "Fresh installation skips import without requiring a completion write")
+
+// Reproduce the reported preferences-save failure, then uninstall the old app.
+// The next launch must neither synchronize nor touch stale/corrupt source files
+// or the current Favorites store. Existing new data and recovery journal survive.
+final class FailingPreferences: UserDefaults {
+    var flushes = 0
+    override func synchronize() -> Bool { flushes += 1; return flushes == 1 }
+}
+let failingSuite = "TrollRoute.Migration.Failure.\(UUID())"
+let failing = FailingPreferences(suiteName: failingSuite)!
+defer { failing.removePersistentDomain(forName: failingSuite) }
+do {
+    _ = try LegacyMigration.run(preferenceURLs: [old], favoritesURL: favorites,
+        oldAppInstalled: true, target: failing, favoriteStore: store)
+    fatalError("Preferences-save failure was not detected")
+} catch is MigrationError {}
+failing.set(123, forKey: "routeSpeedKmh.driving")
+try Data("unreadable current Favorites".utf8).write(to: storeURL)
+let beforeUninstall = failing.persistentDomain(forName: failingSuite)!
+let priorFlushes = failing.flushes
+let afterUninstall = try LegacyMigration.run(preferenceURLs: [temp], favoritesURL: temp,
+    oldAppInstalled: false, target: failing, favoriteStore: store)
+require(afterUninstall == nil && failing.flushes == priorFlushes,
+        "Uninstalled app cannot trigger the preferences-save lockout")
+require(NSDictionary(dictionary: beforeUninstall).isEqual(to: failing.persistentDomain(forName: failingSuite)!),
+        "Uninstall skips stale journal and preserves every current preference")
+let untouchedStore = try Data(contentsOf: storeURL)
+require(untouchedStore == Data("unreadable current Favorites".utf8),
+        "Absent old app does not read or change current Favorites")
+
+failing.set(true, forKey: LegacyMigration.skippedKey)
+require(!LegacyMigration.needsImport(in: failing), "Continue opts out without claiming a successful import")
+let skipped = try LegacyMigration.run(preferenceURLs: [temp], favoritesURL: temp,
+    oldAppInstalled: true, target: failing, favoriteStore: store)
+require(skipped == nil && failing.flushes == priorFlushes, "Continue bypasses import errors on later launches")
 let finalOldBytes = try Data(contentsOf: old)
 let finalFavoriteBytes = try Data(contentsOf: favorites)
 require(finalOldBytes == sourceBytes && finalFavoriteBytes == favoriteBytes, "All tests leave source bytes intact")
