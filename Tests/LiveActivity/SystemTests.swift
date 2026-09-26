@@ -28,6 +28,33 @@ final class LiveActivitySystemTests: XCTestCase {
     private func expand() {
         board.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.035)).press(forDuration: 1.2)
     }
+    private func tapSettledActivityControl(_ title: String) {
+        let button = board.buttons[title]
+        var previous = CGRect.null
+        var stableSince: Date?
+        let ready = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
+            guard button.exists, button.isEnabled, button.isHittable else {
+                stableSince = nil
+                return false
+            }
+            let frame = button.frame
+            guard !frame.isEmpty, frame.origin.x.isFinite, frame.origin.y.isFinite else {
+                stableSince = nil
+                return false
+            }
+            if frame != previous || stableSince == nil {
+                previous = frame
+                stableSince = Date()
+                return false
+            }
+            return Date().timeIntervalSince(stableSince!) >= 2
+        }, object: nil)
+        // SpringBoard exposes replacement controls before chronod finishes the
+        // preceding action/transition, sometimes with an infinite hit point.
+        // Wait for a stable, tappable control; never retry the action itself.
+        XCTAssertEqual(XCTWaiter.wait(for: [ready], timeout: 15), .completed, board.debugDescription)
+        button.tap()
+    }
     private func waitForPresentation(_ identifiers: [String]) {
         var previous: [CGRect] = []
         let expectation = XCTNSPredicateExpectation(predicate: NSPredicate { [self] _, _ in
@@ -126,19 +153,23 @@ final class LiveActivitySystemTests: XCTestCase {
         XCTAssertTrue(board.staticTexts["20 km/h"].exists, board.debugDescription)
         capture("notification-centre-moving")
         XCTAssertTrue(board.buttons["Pause"].exists)
-        board.buttons["Pause"].tap()
+        tapSettledActivityControl("Pause")
         XCTAssertTrue(board.buttons["Resume"].waitForExistence(timeout: 10), board.debugDescription)
         capture("notification-centre-paused")
-        board.buttons["Resume"].tap()
+        tapSettledActivityControl("Resume")
         XCTAssertTrue(board.buttons["Pause"].waitForExistence(timeout: 10))
-        board.buttons["Stop"].tap()
+        tapSettledActivityControl("Stop")
         XCTAssertTrue(board.buttons["Restore real location"].waitForExistence(timeout: 10))
         capture("notification-centre-stop-choices")
-        board.buttons["Cancel"].tap()
+        tapSettledActivityControl("Cancel")
         XCTAssertTrue(board.buttons["Pause"].waitForExistence(timeout: 10))
-        board.buttons["Stop"].tap()
+        tapSettledActivityControl("Stop")
         XCTAssertTrue(board.buttons["Restore real location"].waitForExistence(timeout: 10))
-        board.buttons["Restore real location"].tap()
+        tapSettledActivityControl("Restore real location")
+        let dismissed = XCTNSPredicateExpectation(predicate: NSPredicate { [self] _, _ in
+            !board.buttons["Restore real location"].exists && !board.staticTexts["Test destination"].exists
+        }, object: nil)
+        XCTAssertEqual(XCTWaiter.wait(for: [dismissed], timeout: 15), .completed, board.debugDescription)
         app.activate()
         XCTAssertTrue(app.staticTexts["QA stopped"].waitForExistence(timeout: 10))
         XCTAssertTrue(app.staticTexts["QA no activity"].waitForExistence(timeout: 10))
