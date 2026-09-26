@@ -6,7 +6,7 @@ The new identity installs beside Andromeda. Optional import is offered only whil
 
 Build 52 fixes the startup lockout after removing the old app. Install over TrollRoute without uninstalling it. Check that reopening with the old app absent opens the map and keeps existing favorites/settings; repeat after force-closing. The migration regression includes a preferences-save failure followed by uninstall, stale files/journal, and continuing after an optional import error.
 
-Build 53 targets the iOS 17 Live Activity: matching light/dark colors and compatible in-place Pause/Resume/Stop controls. Install over TrollRoute. Check Notification Centre in both appearances: Pause, Resume, Stop, Cancel, then Restore real location. A locked device requires authentication before iOS runs interactive controls.
+[Build 53 download](https://github.com/dm2mymcszt-commits/TrollRoute/actions/runs/36228389628/artifacts/10901536767) fixes the Live Activity: matching light/dark colors and compatible in-place Pause/Resume/Stop controls. Install over TrollRoute. Check Notification Centre in both appearances: Pause, Resume, Stop, Cancel, then Restore real location. A locked device requires authentication before iOS runs interactive controls.
 
 This round adds the approved icon, shared location ownership, smoother injection and terrain profiles, safer map controls, per-trip finish and Stop choices, direct share actions, access guidance, notifications and Live Activity. [VERIFICATION.md](VERIFICATION.md) records evidence and remaining checks.
 
