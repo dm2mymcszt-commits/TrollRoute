@@ -324,6 +324,57 @@ func testRouteFinishEngine() {
     }
 }
 
+func testCompletedRouteClearsMap() {
+    for timedArrival in [false, true] {
+        for action in RouteFinishAction.allCases {
+            let f = EngineFixture()
+            defer { f.close() }
+            f.prepare()
+            let route = f.engine.availableRoutes[0].route
+            f.engine.availableRoutes = (0..<3).map { RouteOption(route: route, index: $0) }
+            f.engine.allRoutePolylines = f.engine.availableRoutes.map { $0.route.polyline }
+            f.engine.selectRoute(at: 2)
+            precondition(f.engine.displayedPolylines.count == 3)
+            let place = RouteFinishDestination(name: "Saved place", address: "", coordinate: f.c)
+            f.engine.configureFinish(RouteFinishConfiguration(action: action, destination: place))
+            f.engine.startSimulation()
+
+            func arrive() {
+                if timedArrival {
+                    f.clock += route.distance / (f.engine.currentSpeedKmh / 3.6) + 0.01
+                    f.engine.advanceRoute()
+                } else {
+                    f.engine.seek(to: 1)
+                }
+            }
+            arrive()
+            if action == .returnOnce || action == .loop || action == .backAndForth {
+                precondition(f.engine.isSimulating && f.engine.displayedPolylines.count == 1,
+                             "Continuing legs must keep their active path")
+                precondition(f.engine.availableRoutes.count == 3)
+                if action != .returnOnce { continue }
+                arrive()
+            }
+
+            precondition(!f.engine.isSimulating && f.engine.activitySnapshot == nil)
+            precondition(f.engine.displayedPolylines.isEmpty && f.engine.allRoutePolylines.isEmpty)
+            precondition(f.engine.routePolyline == nil && f.engine.availableRoutes.isEmpty)
+            precondition(f.engine.routeStart == nil && f.engine.routeEnd == nil)
+            precondition(f.engine.simulatedRouteETAs.isEmpty && f.engine.selectedRouteIndex == 0)
+            precondition(f.engine.previewPosition == nil && f.engine.progress == 0)
+            if action == .stop {
+                precondition(!f.owner.isActive)
+            } else {
+                let expected = action == .goToPlace ? f.c : (action == .returnOnce ? f.a : f.b)
+                precondition(f.owner.isActive && f.at(expected) && f.owner.current!.speed == 0,
+                             "Clearing the map must preserve the chosen finish location")
+            }
+            f.engine.startSimulation()
+            precondition(!f.engine.isSimulating, "A completed route cannot restart without preparation")
+        }
+    }
+}
+
 func testRouteStopEngine() {
     for previous in [false, true] {
         for preferred in RouteStopAction.defaults {
@@ -521,6 +572,7 @@ func testLocationPermissionAdapter() {
             testNotificationContent()
             testActivityStateAndCommands()
             testRouteFinishEngine()
+            testCompletedRouteClearsMap()
             testRouteStopEngine()
             testMovingScrubEngine()
             testSharedMoveRevokesEngine()

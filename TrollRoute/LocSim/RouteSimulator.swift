@@ -816,20 +816,8 @@ class RouteSimulator: NSObject, ObservableObject, CLLocationManagerDelegate {
         case .hold: break
         }
         locationSession.finishHolding()
-        tripID = nil
-        stopRequest = nil
-        activityStopPickerID = nil
-        // The final sample has already published exact destination and zero speed.
-        timer?.invalidate()
-        timer = nil
-        lastTick = nil
-        isSimulating = false
-        isPaused = false
-        previewPosition = nil
-        seekFraction = nil
-        progress = 1
-        endBackgroundTask()
-        locationManager.stopUpdatingLocation()
+        // Keep the final held location, but discard the completed route and alternatives.
+        endPlayback()
     }
 
     private func beginLeg(_ track: RouteTrack, speedKmh: Double) {
