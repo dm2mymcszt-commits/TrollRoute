@@ -217,7 +217,8 @@ struct LocSimView: View {
                 let region = MKCoordinateRegion(center: coord, span: MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01))
                 mapRegion = region
                 startSimulation(at: coord)
-                AlertKitAPI.present(title: "📍 \(name)", icon: .done, style: .iOS17AppleMusic, haptic: .success)
+                AlertKitAPI.present(title: name, icon: UIImage(systemName: "mappin.circle.fill").map { .custom($0) },
+                                    style: .iOS17AppleMusic, haptic: .success)
             }
         }
         .sheet(item: $incomingPlace, onDismiss: offerSharedPlace) { request in

@@ -156,6 +156,9 @@ jobs:
       - name: Check app identity
         run: python3 Tests/Identity/check.py
 
+      - name: Check app text contains no emoji
+        run: python3 Tests/Identity/no-emoji.py
+
       - name: Package version
         id: version
         run: echo "version=$(/usr/libexec/PlistBuddy -c 'Print CFBundleShortVersionString' TrollRoute/Info.plist)" >> "$GITHUB_OUTPUT"

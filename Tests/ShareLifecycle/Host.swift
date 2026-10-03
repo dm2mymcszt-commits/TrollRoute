@@ -14,10 +14,10 @@ struct EquatableCoordinate: Equatable {
 
 // Replace only decorative toasts/haptics; failure dialogs and all actions remain.
 enum AlertKitAPI {
-    enum Icon { case done }
+    enum Icon { case done; case custom(UIImage) }
     enum Style { case iOS17AppleMusic }
     enum Haptic { case success }
-    static func present(title: String, icon: Icon, style: Style, haptic: Haptic) {}
+    static func present(title: String, icon: Icon?, style: Style, haptic: Haptic) {}
 }
 func successVibrate() {}
 extension UIApplication {

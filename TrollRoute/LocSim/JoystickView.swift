@@ -19,10 +19,10 @@ struct JoystickView: View {
     @State private var moveTimer: Timer? = nil
     
     enum SpeedMode: String, CaseIterable {
-        case walk = "🚶"
-        case run = "🏃"
-        case bike = "🚴"
-        case car = "🚗"
+        case walk = "figure.walk"
+        case run = "figure.run"
+        case bike = "bicycle"
+        case car = "car.fill"
         
         var label: String {
             switch self {
@@ -56,8 +56,9 @@ struct JoystickView: View {
                 VStack(spacing: 6) {
                     ForEach(SpeedMode.allCases, id: \.self) { mode in
                         Button(action: { selectedSpeed = mode }) {
-                            Text(mode.rawValue)
+                            Image(systemName: mode.rawValue)
                                 .font(.system(size: 20))
+                                .foregroundColor(.white)
                                 .frame(width: 40, height: 40)
                                 .background(
                                     selectedSpeed == mode
@@ -70,6 +71,8 @@ struct JoystickView: View {
                                         .stroke(selectedSpeed == mode ? Color.white.opacity(0.5) : Color.clear, lineWidth: 2)
                                 )
                         }
+                        .accessibilityLabel(mode.label)
+                        .accessibilityAddTraits(selectedSpeed == mode ? .isSelected : [])
                     }
                     
                     Text(selectedSpeed.label)
