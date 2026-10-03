@@ -25,6 +25,25 @@ final class LiveActivitySystemTests: XCTestCase {
         let settled = XCTNSPredicateExpectation(predicate: NSPredicate(format: "hittable == true"), object: icon)
         XCTAssertEqual(XCTWaiter.wait(for: [settled], timeout: 10), .completed)
     }
+    private func authorizeActivity(_ app: XCUIApplication, destination: String = "Test destination") {
+        // Fresh installs can expose the activity controls underneath the system
+        // consent card. A hittable Pause is not evidence consent was granted.
+        goHome()
+        board.coordinate(withNormalizedOffset: CGVector(dx: 0.2, dy: 0.01))
+            .press(forDuration: 0.1, thenDragTo: board.coordinate(withNormalizedOffset: CGVector(dx: 0.2, dy: 0.8)))
+        XCTAssertTrue(board.staticTexts[destination].waitForExistence(timeout: 15), board.debugDescription)
+        if board.buttons["Allow"].waitForExistence(timeout: 5) {
+            capture("system-activity-consent")
+            tapSettledActivityControl("Allow")
+            let accepted = XCTNSPredicateExpectation(predicate: NSPredicate { [self] _, _ in
+                !board.buttons["Allow"].exists && !board.buttons["Don\u{2019}t Allow"].exists
+            }, object: nil)
+            XCTAssertEqual(XCTWaiter.wait(for: [accepted], timeout: 10), .completed, board.debugDescription)
+        }
+        XCTAssertTrue(board.buttons["Pause"].waitForExistence(timeout: 10), board.debugDescription)
+        app.activate()
+        XCTAssertTrue(app.wait(for: .runningForeground, timeout: 10))
+    }
     private func expand() {
         waitForPresentation(["route-activity-compact-progress", "route-activity-compact-time"])
         board.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.035)).press(forDuration: 1.2)
@@ -74,6 +93,7 @@ final class LiveActivitySystemTests: XCTestCase {
         app.buttons["Start real"].tap()
         XCTAssertTrue(app.staticTexts["QA moving"].waitForExistence(timeout: 5))
         XCTAssertTrue(app.staticTexts["QA activity ready"].waitForExistence(timeout: 10), app.debugDescription)
+        authorizeActivity(app)
         goHome()
         waitForPresentation(["route-activity-compact-progress", "route-activity-compact-time"])
         capture("system-compact")
@@ -100,6 +120,7 @@ final class LiveActivitySystemTests: XCTestCase {
         XCTAssertTrue(app.staticTexts["QA stopped"].waitForExistence(timeout: 10))
         app.buttons["Start spoof"].tap()
         XCTAssertTrue(app.staticTexts["QA activity ready"].waitForExistence(timeout: 10), app.debugDescription)
+        authorizeActivity(app)
         goHome(); expand()
         XCTAssertTrue(board.buttons["Stop"].waitForExistence(timeout: 10))
         tapSettledActivityControl("Stop")
@@ -114,6 +135,7 @@ final class LiveActivitySystemTests: XCTestCase {
         defer { app.terminate() }
         app.buttons["Start real"].tap()
         XCTAssertTrue(app.staticTexts["QA activity ready"].waitForExistence(timeout: 10), app.debugDescription)
+        authorizeActivity(app)
         app.buttons["Seek 46"].tap()
         let companion = XCUIApplication(bundleIdentifier: "local.trollroute.companionqa")
         companion.launch()
@@ -151,6 +173,7 @@ final class LiveActivitySystemTests: XCTestCase {
         defer { app.terminate() }
         app.buttons["Start real"].tap()
         XCTAssertTrue(app.staticTexts["QA activity ready"].waitForExistence(timeout: 10))
+        authorizeActivity(app)
         goHome()
         // Notification Centre on an authenticated device, the reported surface.
         // A passcode-locked device requires authentication before iOS runs buttons.
@@ -187,6 +210,7 @@ final class LiveActivitySystemTests: XCTestCase {
         defer { app.terminate() }
         app.buttons["Start real"].tap()
         XCTAssertTrue(app.staticTexts["QA activity ready"].waitForExistence(timeout: 10))
+        authorizeActivity(app)
         goHome(); expand()
         XCTAssertTrue(board.buttons["Stop"].waitForExistence(timeout: 10))
         tapSettledActivityControl("Stop")
@@ -209,6 +233,7 @@ final class LiveActivitySystemTests: XCTestCase {
         defer { app.terminate() }
         app.buttons["Start real"].tap()
         XCTAssertTrue(app.staticTexts["QA activity ready"].waitForExistence(timeout: 10))
+        authorizeActivity(app)
         app.buttons["Seek 46"].tap()
         app.buttons["Speed 120"].tap()
         goHome(); expand()
@@ -225,6 +250,7 @@ final class LiveActivitySystemTests: XCTestCase {
         XCTAssertTrue(app.staticTexts["QA moving"].exists)
         app.buttons["Enable activity"].tap()
         XCTAssertTrue(app.staticTexts["QA activity ready"].waitForExistence(timeout: 10))
+        authorizeActivity(app, destination: "Original start")
         XCTAssertTrue(app.staticTexts["QA moving"].exists)
     }
 }
