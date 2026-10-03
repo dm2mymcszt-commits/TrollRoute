@@ -1,47 +1,96 @@
-# TrollRoute
+<p align="center">
+  <img src="docs/readme/icon.png" width="112" alt="TrollRoute app icon">
+</p>
 
-Location simulation and route playback for TrollStore. Set a location, search worldwide, save favorites, import GPX files, or play walking, cycling and driving routes.
+<h1 align="center">TrollRoute</h1>
 
-## Compatibility and installation
+<p align="center">
+  Put your iPhone anywhere in the world, or send it along a real route at the speed you choose.<br>
+  A location simulator for <a href="https://github.com/opa334/TrollStore">TrollStore</a>, on iOS 15.0 to 17.0.
+</p>
 
-TrollRoute is **TrollStore-only**. It supports iOS 15.0?16.6.1, iOS 16.7 RC (20H18), and iOS 17.0 where [TrollStore](https://github.com/opa334/TrollStore) is supported. Ordinary signing does not provide the private location-simulation privileges it needs.
+<p align="center">
+  <a href="https://github.com/dm2mymcszt-commits/TrollRoute/releases/latest"><b>Download the latest release</b></a>
+</p>
 
-Download a successful [GitHub Actions build](https://github.com/dm2mymcszt-commits/TrollRoute/actions/workflows/trollstore.yml) from `experiment/route-motion`. Extract **TrollRoute.tipa** from the **TrollRoute-<version>-<commit>** artifact, then install it with TrollStore?s **+** button.
+<p align="center">
+  <img src="docs/readme/route-in-progress.png" width="24%" alt="A route playing on the map, with progress and speed controls">
+  <img src="docs/readme/route-planner.png" width="24%" alt="Planning a route, with walking, cycling and driving times">
+  <img src="docs/readme/route-choices.png" width="24%" alt="Three routes to choose from">
+  <img src="docs/readme/stop-route.png" width="24%" alt="Choosing where the location goes when a route is stopped">
+</p>
 
-TrollRoute installs separately from Andromeda. On first launch it imports saved places and settings without modifying the old data. Keep Andromeda until the import succeeds and you have checked its summary and your saved values. Both share actions can appear while both apps are installed. An unrelated installed app?s ?Bookmark Location in Geranium? action is not removed.
+## What it does
+
+TrollRoute changes the location your iPhone reports to every app. Set a spot and stay there, or plan a trip and let the phone travel it along real roads, on foot, by bike or by car, at any speed from 1 to 500 km/h.
+
+Three things matter most here. Your location never changes by accident. Stopping a route never sends you back to your real position by surprise. And the movement other apps see (speed, heading, altitude) stays consistent.
 
 ## Features
 
-- Worldwide search, Google and Apple Maps links, decimal/DMS coordinates, plus codes, favorites and recent places. Search coverage varies by source; approximate matches are marked.
-- Walking, cycling and driving routes with cached mode tabs, saved speeds from 1?500 km/h, simulated travel times, and a one-tap start/destination swap.
-- Route playback with pause/resume, live speed changes and a draggable progress preview. The trip keeps moving while you preview a seek; releasing jumps to that point.
-- Six finish actions, chosen per trip and changeable during playback: stay, go to a saved place, restore real location, loop, return once, or repeat back and forth.
-- Separate controls for stopping a route and stopping location spoofing. Route Stop always asks where the location should stay or move; main Stop asks for confirmation by default.
-- Long press to prepare a route, with optional confirmation and automatic start. Tap-to-move is off by default.
-- Automatic terrain elevation or a saved Custom altitude, including negative values and decimal commas. Route elevation uses a cached terrain profile.
-- Share actions to move immediately, open Navigation with a route endpoint, or save an editable favorite.
-- A live Settings overview of TrollStore registration, location access and Precise Location.
+<img align="right" src="docs/readme/search.png" width="210" alt="Searching for a place">
 
-Route-finished notifications are on by default. Time Sensitive notifications are optional and off by default; iOS notification and Focus settings still apply.
+### Go anywhere
+
+- Search any address or place in the world.
+- Paste a Google Maps or Apple Maps link, coordinates, or a plus code.
+- Share a place from Google Maps or Apple Maps straight to TrollRoute: go there, use it as a route start or destination, or save it.
+- Keep favorites and pick them wherever a place is asked for.
+- Move by hand with the joystick, or import a GPX file.
+
+### Travel a route
+
+- Walking, cycling and driving routes, with alternatives. Each mode remembers its own speed.
+- Drag the progress bar to jump anywhere on the route, change speed while moving, pause and resume.
+- Decide what happens at the end: stay there, go to a saved place, return to your real location, loop, drive back, or go back and forth. You can change your mind while the route is running.
+- Stopping a route asks where your location should go: back where it was before the route, where it is now, the route start, or your real location.
+- Long press the map to plan a route to that point.
+
+### The details
+
+- Tapping the map does nothing unless you turn that on, and the main Stop button asks before restoring your real location.
+- Altitude follows the terrain automatically, or uses a value you set.
+- A notification tells you when a route finishes.
+- A status screen shows TrollStore registration, location access and Precise Location, and explains what to change if something is off.
+
+<br clear="right">
 
 ## Live Activity
 
-Live Activity is optional and **off by default**, and requires a supported iOS 16.1+ environment. It shows progress, remaining time and distance, speed, the current leg?s destination, Pause/Resume and Stop. On supported devices it appears on the Lock Screen; a native Dynamic Island provides additional presentations and interaction.
+<p align="center">
+  <img src="docs/readme/live-activity.png" width="46%" alt="Live Activity showing destination, progress, remaining time, distance and speed">
+  &nbsp;
+  <img src="docs/readme/live-activity-stop.png" width="46%" alt="Live Activity showing the choices offered when stopping a route">
+</p>
 
-On iOS 17.0, controls act in place and Stop presents the route?s location choices. Choosing a specific place opens TrollRoute?s picker. On iOS 16, controls open the app. Disabling Live Activity or its system presentation does not stop the route.
+A running route can show on the Lock Screen as a Live Activity: destination, progress, remaining time and distance, speed, with Pause and Stop. It is optional and off by default, and needs iOS 16.1 or later.
 
-[DynamicCowTS / DynamicCow](https://github.com/matteozappia/DynamicCowTS) is a separate, optional tool for adding a Dynamic Island presentation externally. It is not bundled; check its own compatibility before using it.
+On iOS 17.0 the buttons act in place, and Stop offers the same choices as in the app. On iOS 16 they open TrollRoute. On a device with a Dynamic Island the activity appears there too.
 
-## Build and verification
+## Install
 
-CI uses macOS 15 and Xcode 16.4 with `ipabuild.sh`. It checks the signed app and extensions, migration, route and location models, worldwide search, map gestures, share delivery, route controls and actual system Live Activity presentations. The app has also launched successfully on an actual iOS 15.5 simulator runtime.
+1. Install [TrollStore](https://github.com/opa334/TrollStore) on a supported device.
+2. Download the `.tipa` from the [latest release](https://github.com/dm2mymcszt-commits/TrollRoute/releases/latest).
+3. Open it with TrollStore.
 
-Simulator checks do not establish private location injection, locked-screen operation, Focus delivery, Snapchat behavior or native Dynamic Island interaction on physical TrollStore hardware. See the short [build and phone checklist](BUILD-TROLLSTORE.md) and [round verification report](VERIFICATION.md).
+TrollRoute works wherever TrollStore does from iOS 15.0 up: iOS 15.0 to 16.6.1, 16.7 RC (20H18) and 17.0. It cannot be installed with ordinary sideloading, because simulating the location needs permissions only TrollStore can grant.
 
-GitHub Releases are created only on the owner?s explicit request, using the `.tipa` from a successful CI run and added / changed / fixed notes. This round produces an Actions artifact; no Release has been created.
+### Coming from Andromeda
+
+TrollRoute is a separate app, so it installs next to Andromeda. On first launch it offers to import your favorites, recent places and settings. Nothing in Andromeda is changed. Once you have checked the import, you can delete Andromeda.
+
+## Good to know
+
+- **Search** uses Apple Maps and OpenStreetMap data, not Google's place database. For a place only Google Maps finds, share it from Google Maps to TrollRoute.
+- **Privacy**: no account, no ads, no analytics. Network requests go to Apple Maps and to the search, routing and elevation services listed in the [data credits](THIRD-PARTY-NOTICES.md). A pasted short link is opened once to read where it points.
+- **Dynamic Island**: the Live Activity has not been tested on a physical device with a native Dynamic Island. [DynamicCowTS](https://github.com/matteozappia/DynamicCowTS) is a separate tool that can add one on other devices; it is not part of TrollRoute.
+
+## Building
+
+There is no local build to set up: every push is built by GitHub Actions on macOS, which runs the tests and produces the `.tipa`. The packaging script is [`ipabuild.sh`](ipabuild.sh). Details and the on-device checklist are in [BUILD-TROLLSTORE.md](BUILD-TROLLSTORE.md), and what has and has not been verified is in [VERIFICATION.md](VERIFICATION.md).
 
 ## Credits and license
 
-Based on Andromeda by son3ra1n and Geranium by c22dev. GPL-3.0. See [LICENSE](LICENSE.md).
+TrollRoute is based on [Andromeda](https://github.com/Son3ra1n/Andromeda) by son3ra1n, itself based on [Geranium](https://github.com/c22dev/Geranium) by c22dev. It is released under the [GPL-3.0 license](LICENSE.md).
 
-Data: Apple Maps, ? OpenStreetMap contributors, national address and elevation services. See [data credits and licenses](THIRD-PARTY-NOTICES.md). Google result pages are not scraped and no billing-linked Google API key is required.
+Map, address, routing and elevation data: Apple Maps, © OpenStreetMap contributors and the other sources listed in [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md).
