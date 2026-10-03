@@ -1,27 +1,32 @@
-# TrollRoute: build and phone checks
+# TrollRoute: build and device checks
 
-CI uses macOS 15 / Xcode 16.4 on `experiment/route-motion`. Download a successful [build](https://github.com/dm2mymcszt-commits/TrollRoute/actions/workflows/trollstore.yml), extract `TrollRoute.tipa` from **TrollRoute-<version>-<commit>**, and install with TrollStore?s **+** button. Supported versions are listed in [README](README.md).
+TrollRoute 3.0.0 (build 54) was released as [v3.0.0](https://github.com/dm2mymcszt-commits/TrollRoute/releases/tag/v3.0.0) on 2026-10-03 from `fd7d417`. It clears completed route paths and alternatives. The 3.1 work is in progress; the new modes and History are not delivered yet.
 
-The new identity installs beside Andromeda. Optional import is offered only while the old app is installed. Once imported values are checked, the old app can be removed. An import error offers Retry or Continue to TrollRoute; it never requires keeping the old app to use TrollRoute.
+GitHub Actions builds on macOS 15 with Xcode 16.4. Open a successful [package workflow](https://github.com/dm2mymcszt-commits/TrollRoute/actions/workflows/trollstore.yml), download `TrollRoute-<version>-<commit>`, extract `TrollRoute.tipa`, and install it using TrollStore's + button. Install over TrollRoute to retain data. This is TrollStore-only: iOS 15.0-16.6.1, 16.7 RC and 17.0. No Mac is needed for installation.
 
-Build 52 fixes the startup lockout after removing the old app. Install over TrollRoute without uninstalling it. Check that reopening with the old app absent opens the map and keeps existing favorites/settings; repeat after force-closing. The migration regression includes a preferences-save failure followed by uninstall, stale files/journal, and continuing after an optional import error.
+The app installs beside Andromeda. Optional import is offered while Andromeda is installed. Check imported favorites and settings before removing the old app; reopening TrollRoute must still work. Build 52 fixed the import lockout, build 53 fixed Live Activity contrast and iOS 17 intent compatibility, and build 54 retains both fixes.
 
-[Build 53 download](https://github.com/dm2mymcszt-commits/TrollRoute/actions/runs/36228389628/artifacts/10901536767) fixes the Live Activity: matching light/dark colors and compatible in-place Pause/Resume/Stop controls. Install over TrollRoute. Check Notification Centre in both appearances: Pause, Resume, Stop, Cancel, then Restore real location. A locked device requires authentication before iOS runs interactive controls.
+## Device checklist for this round
 
-This round adds the approved icon, shared location ownership, smoother injection and terrain profiles, safer map controls, per-trip finish and Stop choices, direct share actions, access guidance, notifications and Live Activity. [VERIFICATION.md](VERIFICATION.md) records evidence and remaining checks.
+These are acceptance checks for the eventual 3.1 candidate, not claims that unfinished features are available. See [verification](VERIFICATION.md) for current status.
 
-## On-device checklist
+- [ ] History: run two routes, redo one without automatic movement, delete one, clear all with confirmation, then relaunch.
+- [ ] Settings: every existing option/default remains present and works after reorganization.
+- [ ] Long flight: airport selection, continuous altitude and speed, heading, date-line crossing, and the clock following time zones. Check Automatic and Custom altitude restoration after landing.
+- [ ] Short flight: lower cruise altitude, departure/arrival ground elevations and smooth landing.
+- [ ] Train: station selection, track-following geometry and a clear error for an unavailable route.
+- [ ] Both new modes: seek forward/back while moving and paused; change speed in flight phases and on the train; pause/resume.
+- [ ] Both new modes: all six finish actions, changes mid-trip, return/repeat, Route Stop/Cancel, notifications and Live Activity controls.
+- [ ] Snapchat during a flight and train trip: record what it displays; a plane or train Bitmoji is not guaranteed.
+- [ ] Driving Bitmoji still works after the time-zone/injection-adapter change, including seeking, pause/resume and speed changes.
+- [ ] Share action shows TrollRoute artwork. Joystick modes and the favorite toast show system icons.
 
-- [ ] **Phase 1 ? identity/import:** verify the app, icon and share title; compare imported values against Andromeda; confirm old data is unchanged and reopening does not import again.
-- [ ] **Phase 2 ? motion/altitude:** test Automatic elevation at 50?500 km/h, reverse legs and arrival; Custom 250 m, `12,5`, negative values and Reset. Recheck search, favorites, joystick, GPX and Snapchat?s driving Bitmoji after the injection changes.
-- [ ] **Phase 3 ? map:** default taps do not move you; test enabled tap confirmation and Cancel, double-tap zoom and route selection. Drag below the toolbar to pan the map. Test all long-press confirmation/auto-start combinations, real/spoofed starts, and saving/editing favorites from search and map pins.
-- [ ] **Phase 4 ? route session:** exercise all six finish actions, including changes during return legs, without changing Settings defaults. Test both Route Stop choice sets and Cancel; main Stop remains separate. Seek both ways and to 100% while moving/paused, change 50?120?50 km/h, collapse the panel and check cycling credits. Recheck Bitmoji while dragging and after jumps/holds.
-- [ ] **Phase 5 ? share:** share Start/Destination while open, backgrounded and closed: Navigation opens with the endpoint and correct source, with no second review or replay. Go there now must move before success while idle/moving/paused/closed, with no old route overwriting it. Check saved altitude. Save an edited favorite without opening TrollRoute and confirm existing favorites remain.
-- [ ] **Phase 6 ? access:** System registration is informational; if Settings is missing, follow User-registration instructions, then return to System. Check denied/reduced-accuracy guidance and temporary Precise Location. With While Using access, start a route in the foreground, switch apps/lock, pause/resume and return; check continuous motion and refreshed status after changing permissions.
-- [ ] **Phase 7 ? notifications/activity:** test Route finished and Time Sensitive off/on with Focus; a one-time return notifies at both ends, repeats only on first arrival. Enable Live Activity and check its seven fields, speed/seek updates, return-leg destination, Pause/Resume, every Stop choice and specific-place picker. Check iOS 16 app-opening controls and iOS 17 in-place controls where available. Disabling Live Activity must leave the route running.
+## Existing behavior to recheck
 
-## Verification limits and releases
+- Safe map taps and long press, every confirmation/auto-start combination, search/links/coordinates/plus codes, and Favorites in all pickers.
+- Walking/cycling/driving: cached tabs and saved speeds, simulated times/Fastest, swap, playback seeking/live speed, finish choices and separate main Stop confirmation.
+- Share Start/Destination and Go there now while open/backgrounded/closed; no stale route resumes over a direct move. Save favorites without opening the app.
+- Automatic terrain and fixed Custom altitude; access overview, TrollStore installation/registration, location permission and Precise Location; optional import.
+- Background/locked travel, Focus and Time Sensitive notifications. Live Activity in both appearances: Pause, Resume, Stop, Cancel, every stop choice and specific-place picker. Locked interactive controls require authentication; disabling Live Activity must leave the trip running.
 
-CI covers models, signed packaging, live search, touch interactions and real simulator system presentations, plus an actual iOS 15.5 app launch. Physical TrollStore migration, private share opening/injection, background/locked operation, Focus, Snapchat and native Dynamic Island interaction still need the checks above. Earlier simulator widget runs intermittently rendered blank; later runs passed without a production rendering fix, and diagnostic logs were retained. Report any recurrence.
-
-Create a GitHub Release **only when the owner explicitly requests it**. Attach the successful CI `.tipa` and added / changed / fixed notes. No Release was created for this round.
+Simulator checks cannot prove private TrollStore injection, background behavior, clock changes or Snapchat appearance. Record those on the device. Create a GitHub Release only on an explicit owner request; none has been created for the 3.1 work.
