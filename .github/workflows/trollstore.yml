@@ -23,6 +23,8 @@ jobs:
         run: bash Tests/Flight/check.sh
       - name: Check local route history
         run: bash Tests/History/check.sh
+      - name: Check Settings keys and defaults against 3.0.0
+        run: python3 Tests/Settings/check.py
   live-activity-ui:
     runs-on: macos-15
     timeout-minutes: 50

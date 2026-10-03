@@ -1,6 +1,56 @@
 import XCTest
 
 final class MapGestureTests: XCTestCase {
+    func testSettingsGroupsRetainEveryControl() {
+        let app = XCUIApplication(bundleIdentifier: "local.trollroute.workspacepreview")
+        app.launchArguments = ["--screen", "settings-enabled"]
+        app.launch()
+        defer { app.terminate() }
+        XCTAssertTrue(app.navigationBars["Settings"].waitForExistence(timeout: 15))
+        let groups = ["Map", "Gestures", "Routes", "Safety", "Notifications and Live Activity", "Access", "About"]
+        for group in groups { XCTAssertTrue(app.buttons[group].exists, group) }
+        capture(app, "settings-overview-awaiting-approval")
+        for group in groups {
+            app.buttons[group].tap()
+            let title = group == "Notifications and Live Activity" ? "Notifications" : group
+            XCTAssertTrue(app.navigationBars[title].waitForExistence(timeout: 5), app.debugDescription)
+            switch group {
+            case "Map":
+                for label in ["Appearance", "Map style", "Show button labels", "Button haptics"] {
+                    XCTAssertTrue(app.staticTexts[label].exists, label)
+                }
+            case "Gestures":
+                for label in ["Tap map to set location", "Ask before moving", "Long press to create route",
+                              "Confirm before creating route from long press", "Automatically start route after long press"] {
+                    XCTAssertTrue(app.switches[label].exists, label)
+                }
+            case "Routes":
+                XCTAssertTrue(app.staticTexts["Default action when a route finishes"].exists)
+                XCTAssertTrue(app.staticTexts["Default action when stopping a route"].exists)
+                XCTAssertTrue(app.buttons["History"].exists)
+            case "Safety":
+                XCTAssertTrue(app.switches["Confirm before stopping location spoofing"].exists)
+            case "Notifications and Live Activity":
+                XCTAssertTrue(app.switches["Route finished"].exists)
+                XCTAssertTrue(app.switches["Time Sensitive"].exists)
+                XCTAssertTrue(app.switches["route-live-activity"].exists)
+                XCTAssertTrue(app.buttons["About notifications"].exists)
+                XCTAssertTrue(app.buttons["About Live Activity"].exists)
+            case "Access":
+                for label in ["TrollStore registration", "Location access", "Precise Location"] {
+                    XCTAssertTrue(app.buttons["access-" + label].exists, label)
+                }
+            case "About":
+                XCTAssertTrue(app.staticTexts["TrollRoute"].exists)
+                XCTAssertTrue(app.links["Source code"].exists)
+            default: XCTFail("Unverified Settings group")
+            }
+            capture(app, "settings-\(title.lowercased())-awaiting-approval")
+            app.navigationBars.buttons["Settings"].tap()
+            XCTAssertTrue(app.navigationBars["Settings"].waitForExistence(timeout: 5))
+        }
+    }
+
     func testLocationOverviewExplainsSystemRegistrationAndDeniedAccess() {
         let app = XCUIApplication(bundleIdentifier: "local.trollroute.workspacepreview")
         app.launchArguments = ["--screen", "access-good"]

@@ -26,89 +26,15 @@ struct SettingsView: View {
     var body: some View {
         NavigationView {
             Form {
-                Section("Map") {
-                    Picker("Appearance", selection: $mapAppearance) {
-                        Text("System").tag("system")
-                        Text("Light").tag("light")
-                        Text("Dark").tag("dark")
-                    }
-                    Picker("Map style", selection: $mapStyle) {
-                        Text("Standard").tag("standard")
-                        Text("Satellite").tag("hybrid")
-                    }
-                    Toggle("Show button labels", isOn: $mapButtonLabels)
-                    Toggle("Button haptics", isOn: $mapHaptics)
-                    Toggle("Tap map to set location", isOn: $tapMapToSetLocation)
-                    if tapMapToSetLocation {
-                        Toggle("Ask before moving", isOn: $askBeforeMoving)
-                    }
-                    Toggle("Long press to create route", isOn: $longPressToCreateRoute)
-                    if longPressToCreateRoute {
-                        Toggle("Confirm before creating route from long press", isOn: $confirmLongPressRoute)
-                        Toggle("Automatically start route after long press", isOn: $autoStartLongPressRoute)
-                    }
+                NavigationLink { Form { mapOptions }.navigationTitle("Map") } label: { Label("Map", systemImage: "map") }
+                NavigationLink { Form { gestureOptions }.navigationTitle("Gestures") } label: { Label("Gestures", systemImage: "hand.tap") }
+                NavigationLink { Form { routeOptions }.navigationTitle("Routes") } label: { Label("Routes", systemImage: "point.topleft.down.to.point.bottomright.curvepath") }
+                NavigationLink { Form { safetyOptions }.navigationTitle("Safety") } label: { Label("Safety", systemImage: "checkmark.shield") }
+                NavigationLink { Form { notificationOptions; RouteActivitySettings() }.navigationTitle("Notifications") } label: {
+                    Label("Notifications and Live Activity", systemImage: "bell")
                 }
-                Section {
-                    Toggle("Confirm before stopping location spoofing", isOn: $confirmBeforeStoppingSpoofing)
-                } header: { Text("Location") }
-                LocationAccessOverview()
-                Section("Default action when a route finishes") {
-                    Picker("Action", selection: Binding(get: { finishSettings.action }, set: { action in
-                        if action == .goToPlace && finishSettings.destination == nil {
-                            selectGoAfterPicking = true
-                            showFinishPlacePicker = true
-                        } else { finishSettings.action = action }
-                    })) {
-                        ForEach(RouteFinishAction.allCases) { action in Text(action.title).tag(action) }
-                    }
-                    if finishSettings.action == .goToPlace {
-                        Button {
-                            selectGoAfterPicking = false
-                            showFinishPlacePicker = true
-                        } label: {
-                            VStack(alignment: .leading, spacing: 4) {
-                                Text(finishSettings.destination?.name ?? "Choose a place")
-                                if let destination = finishSettings.destination {
-                                    Text(destination.address.isEmpty ? String(format: "%.5f, %.5f", destination.latitude, destination.longitude) : destination.address)
-                                        .font(.caption).foregroundColor(.secondary)
-                                }
-                            }
-                        }
-                    }
-                    Text("The starting choice for each new route. Route-specific choices do not change this default.")
-                        .font(.caption).foregroundColor(.secondary)
-                }
-                Section("Default action when stopping a route") {
-                    Picker("Action", selection: $routeStopDefault) {
-                        ForEach(RouteStopAction.defaults) { action in Text(action.title).tag(action.rawValue) }
-                    }
-                    Text("Preselects a choice only. Stopping a route always asks what should happen to your location. If Return to previous spoofed location is unavailable, Stay at current location is selected instead.")
-                        .font(.caption).foregroundColor(.secondary)
-                }
-                Section {
-                    Toggle("Route finished", isOn: $routeFinishedNotifications)
-                    Toggle("Time Sensitive", isOn: $routeTimeSensitiveNotifications)
-                        .disabled(!routeFinishedNotifications)
-                } header: { Text("Notifications") } footer: {
-                    Text("Permission is requested when you start a route with notifications enabled. Repeating routes notify only on the first arrival. Time Sensitive can notify during Focus or Do Not Disturb when allowed by iOS. If alerts are blocked, check TrollRoute's notification settings and Allow Time Sensitive Notifications in your Focus settings.")
-                }
-                RouteActivitySettings()
-                Section("History") {
-                    NavigationLink("History") { RouteHistoryView(store: history, replay: replayHistory) }
-                }
-                Section("About") {
-                    HStack {
-                        Text("TrollRoute")
-                        Spacer()
-                        Text("\(Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "") (\(Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? ""))")
-                            .foregroundColor(.secondary)
-                    }
-                    Link("Source code", destination: URL(string: "https://github.com/dm2mymcszt-commits/TrollRoute")!)
-                    Text("Based on Andromeda by son3ra1n and Geranium by c22dev. GPL-3.0.")
-                        .font(.caption).foregroundColor(.secondary)
-                    Text("[Data: Apple Maps, \u{00A9} OpenStreetMap contributors, national address and elevation services](https://github.com/dm2mymcszt-commits/TrollRoute/blob/experiment/route-motion/THIRD-PARTY-NOTICES.md)")
-                        .font(.caption).foregroundColor(.secondary)
-                }
+                NavigationLink { Form { LocationAccessOverview() }.navigationTitle("Access") } label: { Label("Access", systemImage: "location.circle") }
+                NavigationLink { Form { aboutOptions }.navigationTitle("About") } label: { Label("About", systemImage: "info.circle") }
             }
             .navigationTitle("Settings")
             .navigationBarTitleDisplayMode(.inline)
@@ -123,6 +49,109 @@ struct SettingsView: View {
                         if selectGoAfterPicking { finishSettings.action = .goToPlace }
                     })
             }
+        }
+    }
+
+    private var mapOptions: some View {
+        Section("Map") {
+            Picker("Appearance", selection: $mapAppearance) {
+                Text("System").tag("system")
+                Text("Light").tag("light")
+                Text("Dark").tag("dark")
+            }
+            Picker("Map style", selection: $mapStyle) {
+                Text("Standard").tag("standard")
+                Text("Satellite").tag("hybrid")
+            }
+            Toggle("Show button labels", isOn: $mapButtonLabels)
+            Toggle("Button haptics", isOn: $mapHaptics)
+        }
+    }
+    private var gestureOptions: some View {
+        Group {
+            Section("Map taps") {
+                Toggle("Tap map to set location", isOn: $tapMapToSetLocation)
+                if tapMapToSetLocation { Toggle("Ask before moving", isOn: $askBeforeMoving) }
+            }
+            Section("Long press") {
+                Toggle("Long press to create route", isOn: $longPressToCreateRoute)
+                if longPressToCreateRoute {
+                    Toggle("Confirm before creating route from long press", isOn: $confirmLongPressRoute)
+                    Toggle("Automatically start route after long press", isOn: $autoStartLongPressRoute)
+                }
+            }
+        }
+    }
+    private var routeOptions: some View {
+        Group {
+            Section("Default action when a route finishes") {
+                Picker("Action", selection: Binding(get: { finishSettings.action }, set: { action in
+                    if action == .goToPlace && finishSettings.destination == nil {
+                        selectGoAfterPicking = true
+                        showFinishPlacePicker = true
+                    } else { finishSettings.action = action }
+                })) {
+                    ForEach(RouteFinishAction.allCases) { action in Text(action.title).tag(action) }
+                }
+                if finishSettings.action == .goToPlace {
+                    Button {
+                        selectGoAfterPicking = false
+                        showFinishPlacePicker = true
+                    } label: {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text(finishSettings.destination?.name ?? "Choose a place")
+                            if let destination = finishSettings.destination {
+                                Text(destination.address.isEmpty ? String(format: "%.5f, %.5f", destination.latitude, destination.longitude) : destination.address)
+                                    .font(.caption).foregroundColor(.secondary)
+                            }
+                        }
+                    }
+                }
+                Text("Starting choice for new routes. Each trip can use a different action.")
+                    .font(.caption).foregroundColor(.secondary)
+            }
+            Section("Default action when stopping a route") {
+                Picker("Action", selection: $routeStopDefault) {
+                    ForEach(RouteStopAction.defaults) { action in Text(action.title).tag(action.rawValue) }
+                }
+                DisclosureGroup("About stopping routes") {
+                    Text("Preselects a choice only. Stopping a route always asks what should happen to your location. If Return to previous spoofed location is unavailable, Stay at current location is selected instead.")
+                        .font(.caption).foregroundColor(.secondary)
+                }
+            }
+            Section {
+                NavigationLink("History") { RouteHistoryView(store: history, replay: replayHistory) }
+            }
+        }
+    }
+    private var safetyOptions: some View {
+        Section("Location spoofing") {
+            Toggle("Confirm before stopping location spoofing", isOn: $confirmBeforeStoppingSpoofing)
+        }
+    }
+    private var notificationOptions: some View {
+        Section("Notifications") {
+            Toggle("Route finished", isOn: $routeFinishedNotifications)
+            Toggle("Time Sensitive", isOn: $routeTimeSensitiveNotifications).disabled(!routeFinishedNotifications)
+            DisclosureGroup("About notifications") {
+                Text("Permission is requested when you start a route with notifications enabled. Repeating routes notify only on the first arrival. Time Sensitive can notify during Focus or Do Not Disturb when allowed by iOS. If alerts are blocked, check TrollRoute's notification settings and Allow Time Sensitive Notifications in your Focus settings.")
+                    .font(.caption).foregroundColor(.secondary)
+            }
+        }
+    }
+    private var aboutOptions: some View {
+        Section("About") {
+            HStack {
+                Text("TrollRoute")
+                Spacer()
+                Text("\(Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "") (\(Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? ""))")
+                    .foregroundColor(.secondary)
+            }
+            Link("Source code", destination: URL(string: "https://github.com/dm2mymcszt-commits/TrollRoute")!)
+            Text("Based on Andromeda by son3ra1n and Geranium by c22dev. GPL-3.0.")
+                .font(.caption).foregroundColor(.secondary)
+            Text("[Data: Apple Maps, \u{00A9} OpenStreetMap contributors, OurAirports, national address and elevation services](https://github.com/dm2mymcszt-commits/TrollRoute/blob/experiment/route-motion/THIRD-PARTY-NOTICES.md)")
+                .font(.caption).foregroundColor(.secondary)
         }
     }
 }

@@ -1,0 +1,28 @@
+{
+  "AppStorage": [
+    "@AppStorage(\"askBeforeMoving\", store: SharedPreferences.defaults) private var askBeforeMoving = true",
+    "@AppStorage(\"autoStartLongPressRoute\", store: SharedPreferences.defaults) private var autoStartLongPressRoute = false",
+    "@AppStorage(\"confirmBeforeStoppingSpoofing\", store: SharedPreferences.defaults) private var confirmBeforeStoppingSpoofing = true",
+    "@AppStorage(\"confirmLongPressRoute\", store: SharedPreferences.defaults) private var confirmLongPressRoute = false",
+    "@AppStorage(\"longPressToCreateRoute\", store: SharedPreferences.defaults) private var longPressToCreateRoute = true",
+    "@AppStorage(\"mapAppearance\", store: SharedPreferences.defaults) private var mapAppearance = \"system\"",
+    "@AppStorage(\"mapButtonLabels\", store: SharedPreferences.defaults) private var mapButtonLabels = true",
+    "@AppStorage(\"mapHaptics\", store: SharedPreferences.defaults) private var mapHaptics = true",
+    "@AppStorage(\"mapStyle\", store: SharedPreferences.defaults) private var mapStyle = \"standard\"",
+    "@AppStorage(\"routeStopDefault\", store: SharedPreferences.defaults) private var routeStopDefault = RouteStopAction.previous.rawValue",
+    "@AppStorage(\"tapMapToSetLocation\", store: SharedPreferences.defaults) private var tapMapToSetLocation = false",
+    "@AppStorage(RouteNotificationPreferences.finishedKey, store: SharedPreferences.defaults) private var routeFinishedNotifications = true",
+    "@AppStorage(RouteNotificationPreferences.timeSensitiveKey, store: SharedPreferences.defaults) private var routeTimeSensitiveNotifications = false"
+  ],
+  "final class RouteFinishSettings": "final class RouteFinishSettings: ObservableObject { static let shared = RouteFinishSettings() private let defaults: UserDefaults @Published var action: RouteFinishAction { didSet { defaults.set(action.rawValue, forKey: \"routeFinishAction\") } } @Published var destination: RouteFinishDestination? { didSet { defaults.set(try? JSONEncoder().encode(destination), forKey: \"routeFinishDestination\") } } init(defaults: UserDefaults = SharedPreferences.defaults) { self.defaults = defaults action = RouteFinishAction(rawValue: defaults.string(forKey: \"routeFinishAction\") ?? \"\") ?? .stay let place = defaults.data(forKey: \"routeFinishDestination\").flatMap { try? JSONDecoder().decode(RouteFinishDestination.self, from: $0) } destination = place.flatMap { CLLocationCoordinate2DIsValid($0.coordinate) ? $0 : nil } } }",
+  "struct RouteNotificationPreferences": "struct RouteNotificationPreferences { static let finishedKey = \"routeFinishedNotifications\" static let timeSensitiveKey = \"routeTimeSensitiveNotifications\" let defaults: UserDefaults init(defaults: UserDefaults = SharedPreferences.defaults) { self.defaults = defaults } var finished: Bool { get { defaults.object(forKey: Self.finishedKey) as? Bool ?? true } nonmutating set { defaults.set(newValue, forKey: Self.finishedKey) } } var timeSensitive: Bool { get { defaults.object(forKey: Self.timeSensitiveKey) as? Bool ?? false } nonmutating set { defaults.set(newValue, forKey: Self.timeSensitiveKey) } } enum Delivery: Equatable { case disabled, active, timeSensitive } var delivery: Delivery { !finished ? .disabled : (timeSensitive ? .timeSensitive : .active) } }",
+  "static func savedDefault": "static func savedDefault(in defaults: UserDefaults) -> Self { let saved = Self(rawValue: defaults.string(forKey: \"routeStopDefault\") ?? \"\") ?? .previous return Self.defaults.contains(saved) ? saved : .previous }",
+  "struct RouteActivityPreference": "struct RouteActivityPreference { static let key = \"routeLiveActivity\" let defaults: UserDefaults var enabled: Bool { get { defaults.bool(forKey: Self.key) } nonmutating set { defaults.set(newValue, forKey: Self.key) } } }",
+  "mapTags": [
+    "dark",
+    "hybrid",
+    "light",
+    "standard",
+    "system"
+  ]
+}

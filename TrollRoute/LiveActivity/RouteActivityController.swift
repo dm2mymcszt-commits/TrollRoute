@@ -50,11 +50,13 @@ struct RouteActivitySettings: View {
                 .accessibilityIdentifier("route-live-activity")
             if let reason = preferences.availability.reason { Text(reason).font(.caption).foregroundColor(.secondary) }
             if let message = preferences.message { Text(message).font(.caption).foregroundColor(.secondary) }
-            Text("Shows the active route on the Lock Screen. On devices with a native Dynamic Island, it can also appear there. iOS may end a Live Activity after eight hours; the route keeps running.")
-                .font(.caption).foregroundColor(.secondary)
-            Link("DynamicCowTS / DynamicCow", destination: URL(string: "https://github.com/matteozappia/DynamicCowTS")!)
-            Text("If your device has no native Dynamic Island, this separate, optional TrollStore app can modify its presentation. Check its own supported iOS versions. It is not included in TrollRoute.")
-                .font(.caption).foregroundColor(.secondary)
+            DisclosureGroup("About Live Activity") {
+                Text("Shows the active route on the Lock Screen. On devices with a native Dynamic Island, it can also appear there. iOS may end a Live Activity after eight hours; the route keeps running.")
+                    .font(.caption).foregroundColor(.secondary)
+                Link("DynamicCowTS / DynamicCow", destination: URL(string: "https://github.com/matteozappia/DynamicCowTS")!)
+                Text("If your device has no native Dynamic Island, this separate, optional TrollStore app can modify its presentation. Check its own supported iOS versions. It is not included in TrollRoute.")
+                    .font(.caption).foregroundColor(.secondary)
+            }
         } header: { Text("Live Activity") }
     }
 }
