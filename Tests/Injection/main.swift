@@ -37,7 +37,7 @@ final class TestClock {
     @MainActor static func main() {
         let clock = TestClock()
         var timezone = 0
-        let driver = CoreLocationSimulationDriver(timezoneUpdate: { timezone += 1 })
+        let driver = CoreLocationSimulationDriver(timezoneUpdate: { timezone += 1 }, now: { clock.time })
         var deliveries: [(TimeInterval, SessionLocation)] = []
         let queue = LocationInjectionQueue(now: { clock.time }, schedule: clock.schedule) { sample, reason in
             deliveries.append((clock.time, SessionLocation(sample)))
@@ -69,7 +69,7 @@ final class TestClock {
         precondition(deliveries.last!.1 == SessionLocation(latest), "Trailing delivery keeps the newest complete sample")
         precondition(CLSimulationManager.operations.filter { $0 == "start" }.count == 1)
         precondition(CLSimulationManager.operations.filter { $0 == "stop" }.count == 1)
-        precondition(timezone == 1, "Continuous movement must not notify the time-zone service")
+        precondition(timezone == 1, "Short bursts of continuous movement must not notify per sample")
         precondition(Array(CLSimulationManager.operations.prefix(5)) == ["stop", "clear", "append", "flush", "start"])
         precondition(CLSimulationManager.samples.allSatisfy { $0.courseAccuracy == 0 && $0.speedAccuracy == 0 && $0.altitude == 12.5 })
         print("PASS: 140 inputs / 10 s: old 140 starts + 140 timezone posts; new \(deliveries.count) deliveries, 1 start + 1 timezone post")
@@ -103,5 +103,51 @@ final class TestClock {
         driver.inject(sample(2000), reason: .jump)
         precondition(Array(CLSimulationManager.operations.suffix(5)) == ["stop", "clear", "append", "flush", "start"])
         print("PASS: explicit jumps, latest-wins, cancellation race, pause/arrival/resume, Stop and restart; sample metadata unchanged")
+
+        // The real adapter is mode-independent: test distance and elapsed time
+        // at walking, cycling, driving, train and plane speeds across the date line.
+        for kmh in [5.0, 20, 50, 130, 850, 1000] {
+            var time = 0.0
+            var posts = 0
+            let moving = CoreLocationSimulationDriver(timezoneUpdate: { posts += 1 }, now: { time })
+            let initialStarts = CLSimulationManager.operations.filter { $0 == "start" }.count
+            var lastPost = 0.0
+            for second in 0...3600 {
+                time = Double(second)
+                let degrees = time * kmh / 3.6 / 111_195
+                let lon = (179.99 + degrees + 180).truncatingRemainder(dividingBy: 360) - 180
+                let point = RouteLocationSample.make(coordinate: .init(latitude: 0, longitude: lon),
+                    altitude: 100, course: 90, speed: kmh / 3.6, timestamp: Date(timeIntervalSince1970: time))
+                let before = posts
+                moving.inject(point, reason: .continuous)
+                if posts > before && second > 0 {
+                    precondition(time - lastPost >= 60, "Timezone notifications are bounded independently of speed")
+                    lastPost = time
+                }
+            }
+            precondition(posts > 1 && posts <= 61, "Every mode updates while travelling, never per sample")
+            precondition(CLSimulationManager.operations.filter { $0 == "start" }.count == initialStarts + 1,
+                         "Timezone updates must not restart location simulation")
+            let last = CLSimulationManager.samples.last!
+            precondition(last.speed == kmh / 3.6 && last.course == 90 && last.altitude == 100)
+            let beforeRest = posts
+            time += 3600
+            moving.inject(last, reason: .continuous)
+            let afterRest = posts
+            // An unsent final displacement may cause one deferred update.
+            precondition(afterRest <= beforeRest + 1)
+            time += 3600
+            moving.inject(last, reason: .stateChange)
+            precondition(posts == afterRest, "Stationary samples must not keep requesting timezone changes")
+            moving.inject(last, reason: .jump)
+            precondition(posts == afterRest + 1, "Explicit jumps always notify, even without displacement")
+            moving.stop()
+            precondition(posts == afterRest + 2)
+            moving.inject(last, reason: .continuous)
+            precondition(posts == afterRest + 3, "New ownership starts with a fresh timezone notification")
+            moving.relinquish()
+            precondition(posts == afterRest + 3, "Relinquishing must not change the new owner's timezone")
+        }
+        print("PASS: long-route timezone updates at all mode speeds, date-line crossing, bounded frequency and no simulation restart")
     }
 }

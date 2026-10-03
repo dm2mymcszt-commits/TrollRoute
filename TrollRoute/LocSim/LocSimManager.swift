@@ -50,9 +50,14 @@ final class CoreLocationSimulationDriver: LocationSimulationDriver {
     private let simManager = CLSimulationManager()
     private var running = false
     private let timezoneUpdate: () -> Void
+    private let now: () -> TimeInterval
+    private var timezoneLocation: CLLocation?
+    private var timezoneTime: TimeInterval?
 
-    init(timezoneUpdate: @escaping () -> Void = CoreLocationSimulationDriver.postTimezoneUpdate) {
+    init(timezoneUpdate: @escaping () -> Void = CoreLocationSimulationDriver.postTimezoneUpdate,
+         now: @escaping () -> TimeInterval = { ProcessInfo.processInfo.systemUptime }) {
         self.timezoneUpdate = timezoneUpdate
+        self.now = now
     }
 
     /// Updates timezone
@@ -70,7 +75,22 @@ final class CoreLocationSimulationDriver: LocationSimulationDriver {
             simManager.startLocationSimulation()
             running = true
         }
-        if starting || reason == .jump { timezoneUpdate() }
+        updateTimezone(at: location, immediately: starting || reason == .jump)
+    }
+
+    private func updateTimezone(at location: CLLocation, immediately: Bool) {
+        let time = now()
+        let valid = CLLocationCoordinate2DIsValid(location.coordinate)
+        let elapsed = timezoneTime.map { max(0, time - $0) } ?? 0
+        let distance = valid ? timezoneLocation.map { location.distance(from: $0) } ?? 0 : 0
+        // Ask locationd to reconsider its timezone during travel. A fast trip
+        // posts at most once a minute; slower travel also gets an update after
+        // five minutes and 250 m. Stationary refreshes do not post repeatedly.
+        let travelled = elapsed >= 60 && (distance >= 5_000 || (elapsed >= 300 && distance >= 250))
+        guard immediately || travelled else { return }
+        timezoneUpdate()
+        timezoneLocation = valid ? location : nil
+        timezoneTime = time
     }
     
     /// Stops location simulation
@@ -79,10 +99,16 @@ final class CoreLocationSimulationDriver: LocationSimulationDriver {
         simManager.clearSimulatedLocations()
         simManager.flush()
         running = false
+        timezoneLocation = nil
+        timezoneTime = nil
         timezoneUpdate()
     }
 
-    func relinquish() { running = false }
+    func relinquish() {
+        running = false
+        timezoneLocation = nil
+        timezoneTime = nil
+    }
 }
 
 
