@@ -10,6 +10,17 @@ permissions:
   contents: read
 
 jobs:
+  flight-model:
+    runs-on: macos-15
+    timeout-minutes: 10
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_16.4.app/Contents/Developer
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - name: Check airport selection and flight geometry, profile and timing
+        run: bash Tests/Flight/check.sh
   live-activity-ui:
     runs-on: macos-15
     timeout-minutes: 50

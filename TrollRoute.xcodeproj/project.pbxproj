@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+        CDA810010000000000000201 /* Flight.swift in Sources */ = {isa = PBXBuildFile; fileRef = CDA810010000000000000101; };
+        CDA810020000000000000201 /* Airports.json in Resources */ = {isa = PBXBuildFile; fileRef = CDA810020000000000000101; };
 CDA7000300000000000000D2 /* TrollRouteActivity.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = CDA70003000000000000000A; settings = {ATTRIBUTES = (RemoveHeadersOnCopy,); }; };
 CDA7000300000000000000CC = {isa = PBXBuildFile; fileRef = CDA700010000000000000101; };
 CDA7000300000000000000CB = {isa = PBXBuildFile; fileRef = CDA700030000000000000004; };
@@ -125,6 +127,8 @@ CDA70003000000000000000B = {isa = PBXContainerItemProxy; containerPortal = FAA45
 
 
 /* Begin PBXFileReference section */
+        CDA810010000000000000101 /* Flight.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrollRoute/LocSim/Flight.swift; sourceTree = SOURCE_ROOT; };
+        CDA810020000000000000101 /* Airports.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = TrollRoute/Resources/Airports.json; sourceTree = SOURCE_ROOT; };
 CDA70003000000000000000A /* TrollRouteActivity.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = TrollRouteActivity.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 CDA700030000000000000004 /* TrollRouteActivity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TrollRouteActivity/TrollRouteActivity.swift"; sourceTree = SOURCE_ROOT; };
 CDA700030000000000000003 /* RouteActivityIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TrollRoute/LiveActivity/RouteActivityIntent.swift"; sourceTree = SOURCE_ROOT; };
@@ -323,6 +327,8 @@ CDA700030000000000000017 = {isa = PBXFrameworksBuildPhase; buildActionMask = 214
 				CDA200010000000000000101 /* LocationSession.swift */,
 				CDA500010000000000000101 /* DirectLocationMove.swift */,
 				CDA200020000000000000101 /* RouteElevation.swift */,
+                CDA810010000000000000101 /* Flight.swift */,
+                CDA810020000000000000101 /* Airports.json */,
 				CDA100010000000000000104 /* MigrationLaunchView.swift */,
 				FAA456D42B265FEA00FC7287 /* TrollRouteApp.swift */,
 				FAA457042B2660AC00FC7287 /* TrollRoute-Bringing-Header.h */,
@@ -525,6 +531,7 @@ CDA700030000000000000018 = {isa = PBXResourcesBuildPhase; buildActionMask = 2147
 			buildActionMask = 2147483647;
 			files = (
 				FAA456DC2B265FEC00FC7287 /* Preview Assets.xcassets in Resources */,
+                CDA810020000000000000201 /* Airports.json in Resources */,
 				FAA456D92B265FEC00FC7287 /* Assets.xcassets in Resources */,
 				790301C12B377EA70044E30A /* Localizable.xcstrings in Resources */,
 			);
@@ -593,6 +600,7 @@ CDA700030000000000000016 = {isa = PBXSourcesBuildPhase; buildActionMask = 214748
 				CDA100010000000000000204 /* MigrationLaunchView.swift in Sources */,
 				FAA456D52B265FEA00FC7287 /* TrollRouteApp.swift in Sources */,
 				F82C58062E37790000F76DFA /* RouteSimulator.swift in Sources */,
+                CDA810010000000000000201 /* Flight.swift in Sources */,
 				BDA110090000000000000001 /* RouteFinish.swift in Sources */,
 				BDA110100000000000000003 /* AltitudeSheet.swift in Sources */,
 				BDA110100000000000000001 /* Altitude.swift in Sources */,
