@@ -249,6 +249,9 @@ struct RoutePath {
     let name: String
     let trafficLabel: String
     let flight: FlightPlan?
+    // Keep the original WGS-84 geometry when replaying. A display-coordinate
+    // round trip is approximate in China and must not alter a saved journey.
+    let historyEntry: RouteHistoryEntry?
 
     init(_ route: MKRoute, mode: TravelMode) {
         polyline = route.polyline
@@ -257,24 +260,28 @@ struct RoutePath {
         name = route.name
         trafficLabel = mode == .driving ? "Real traffic" : "Typical travel"
         flight = nil
+        historyEntry = nil
     }
 
     init(polyline: MKPolyline, distance: Double, expectedTravelTime: TimeInterval,
-         name: String, trafficLabel: String = "Typical travel", flight: FlightPlan? = nil) {
+         name: String, trafficLabel: String = "Typical travel", flight: FlightPlan? = nil,
+         historyEntry: RouteHistoryEntry? = nil) {
         self.polyline = polyline
         self.distance = distance
         self.expectedTravelTime = expectedTravelTime
         self.name = name
         self.trafficLabel = trafficLabel
         self.flight = flight
+        self.historyEntry = historyEntry
     }
 
-    init(flight: FlightPlan) {
+    init(flight: FlightPlan, historyEntry: RouteHistoryEntry? = nil) {
         let coordinates = flight.path.coordinates.map(CoordTransform.wgs84ToGcj02)
         self.init(polyline: MKGeodesicPolyline(coordinates: coordinates, count: coordinates.count),
             distance: flight.path.length,
             expectedTravelTime: FlightJourney(plan: flight, cruiseKmh: TravelMode.plane.defaultSpeedKmh).remainingSeconds,
-            name: "\(flight.departure.code) to \(flight.arrival.code)", trafficLabel: "Flight at default cruise", flight: flight)
+            name: "\(flight.departure.code) to \(flight.arrival.code)", trafficLabel: "Flight at default cruise", flight: flight,
+            historyEntry: historyEntry)
     }
 }
 
@@ -705,7 +712,8 @@ class RouteSimulator: NSObject, ObservableObject, CLLocationManagerDelegate {
         var coords = [CLLocationCoordinate2D](repeating: CLLocationCoordinate2D(), count: pointCount)
         route.polyline.getCoordinates(&coords, range: NSRange(location: 0, length: pointCount))
         
-        track = route.flight.map { RouteTrack(flight: $0) } ?? RouteTrack(coordinates: coords.map(CoordTransform.gcj02ToWgs84))
+        track = route.flight.map { RouteTrack(flight: $0) } ?? RouteTrack(coordinates:
+            route.historyEntry?.coordinates.map(\.coordinate) ?? coords.map(CoordTransform.gcj02ToWgs84))
         prepareElevation()
         journey = nil
         routePolyline = route.polyline
@@ -787,8 +795,8 @@ class RouteSimulator: NSObject, ObservableObject, CLLocationManagerDelegate {
     private func recordHistory(startName: String?, destinationName: String?) {
         guard availableRoutes.indices.contains(selectedRouteIndex), let track = track else { return }
         let path = availableRoutes[selectedRouteIndex].route
-        let start = routeStart.map(CoordTransform.gcj02ToWgs84) ?? track.coordinates[0]
-        let end = routeEnd.map(CoordTransform.gcj02ToWgs84) ?? track.coordinates.last!
+        let start = path.historyEntry?.start.coordinate ?? routeStart.map(CoordTransform.gcj02ToWgs84) ?? track.coordinates[0]
+        let end = path.historyEntry?.destination.coordinate ?? routeEnd.map(CoordTransform.gcj02ToWgs84) ?? track.coordinates.last!
         history.record(RouteHistoryEntry(
             start: .init(name: startName ?? activityStartName, address: "", coordinate: start),
             destination: .init(name: destinationName ?? activityEndName, address: "", coordinate: end),
@@ -811,12 +819,12 @@ class RouteSimulator: NSObject, ObservableObject, CLLocationManagerDelegate {
                   let flight = try? FlightPlan(departure: a, arrival: b) else {
                 startError = "This saved flight needs valid airport elevations."; return false
             }
-            path = RoutePath(flight: flight)
+            path = RoutePath(flight: flight, historyEntry: entry)
         } else {
             let coordinates = entry.coordinates.map { CoordTransform.wgs84ToGcj02($0.coordinate) }
             path = RoutePath(polyline: MKPolyline(coordinates: coordinates, count: coordinates.count),
                 distance: entry.distance, expectedTravelTime: entry.expectedTravelTime, name: entry.routeName,
-                trafficLabel: entry.trafficLabel)
+                trafficLabel: entry.trafficLabel, historyEntry: entry)
         }
         clearCalculatedRoutes()
         startError = nil

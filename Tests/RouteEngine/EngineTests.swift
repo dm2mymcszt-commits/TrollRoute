@@ -719,7 +719,28 @@ func testHistoryEngine() {
     precondition(f.engine.availableRoutes.count == 1 && f.engine.availableRoutes[0].route.name == entry.routeName)
     f.engine.startSimulation(startName: entry.start.name, destinationName: entry.destination.name)
     precondition(f.history.entries.count == 1 && f.history.entries[0].id == entry.id)
-    print("PASS: history records successful user starts, excludes preview/internal legs, restores the complete draft and never auto-starts")
+    f.engine.stopSimulation()
+    let china = [CLLocationCoordinate2D(latitude: 39.9, longitude: 116.4),
+                 CLLocationCoordinate2D(latitude: 39.92, longitude: 116.43)]
+    let savedChina = RouteHistoryEntry(start: .init(name: "Beijing start", address: "", coordinate: china[0]),
+        destination: .init(name: "Beijing end", address: "", coordinate: china[1]), mode: "Driving", symbol: "car.fill",
+        speedKmh: 50, routeName: "Saved China geometry", coordinates: china.map(HistoryCoordinate.init),
+        distance: RouteSimulationMath.distance(china[0], china[1]), expectedTravelTime: 400, trafficLabel: "Real traffic",
+        finish: .init(action: .stay), date: Date(), departureAirport: nil, arrivalAirport: nil)
+    precondition(f.history.record(savedChina))
+    for _ in 0..<4 {
+        let saved = f.history.entries.first { $0.id == savedChina.id }!
+        precondition(f.engine.prepareHistory(saved))
+        f.engine.startSimulation(startName: saved.start.name, destinationName: saved.destination.name)
+        precondition(f.at(china[0]), "Replay starts at the exact saved WGS-84 location")
+        f.engine.seek(to: 0.5)
+        precondition(abs(f.owner.current!.latitude - 39.91) < 0.000001)
+        f.engine.stopSimulation()
+        precondition(f.history.entries.count == 2, "Repeated coordinate conversion must not duplicate history")
+        precondition(f.history.entries[0].coordinates == savedChina.coordinates)
+        precondition(f.history.entries[0].start == savedChina.start && f.history.entries[0].destination == savedChina.destination)
+    }
+    print("PASS: history records user starts, prepares without movement, and replays worldwide geometry without drift or duplication")
 }
 
 @main final class EngineApp: UIResponder, UIApplicationDelegate {
