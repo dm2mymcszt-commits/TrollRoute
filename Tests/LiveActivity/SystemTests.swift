@@ -26,6 +26,7 @@ final class LiveActivitySystemTests: XCTestCase {
         XCTAssertEqual(XCTWaiter.wait(for: [settled], timeout: 10), .completed)
     }
     private func expand() {
+        waitForPresentation(["route-activity-compact-progress", "route-activity-compact-time"])
         board.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.035)).press(forDuration: 1.2)
     }
     private func tapSettledActivityControl(_ title: String) {
@@ -33,12 +34,13 @@ final class LiveActivitySystemTests: XCTestCase {
         var previous = CGRect.null
         var stableSince: Date?
         let ready = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
-            guard button.exists, button.isEnabled, button.isHittable else {
+            guard button.exists, button.isEnabled else {
                 stableSince = nil
                 return false
             }
             let frame = button.frame
-            guard !frame.isEmpty, frame.origin.x.isFinite, frame.origin.y.isFinite else {
+            guard !frame.isEmpty, !frame.isNull, !frame.isInfinite,
+                  [frame.minX, frame.minY, frame.maxX, frame.maxY].allSatisfy(\.isFinite) else {
                 stableSince = nil
                 return false
             }
@@ -47,7 +49,7 @@ final class LiveActivitySystemTests: XCTestCase {
                 stableSince = Date()
                 return false
             }
-            return Date().timeIntervalSince(stableSince!) >= 2
+            return Date().timeIntervalSince(stableSince!) >= 2 && button.isHittable
         }, object: nil)
         // SpringBoard exposes replacement controls before chronod finishes the
         // preceding action/transition, sometimes with an infinite hit point.
@@ -78,32 +80,32 @@ final class LiveActivitySystemTests: XCTestCase {
         expand()
         XCTAssertTrue(board.buttons["Pause"].waitForExistence(timeout: 10), board.debugDescription)
         capture("system-expanded")
-        board.buttons["Pause"].tap()
+        tapSettledActivityControl("Pause")
         XCTAssertTrue(board.buttons["Resume"].waitForExistence(timeout: 10), board.debugDescription)
         capture("system-paused")
-        board.buttons["Resume"].tap()
+        tapSettledActivityControl("Resume")
         XCTAssertTrue(board.buttons["Pause"].waitForExistence(timeout: 10))
-        board.buttons["Stop"].tap()
+        tapSettledActivityControl("Stop")
         XCTAssertTrue(board.buttons["Stay at current location"].waitForExistence(timeout: 10), board.debugDescription)
         for title in ["Return to route start", "Go to a specific location", "Restore real location", "Cancel"] {
             XCTAssertTrue(board.buttons[title].exists, board.debugDescription)
         }
         capture("system-stop-real")
-        board.buttons["Cancel"].tap()
+        tapSettledActivityControl("Cancel")
         XCTAssertTrue(board.buttons["Pause"].waitForExistence(timeout: 10))
-        board.buttons["Stop"].tap()
+        tapSettledActivityControl("Stop")
         XCTAssertTrue(board.buttons["Restore real location"].waitForExistence(timeout: 10))
-        board.buttons["Restore real location"].tap()
+        tapSettledActivityControl("Restore real location")
         app.activate()
         XCTAssertTrue(app.staticTexts["QA stopped"].waitForExistence(timeout: 10))
         app.buttons["Start spoof"].tap()
         XCTAssertTrue(app.staticTexts["QA activity ready"].waitForExistence(timeout: 10), app.debugDescription)
         goHome(); expand()
         XCTAssertTrue(board.buttons["Stop"].waitForExistence(timeout: 10))
-        board.buttons["Stop"].tap()
+        tapSettledActivityControl("Stop")
         XCTAssertTrue(board.buttons["Return to previous spoofed location"].waitForExistence(timeout: 10))
         capture("system-stop-previous")
-        board.buttons["Return to previous spoofed location"].tap()
+        tapSettledActivityControl("Return to previous spoofed location")
         app.activate()
         XCTAssertTrue(app.staticTexts["QA stopped"].waitForExistence(timeout: 10))
     }
@@ -115,13 +117,18 @@ final class LiveActivitySystemTests: XCTestCase {
         app.buttons["Seek 46"].tap()
         let companion = XCUIApplication(bundleIdentifier: "local.trollroute.companionqa")
         companion.launch()
+        defer { companion.terminate() }
         companion.buttons["Start companion"].tap()
         XCTAssertTrue(companion.staticTexts["Companion ready"].waitForExistence(timeout: 10))
         goHome()
         waitForPresentation(["route-activity-minimal-progress", "qa-companion-minimal"])
         capture("system-minimal-two-activities")
         companion.activate()
-        companion.buttons["End companion"].tap()
+        XCTAssertTrue(companion.wait(for: .runningForeground, timeout: 10))
+        let endButton = companion.buttons["End companion"]
+        let settled = XCTNSPredicateExpectation(predicate: NSPredicate(format: "hittable == true"), object: endButton)
+        XCTAssertEqual(XCTWaiter.wait(for: [settled], timeout: 10), .completed)
+        endButton.tap()
         XCTAssertTrue(companion.staticTexts["Companion ended"].waitForExistence(timeout: 10))
         companion.terminate()
         app.activate()
@@ -135,7 +142,7 @@ final class LiveActivitySystemTests: XCTestCase {
         XCUIDevice.shared.perform(selector)
         XCUIDevice.shared.press(.home)
         XCTAssertTrue(board.staticTexts["Test destination"].waitForExistence(timeout: 10), board.debugDescription)
-        if board.buttons["Allow"].exists { board.buttons["Allow"].tap() }
+        if board.buttons["Allow"].exists { tapSettledActivityControl("Allow") }
         capture("system-lock-screen")
     }
 
@@ -182,9 +189,9 @@ final class LiveActivitySystemTests: XCTestCase {
         XCTAssertTrue(app.staticTexts["QA activity ready"].waitForExistence(timeout: 10))
         goHome(); expand()
         XCTAssertTrue(board.buttons["Stop"].waitForExistence(timeout: 10))
-        board.buttons["Stop"].tap()
+        tapSettledActivityControl("Stop")
         XCTAssertTrue(board.buttons["Go to a specific location"].waitForExistence(timeout: 10))
-        board.buttons["Go to a specific location"].tap()
+        tapSettledActivityControl("Go to a specific location")
         // Do not activate the app from the test: the production Link must do it.
         XCTAssertTrue(app.wait(for: .runningForeground, timeout: 10))
         XCTAssertTrue(app.navigationBars["After stopping"].waitForExistence(timeout: 10), app.debugDescription)

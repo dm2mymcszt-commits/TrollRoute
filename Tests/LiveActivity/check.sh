@@ -1,7 +1,7 @@
 #!/bin/bash
 set -euo pipefail
 cd "$(dirname "$0")/../.."
-QA_DIR="$PWD/build/live-activity-qa"
+QA_DIR="${ACTIVITY_QA_DIR:-$PWD/build/live-activity-qa}"
 mkdir -p "$QA_DIR"
 python3 Tests/LiveActivity/prepare.py "$QA_DIR"
 xcodebuild -project "$QA_DIR/LiveActivityQA.xcodeproj" -target LiveActivityQA -configuration Debug \
@@ -12,33 +12,61 @@ xcodebuild -project "$QA_DIR/LiveActivityQA.xcodeproj" -target CompanionQA -conf
   CODE_SIGNING_ALLOWED=NO >> "$QA_DIR/build.log" 2>&1 || { cat "$QA_DIR/build.log"; exit 1; }
 xcrun simctl list runtimes -j > "$QA_DIR/runtimes.json"
 RUNTIME=$(python3 -c 'import json,sys; print(next(r["identifier"] for r in json.load(open(sys.argv[1]))["runtimes"] if r["isAvailable"] and "iOS" in r["name"]))' "$QA_DIR/runtimes.json")
-DEVICE=$(xcrun simctl create LiveActivityQA com.apple.CoreSimulator.SimDeviceType.iPhone-15-Pro "$RUNTIME")
+DEVICE=""
+CASE_DIR="$QA_DIR"
 finish() {
+  if [ -z "$DEVICE" ]; then return; fi
   # Keep renderer failures, including extension crashes, separate from XCTest
   # assertions about missing controls. Logs come from this test's simulator.
   xcrun simctl spawn "$DEVICE" log show --last 15m --style compact --info --debug \
     --predicate 'process == "TrollRouteActivity" OR process == "chronod" OR process == "liveactivitiesd"' \
-    > "$QA_DIR/activity-system.log" 2>&1 || true
-  mkdir -p "$QA_DIR/crashes"
+    > "$CASE_DIR/activity-system.log" 2>&1 || true
+  mkdir -p "$CASE_DIR/crashes"
   find "$HOME/Library/Logs/DiagnosticReports" -maxdepth 1 -name 'TrollRouteActivity*' \
-    -exec cp {} "$QA_DIR/crashes/" \; 2>/dev/null || true
+    -exec cp {} "$CASE_DIR/crashes/" \; 2>/dev/null || true
   xcrun simctl shutdown "$DEVICE" || true
   xcrun simctl delete "$DEVICE" || true
+  DEVICE=""
 }
 trap finish EXIT
+python3 Tests/MapWorkspace/ui-project.py "$QA_DIR" Tests/LiveActivity/SystemTests.swift LiveActivityTests
+# A failed companion End or locked SpringBoard must never contaminate another
+# scenario. Each original test runs, with all its assertions, on a fresh device.
+failed=0
+for method in testDynamicIslandControls testMinimalAndLockScreen testNotificationCentreControls \
+  testSpecificPlaceOpensPickerAndAppliesFavorite testSpeedSeekReturnAndToggleDoNotStopRoute; do
+CASE_DIR="$QA_DIR/$method"
+mkdir -p "$CASE_DIR"
+DEVICE=$(xcrun simctl create LiveActivityQA com.apple.CoreSimulator.SimDeviceType.iPhone-15-Pro "$RUNTIME")
 xcrun simctl boot "$DEVICE"
 xcrun simctl bootstatus "$DEVICE" -b
 xcrun simctl ui "$DEVICE" appearance "${ACTIVITY_APPEARANCE:-dark}"
 xcrun simctl install "$DEVICE" "$QA_DIR/Products/Debug-iphonesimulator/LiveActivityQA.app"
 xcrun simctl install "$DEVICE" "$QA_DIR/Products/Debug-iphonesimulator/CompanionQA.app"
 xcrun simctl privacy "$DEVICE" grant location local.trollroute.activityqa
-python3 Tests/MapWorkspace/ui-project.py "$QA_DIR" Tests/LiveActivity/SystemTests.swift LiveActivityTests
-xcodebuild test -project "$QA_DIR/LiveActivityTests.xcodeproj" -scheme LiveActivityTests \
+if xcodebuild test -project "$QA_DIR/LiveActivityTests.xcodeproj" -scheme LiveActivityTests \
   -destination "platform=iOS Simulator,id=$DEVICE" -parallel-testing-enabled NO \
-  -derivedDataPath "$QA_DIR/TestDerivedData" -resultBundlePath "$QA_DIR/System.xcresult" \
-  CODE_SIGNING_ALLOWED=NO > "$QA_DIR/tests.log" 2>&1 || {
-    xcrun xcresulttool export attachments --path "$QA_DIR/System.xcresult" --output-path "$QA_DIR/attachments" || true
-    cat "$QA_DIR/tests.log"; exit 1
-  }
-cat "$QA_DIR/tests.log"
-xcrun xcresulttool export attachments --path "$QA_DIR/System.xcresult" --output-path "$QA_DIR/attachments"
+  -only-testing:"LiveActivityTests/LiveActivitySystemTests/$method" \
+  -derivedDataPath "$QA_DIR/TestDerivedData" -resultBundlePath "$CASE_DIR/System.xcresult" \
+  CODE_SIGNING_ALLOWED=NO > "$CASE_DIR/tests.log" 2>&1; then
+  # xcodebuild can exit successfully when a misspelled test filter ran nothing.
+  python3 - "$CASE_DIR/tests.log" "$method" <<'PY'
+import re, sys
+from pathlib import Path
+log = Path(sys.argv[1]).read_text()
+assert re.search(r"Test Case .* " + re.escape(sys.argv[2]) + r"\]' passed", log), 'Required test did not pass'
+PY
+else
+  if ! grep -q 'Test Suite .* started' "$CASE_DIR/tests.log"; then
+    cat "$CASE_DIR/tests.log"
+    exit 1
+  fi
+  failed=1
+fi
+cat "$CASE_DIR/tests.log"
+xcrun xcresulttool export attachments --path "$CASE_DIR/System.xcresult" --output-path "$CASE_DIR/attachments" || true
+finish
+done
+# Distinguish an executed UI failure from a build/setup failure. Only the former
+# is eligible for the bounded clean-environment retry in run.sh.
+if [ "$failed" -ne 0 ]; then exit 2; fi
