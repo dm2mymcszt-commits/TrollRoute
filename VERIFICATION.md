@@ -21,7 +21,7 @@ Earlier evidence remains in Git history: [build 53](https://github.com/dm2mymcsz
 | F9 | Separate bounded time-zone notification change committed; actual-driver checks passed in [validation 37151742655](https://github.com/dm2mymcszt-commits/TrollRoute/actions/runs/37151742655). Device clock/driving Bitmoji checks pending. |
 | F10 | Build 54 release provenance and this round's checklist recorded; documentation tracks incomplete acceptance explicitly. |
 | F11 | Fresh simulator per original scenario, one bounded retry of executed UI failures, distinct attempt evidence. Screenshot revealed an undismissed Live Activity consent card; explicit consent setup is validating. Several unchanged-code runs still required. No outcome assertions removed. |
-| Delivery | Candidates remain on `codex/round31-validation`; nothing promoted to `experiment/route-motion`. Full green CI, Settings approval, Train and device checks remain outstanding. No 3.1 Release created. |
+| Delivery | 3.1.0 build 55 is the validation candidate on `codex/round31-validation`; nothing promoted to `experiment/route-motion`. Full green CI, Settings approval, Train and device checks remain outstanding. No 3.1 Release created. |
 
 ## Verification gate
 

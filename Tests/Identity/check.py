@@ -10,8 +10,8 @@ root = Path(__file__).resolve().parents[2]
 app = plistlib.loads((root / 'TrollRoute/Info.plist').read_bytes())
 assert app['CFBundleIdentifier'] == 'com.dm2mymcszt.trollroute'
 assert app['CFBundleDisplayName'] == app['CFBundleExecutable'] == 'TrollRoute'
-assert app['CFBundleShortVersionString'] == '3.0.0'
-assert int(app['CFBundleVersion']) > 4
+assert app['CFBundleShortVersionString'] == '3.1.0'
+assert int(app['CFBundleVersion']) > 54
 project_versions = set(re.findall(r'CURRENT_PROJECT_VERSION = (\d+);',
     (root / 'TrollRoute.xcodeproj/project.pbxproj').read_text(encoding='utf-8')))
 assert project_versions == {app['CFBundleVersion']}, (project_versions, app['CFBundleVersion'])
