@@ -23,6 +23,54 @@ final class RouteSessionTests: XCTestCase {
         button.tap()
         XCTAssertTrue(app.buttons["confirm-route-stop"].waitForExistence(timeout: 5))
     }
+    func testPlaneAirportsAndPreview() {
+        let app = launch(["--plane", "--navigation"])
+        XCTAssertTrue(app.navigationBars["TrollRoute Navigation"].waitForExistence(timeout: 10))
+        let departure = app.buttons["departure-airport"]
+        for _ in 0..<8 { if departure.isHittable { break }; app.swipeUp() }
+        XCTAssertTrue(app.buttons["Plane"].exists)
+        XCTAssertTrue(departure.isHittable)
+        capture(app, "plane-tab-and-airports")
+        departure.tap()
+        XCTAssertTrue(app.navigationBars["Departure airport"].waitForExistence(timeout: 5))
+        let search = app.searchFields.firstMatch
+        XCTAssertTrue(search.waitForExistence(timeout: 5))
+        search.tap(); search.typeText("HND")
+        let haneda = app.buttons.matching(NSPredicate(format: "label CONTAINS %@", "(HND)")).firstMatch
+        XCTAssertTrue(haneda.waitForExistence(timeout: 5))
+        capture(app, "plane-airport-selection")
+        haneda.tap()
+        let changed = app.buttons["departure-airport"]
+        expectation(for: NSPredicate(format: "label CONTAINS %@", "HND"), evaluatedWith: changed)
+        waitForExpectations(timeout: 10)
+        let start = app.buttons["Start Route Simulation"]
+        for _ in 0..<8 { if start.isHittable { break }; app.swipeUp() }
+        XCTAssertTrue(start.isHittable)
+        capture(app, "plane-flight-preview")
+        waitState(app, "running=false")
+    }
+    func testPlanePlaybackAndLiveSpeed() {
+        let app = launch(["--plane"])
+        XCTAssertTrue(app.staticTexts["flight-live-speed"].waitForExistence(timeout: 10))
+        XCTAssertTrue(app.staticTexts["Cruise speed"].exists)
+        capture(app, "plane-flight-in-progress")
+        app.buttons["Pause route"].tap()
+        waitState(app, "paused=true")
+        XCTAssertEqual(app.staticTexts["flight-live-speed"].label, "Live speed: 0 km/h")
+        app.buttons["Resume route"].tap()
+        waitState(app, "paused=false")
+        app.buttons["edit-route-finish"].tap()
+        app.buttons["route-finish-action"].tap()
+        XCTAssertTrue(app.buttons["Fly back to start"].waitForExistence(timeout: 5))
+        app.buttons["Fly back to start"].tap()
+        app.buttons["Done"].tap()
+        waitState(app, "action=returnOnce")
+        stop(app)
+        app.buttons["route-stop-current"].tap()
+        app.buttons["confirm-route-stop"].tap()
+        waitState(app, "running=false")
+        waitState(app, "active=true")
+    }
     func testRealStartStopChoicesCancelAndConfirm() {
         let app = launch()
         stop(app)

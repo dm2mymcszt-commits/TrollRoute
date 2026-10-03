@@ -3,6 +3,7 @@ import SwiftUI
 struct RouteFinishControls: View {
     @Binding var configuration: RouteFinishConfiguration
     let active: Bool
+    var flying = false
     @StateObject private var recents = RouteRecentPlaces()
     @State private var showPlace = false
 
@@ -13,7 +14,7 @@ struct RouteFinishControls: View {
                 if action == .goToPlace && configuration.destination == nil { showPlace = true }
                 else { configuration.action = action }
             })) {
-                ForEach(RouteFinishAction.allCases) { action in Text(action.title).tag(action) }
+                ForEach(RouteFinishAction.allCases) { action in Text(action.title(flying: flying)).tag(action) }
             }.pickerStyle(.menu).accessibilityIdentifier("route-finish-action")
             if configuration.action == .goToPlace {
                 if let place = configuration.destination {

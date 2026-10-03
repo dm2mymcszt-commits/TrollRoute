@@ -22,6 +22,7 @@ struct RouteSimSheet: View {
     @StateObject private var currentLocation = RouteCurrentLocation()
     @StateObject private var recentPlaces = RouteRecentPlaces()
     @State private var pickerField: ActiveField?
+    @State private var airportField: ActiveField?
     @State private var waitingForCurrentStart = false
     @State private var didInitializeStart = false
     @State private var loadedDraftRevision: UUID?
@@ -44,7 +45,7 @@ struct RouteSimSheet: View {
                     // MARK: - Route Status (when simulating)
                     if routeSimulator.isSimulating {
                         simulationStatusCard
-                        RouteFinishControls(configuration: finishBinding, active: true)
+                        RouteFinishControls(configuration: finishBinding, active: true, flying: selectedMode == .plane)
                             .padding(.horizontal)
                     } else {
                         // MARK: - Start Point
@@ -101,6 +102,9 @@ struct RouteSimSheet: View {
                             }
                         )
                         .padding(.horizontal)
+                        if selectedMode == .plane {
+                            airportChoices
+                        }
                         if let error = routeSimulator.modeErrors[selectedMode] {
                             Text(error).font(.caption).foregroundColor(.secondary).padding(.horizontal)
                         }
@@ -147,7 +151,9 @@ struct RouteSimSheet: View {
 
                                 routePreview
 
-                                Text("Times use your simulation speed. Travel estimates are shown separately.")
+                                Text(selectedMode == .plane
+                                     ? "Flight time includes takeoff, climb, cruise and landing. Short flights use a lower altitude and speed."
+                                     : "Times use your simulation speed. Travel estimates are shown separately.")
                                     .font(.caption)
                                     .foregroundColor(.secondary)
                                     .padding(.horizontal)
@@ -156,7 +162,7 @@ struct RouteSimSheet: View {
                                     routeOptionCard(option: option, index: idx)
                                 }
                                 
-                                RouteFinishControls(configuration: finishBinding, active: false)
+                                RouteFinishControls(configuration: finishBinding, active: false, flying: selectedMode == .plane)
                                     .padding(.horizontal)
 
                                 // Start button
@@ -228,6 +234,14 @@ struct RouteSimSheet: View {
                     useCurrentLocation: field == .start ? useCurrentStart : nil,
                     select: { selectPlace($0, field: field) }
                 )
+            }
+            .sheet(item: $airportField) { field in
+                FlightAirportPicker(title: field == .start ? "Departure airport" : "Arrival airport",
+                    selected: field == .start ? routeSimulator.departureAirport : routeSimulator.arrivalAirport) { airport in
+                    routeSimulator.chooseAirport(airport, departure: field == .start)
+                    routeReady = !routeSimulator.availableRoutes.isEmpty
+                    showRouteOnMap()
+                }
             }
             .sheet(isPresented: $showGPXPicker) {
                 GPXDocumentPicker { url in
@@ -348,8 +362,36 @@ struct RouteSimSheet: View {
                 Text("© [OpenStreetMap contributors](https://www.openstreetmap.org/copyright) · [Routing](https://routing.openstreetmap.de/about.html) · [Fix the map](https://www.openstreetmap.org/fixthemap)")
                     .font(.caption2).foregroundColor(.secondary)
             }
+            if selectedMode == .plane {
+                Text("Airport data: [OurAirports](https://ourairports.com/data/) · Public domain")
+                    .font(.caption2).foregroundColor(.secondary)
+            }
         }
         .padding(.horizontal)
+    }
+
+    private var airportChoices: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            if let departure = routeSimulator.departureAirport, let arrival = routeSimulator.arrivalAirport {
+                ForEach([ActiveField.start, .end]) { field in
+                    let airport = field == .start ? departure : arrival
+                    Button { airportField = field } label: {
+                        HStack {
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text(field == .start ? "Departure airport" : "Arrival airport").font(.caption).foregroundColor(.secondary)
+                                Text(airport.title).multilineTextAlignment(.leading)
+                            }
+                            Spacer()
+                            Image(systemName: "chevron.right")
+                        }
+                    }.accessibilityIdentifier(field == .start ? "departure-airport" : "arrival-airport")
+                }
+            } else {
+                Text("Calculate to choose the nearest passenger airports. You can then change either airport.")
+                    .font(.caption).foregroundColor(.secondary)
+            }
+        }.padding().background(Color(UIColor.secondarySystemBackground), in: RoundedRectangle(cornerRadius: 14))
+            .padding(.horizontal)
     }
 
     // MARK: - Route Option Card
@@ -406,6 +448,10 @@ struct RouteSimSheet: View {
             )
             
             // Controls
+            if selectedMode == .plane {
+                Text("Live speed: \(Int(routeSimulator.actualSpeedKmh)) km/h")
+                    .monospacedDigit().accessibilityIdentifier("flight-live-speed")
+            }
             HStack(spacing: 20) {
                 Button(action: {
                     routeSimulator.togglePause()
@@ -617,6 +663,41 @@ struct RouteSimSheet: View {
     }
 }
 
+struct FlightAirportPicker: View {
+    @Environment(\.dismiss) private var dismiss
+    let title: String
+    let selected: FlightAirport?
+    let select: (FlightAirport) -> Void
+    var catalog = AirportCatalog.bundled
+    @State private var query = ""
+    var body: some View {
+        NavigationView {
+            List {
+                ForEach(catalog.search(query)) { airport in
+                    Button {
+                        select(airport)
+                        dismiss()
+                    } label: {
+                        HStack {
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text(airport.title).foregroundColor(.primary)
+                                Text([airport.city, airport.country].filter { !$0.isEmpty }.joined(separator: ", "))
+                                    .font(.caption).foregroundColor(.secondary)
+                            }
+                            Spacer()
+                            if airport.id == selected?.id { Image(systemName: "checkmark") }
+                        }
+                    }
+                }
+                if catalog.search(query).isEmpty { Text("No airports found.").foregroundColor(.secondary) }
+            }
+            .searchable(text: $query, prompt: "Name, city or airport code")
+            .navigationTitle(title).navigationBarTitleDisplayMode(.inline)
+            .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } } }
+        }
+    }
+}
+
 struct RouteModeControls: View {
     let selectedMode: TravelMode
     let duration: (TravelMode) -> String
@@ -625,6 +706,7 @@ struct RouteModeControls: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
+          ScrollViewReader { proxy in
             ScrollView(.horizontal, showsIndicators: false) {
               HStack(spacing: 8) {
                 ForEach(TravelMode.availableCases, id: \.self) { mode in
@@ -646,9 +728,13 @@ struct RouteModeControls: View {
                     .buttonStyle(.plain)
                     .foregroundColor(selectedMode == mode ? .accentColor : .primary)
                     .accessibilityAddTraits(selectedMode == mode ? [.isSelected] : [])
+                    .id(mode)
                 }
             }
             }
+            .onAppear { proxy.scrollTo(selectedMode, anchor: .center) }
+            .onChange(of: selectedMode) { mode in proxy.scrollTo(mode, anchor: .center) }
+          }
             HStack {
                 Text(selectedMode.variableSpeed ? "Cruise speed" : "\(selectedMode.rawValue) speed").font(.headline)
                 Spacer()
@@ -675,6 +761,7 @@ struct RoutePlaybackPanel: View {
     let isPaused: Bool
     var legName = "Route in progress"
     var mode: TravelMode = .driving
+    var liveSpeedKmh: Double? = nil
     @Binding var speedKmh: Double
     @Binding var collapsed: Bool
     let preview: (Double) -> Void
@@ -744,7 +831,7 @@ struct RoutePlaybackPanel: View {
                     Text(remainingDistance)
                 }.font(.caption).foregroundColor(.secondary).monospacedDigit()
                 HStack {
-                    Text("Speed").font(.subheadline.weight(.semibold))
+                    Text(mode.variableSpeed ? "Cruise speed" : "Speed").font(.subheadline.weight(.semibold))
                     Spacer()
                     Text("\(Int(speedKmh)) km/h").monospacedDigit()
                 }
@@ -754,6 +841,10 @@ struct RoutePlaybackPanel: View {
                     Slider(value: $speedKmh, in: mode.speedRange, step: 1).accessibilityLabel("Trip speed in kilometres per hour")
                     Button { speedKmh = mode.clampedSpeed(speedKmh + 1) } label: { Image(systemName: "plus.circle.fill").font(.title2) }
                         .accessibilityLabel("Increase trip speed")
+                }
+                if mode.variableSpeed, let live = liveSpeedKmh {
+                    Text("Live speed: \(Int(live)) km/h").font(.caption).monospacedDigit()
+                        .accessibilityIdentifier("flight-live-speed")
                 }
                 if let title = finishActionTitle, let edit = editFinish {
                     Button(action: edit) {
@@ -772,6 +863,9 @@ struct RoutePlaybackPanel: View {
                 Text("© [OpenStreetMap contributors](https://www.openstreetmap.org/copyright) · [Routing](https://routing.openstreetmap.de/about.html) · [Fix the map](https://www.openstreetmap.org/fixthemap)")
                     .font(.caption2)
                     .accessibilityIdentifier("active-route-credit")
+            }
+            if mode == .plane {
+                Text("Airport data: [OurAirports](https://ourairports.com/data/) · Public domain").font(.caption2)
             }
         }
         .padding(14)

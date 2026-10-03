@@ -17,6 +17,11 @@ struct AltitudeSheet: View {
         NavigationView {
             Form {
                 Section("Current setting") {
+                    if controller.flightAltitude != nil {
+                        valueRow("Flight altitude", controller.currentMeters.map(meters) ?? "Unknown")
+                        Text("The flight profile controls altitude while flying. Your saved setting applies again after landing.")
+                            .font(.caption).foregroundColor(.secondary)
+                    }
                     valueRow("Mode", settings.profile.mode == .automatic ? "Automatic" : "Custom")
                     if settings.profile.mode == .custom {
                         valueRow("Altitude", meters(settings.profile.customMeters))
@@ -55,7 +60,7 @@ struct AltitudeSheet: View {
                         settings.reset(); custom = false; input = ""
                     }
                 } footer: {
-                    Text("Saved for all simulated locations. Changes apply immediately to an active location.")
+                    Text("Saved for simulated locations. During a flight, changes apply after landing; otherwise they apply immediately.")
                 }
             }
             .navigationTitle("Altitude").navigationBarTitleDisplayMode(.inline)

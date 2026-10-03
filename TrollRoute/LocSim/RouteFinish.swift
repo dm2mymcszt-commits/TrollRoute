@@ -117,6 +117,7 @@ struct RouteNotificationPreferences {
         get { defaults.object(forKey: Self.finishedKey) as? Bool ?? true }
         nonmutating set { defaults.set(newValue, forKey: Self.finishedKey) }
     }
+    func title(flying: Bool) -> String { flying && self == .returnOnce ? "Fly back to start" : title }
     var timeSensitive: Bool {
         get { defaults.object(forKey: Self.timeSensitiveKey) as? Bool ?? false }
         nonmutating set { defaults.set(newValue, forKey: Self.timeSensitiveKey) }

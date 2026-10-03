@@ -115,17 +115,22 @@ struct LocSimView: View {
                     remaining: routeSimulator.remainingTime, remainingDistance: routeSimulator.remainingDistance,
                     isPaused: routeSimulator.isPaused,
                     legName: routeSimulator.legName, mode: routeSimulator.travelMode,
+                    liveSpeedKmh: routeSimulator.actualSpeedKmh,
                     speedKmh: Binding(get: { routeSimulator.currentSpeedKmh }, set: { routeSimulator.updateLiveSpeed($0) }),
                     collapsed: $routeControlsCollapsed,
                     preview: routeSimulator.previewSeek, seek: routeSimulator.seek,
                     cancelSeek: routeSimulator.cancelSeek, pause: routeSimulator.togglePause, stop: routeSimulator.requestRouteStop,
-                    finishActionTitle: routeSimulator.finishConfiguration.action.title,
+                    finishActionTitle: routeSimulator.finishConfiguration.action.title(flying: routeSimulator.travelMode == .plane),
                     editFinish: { showRouteFinish = true },
                     showsRoutingCredit: routeSimulator.travelMode == .cycling
                 ).padding(.horizontal, 12).padding(.bottom, 6)
             }
             if !routeSimulator.isSimulating && routeSimulator.travelMode == .cycling && !routeSimulator.availableRoutes.isEmpty {
                 Text("© [OpenStreetMap contributors](https://www.openstreetmap.org/copyright) · [Routing](https://routing.openstreetmap.de/about.html) · [Fix the map](https://www.openstreetmap.org/fixthemap)")
+                    .font(.caption2).padding(6).background(.regularMaterial)
+            }
+            if !routeSimulator.isSimulating && routeSimulator.travelMode == .plane && !routeSimulator.availableRoutes.isEmpty {
+                Text("Airport data: [OurAirports](https://ourairports.com/data/) · Public domain")
                     .font(.caption2).padding(6).background(.regularMaterial)
             }
           }
@@ -193,7 +198,8 @@ struct LocSimView: View {
             NavigationView {
                 ScrollView {
                     RouteFinishControls(configuration: Binding(
-                        get: { routeSimulator.finishConfiguration }, set: routeSimulator.configureFinish), active: true)
+                        get: { routeSimulator.finishConfiguration }, set: routeSimulator.configureFinish), active: true,
+                        flying: routeSimulator.travelMode == .plane)
                         .padding()
                 }
                 .navigationTitle("Route finish")

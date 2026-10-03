@@ -4,6 +4,7 @@ cd "$(dirname "$0")/../.."
 QA_DIR="$PWD/build/route-session-ui"
 PREVIEW_APP="$QA_DIR/RouteSessionUI.app"
 mkdir -p "$PREVIEW_APP"
+cp TrollRoute/Resources/Airports.json "$PREVIEW_APP/Airports.json"
 python3 - "$QA_DIR" <<'PY'
 from pathlib import Path
 import plistlib, sys

@@ -49,12 +49,13 @@ struct SessionHost: View {
                 if engine.isSimulating {
                     RoutePlaybackPanel(progress: engine.progress, elapsed: engine.elapsedTime,
                         remaining: engine.remainingTime, remainingDistance: engine.remainingDistance,
-                        isPaused: engine.isPaused, legName: engine.legName,
+                        isPaused: engine.isPaused, legName: engine.legName, mode: engine.travelMode,
+                        liveSpeedKmh: engine.actualSpeedKmh,
                         speedKmh: Binding(get: { engine.currentSpeedKmh }, set: engine.updateLiveSpeed),
                         collapsed: $collapsed, preview: engine.previewSeek, seek: engine.seek,
                         cancelSeek: engine.cancelSeek, pause: engine.togglePause, stop: engine.requestRouteStop,
-                        finishActionTitle: engine.finishConfiguration.action.title,
-                        editFinish: { finish = true }, showsRoutingCredit: true)
+                        finishActionTitle: engine.finishConfiguration.action.title(flying: engine.travelMode == .plane),
+                        editFinish: { finish = true }, showsRoutingCredit: engine.travelMode != .plane)
                         .padding(.horizontal, 12).padding(.bottom, 6)
                 }
             }
@@ -71,7 +72,8 @@ struct SessionHost: View {
             .sheet(isPresented: $finish) {
                 NavigationView {
                     ScrollView {
-                        RouteFinishControls(configuration: Binding(get: { engine.finishConfiguration }, set: engine.configureFinish), active: true)
+                        RouteFinishControls(configuration: Binding(get: { engine.finishConfiguration }, set: engine.configureFinish), active: true,
+                            flying: engine.travelMode == .plane)
                             .padding()
                     }.navigationTitle("Route finish").navigationBarTitleDisplayMode(.inline)
                         .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { finish = false } } }
@@ -94,11 +96,23 @@ struct SessionHost: View {
                 speed: 0, timestamp: Date()), kind: .stationary, newIntent: true)
         }
         fixture.prepare()
+        if arguments.contains("--plane") {
+            let departure = AirportCatalog.bundled.airports.first { $0.id == "LFPG" }!
+            let arrival = AirportCatalog.bundled.airports.first { $0.id == "KJFK" }!
+            let plan = try! FlightPlan(departure: departure, arrival: arrival)
+            fixture.engine.clearCalculatedRoutes()
+            fixture.engine.travelMode = .plane
+            fixture.engine.routeStart = departure.coordinate
+            fixture.engine.routeEnd = arrival.coordinate
+            fixture.engine.availableRoutes = [RouteOption(route: RoutePath(flight: plan), index: 0)]
+            fixture.engine.selectRoute(at: 0)
+            fixture.engine.updateSpeedKmh(850, for: .plane)
+        }
         let navigation = arguments.contains("--navigation") || arguments.contains("--active-navigation")
         if !navigation || arguments.contains("--active-navigation") {
             fixture.engine.startSimulation()
             fixture.engine.seek(to: 0.2)
-            fixture.engine.updateLiveSpeed(5)
+            if !arguments.contains("--plane") { fixture.engine.updateLiveSpeed(5) }
         }
         let window = UIWindow(frame: UIScreen.main.bounds)
         window.rootViewController = UIHostingController(rootView: SessionHost(fixture: fixture, navigation: navigation))

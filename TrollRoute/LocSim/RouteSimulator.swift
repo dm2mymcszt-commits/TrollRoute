@@ -181,7 +181,7 @@ enum TravelMode: String, CaseIterable {
     var calculatesLazily: Bool { self == .train || self == .plane }
     // Providers become visible when their implementation is ready. Train also
     // requires operator permission; the shared model can already retain it.
-    static var availableCases: [TravelMode] { [.walking, .cycling, .driving] }
+    static var availableCases: [TravelMode] { [.walking, .cycling, .driving, .plane] }
     static func initialCalculations(selected: TravelMode) -> [TravelMode] {
         allCases.filter { !$0.calculatesLazily || $0 == selected }
     }
@@ -696,6 +696,7 @@ class RouteSimulator: NSObject, ObservableObject, CLLocationManagerDelegate {
         selectedRouteIndex = index
         modeCache.select(index, for: travelMode)
         let route = availableRoutes[index].route
+        if let flight = route.flight { departureAirport = flight.departure; arrivalAirport = flight.arrival }
         
         let pointCount = route.polyline.pointCount
         var coords = [CLLocationCoordinate2D](repeating: CLLocationCoordinate2D(), count: pointCount)
