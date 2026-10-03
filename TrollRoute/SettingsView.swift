@@ -85,14 +85,17 @@ struct SettingsView: View {
     private var routeOptions: some View {
         Group {
             Section("Default action when a route finishes") {
-                Picker("Action", selection: Binding(get: { finishSettings.action }, set: { action in
-                    if action == .goToPlace && finishSettings.destination == nil {
-                        selectGoAfterPicking = true
-                        showFinishPlacePicker = true
-                    } else { finishSettings.action = action }
-                })) {
-                    ForEach(RouteFinishAction.allCases) { action in Text(action.title).tag(action) }
-                }
+                Menu {
+                    Picker("Action", selection: Binding(get: { finishSettings.action }, set: { action in
+                        if action == .goToPlace && finishSettings.destination == nil {
+                            selectGoAfterPicking = true
+                            showFinishPlacePicker = true
+                        } else { finishSettings.action = action }
+                    })) {
+                        ForEach(RouteFinishAction.allCases) { action in Text(action.title).tag(action) }
+                    }
+                } label: { actionLabel(finishSettings.action.title) }
+                .accessibilityIdentifier("settings-finish-action")
                 if finishSettings.action == .goToPlace {
                     Button {
                         selectGoAfterPicking = false
@@ -111,9 +114,12 @@ struct SettingsView: View {
                     .font(.caption).foregroundColor(.secondary)
             }
             Section("Default action when stopping a route") {
-                Picker("Action", selection: $routeStopDefault) {
-                    ForEach(RouteStopAction.defaults) { action in Text(action.title).tag(action.rawValue) }
-                }
+                Menu {
+                    Picker("Action", selection: $routeStopDefault) {
+                        ForEach(RouteStopAction.defaults) { action in Text(action.title).tag(action.rawValue) }
+                    }
+                } label: { actionLabel((RouteStopAction(rawValue: routeStopDefault) ?? .previous).title) }
+                .accessibilityIdentifier("settings-stop-action")
                 DisclosureGroup("About stopping routes") {
                     Text("Preselects a choice only. Stopping a route always asks what should happen to your location. If Return to previous spoofed location is unavailable, Stay at current location is selected instead.")
                         .font(.caption).foregroundColor(.secondary)
@@ -122,6 +128,13 @@ struct SettingsView: View {
             Section {
                 NavigationLink("History") { RouteHistoryView(store: history, replay: replayHistory) }
             }
+        }
+    }
+    private func actionLabel(_ title: String) -> some View {
+        HStack {
+            Text(title).multilineTextAlignment(.leading).fixedSize(horizontal: false, vertical: true)
+            Spacer(minLength: 8)
+            Image(systemName: "chevron.up.chevron.down").font(.caption)
         }
     }
     private var safetyOptions: some View {

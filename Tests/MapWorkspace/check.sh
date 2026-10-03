@@ -31,10 +31,12 @@ xcrun --sdk iphonesimulator swiftc TrollRoute/Storage/SharedPreferences.swift Tr
   -o "$PREVIEW_APP/MapWorkspacePreview"
 python3 - "$PREVIEW_APP/Info.plist" <<'PY'
 import plistlib, sys
+with open('TrollRoute/Info.plist', 'rb') as source:
+    version = plistlib.load(source)
 with open(sys.argv[1], 'wb') as f:
     plistlib.dump(dict(CFBundleIdentifier='local.trollroute.workspacepreview',
         CFBundleExecutable='MapWorkspacePreview', CFBundleName='MapWorkspacePreview',
-        CFBundleShortVersionString='2.6.0', CFBundleVersion='4',
+        CFBundleShortVersionString=version['CFBundleShortVersionString'], CFBundleVersion=version['CFBundleVersion'],
         CFBundlePackageType='APPL', MinimumOSVersion='17.0', UIDeviceFamily=[1],
         UILaunchScreen={}, NSLocationWhenInUseUsageDescription='Preview the map.'), f)
 PY

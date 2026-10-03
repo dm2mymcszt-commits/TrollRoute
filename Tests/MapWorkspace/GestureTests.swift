@@ -25,8 +25,11 @@ final class MapGestureTests: XCTestCase {
                     XCTAssertTrue(app.switches[label].exists, label)
                 }
             case "Routes":
-                XCTAssertTrue(app.staticTexts["Default action when a route finishes"].exists)
-                XCTAssertTrue(app.staticTexts["Default action when stopping a route"].exists)
+                for heading in ["Default action when a route finishes", "Default action when stopping a route"] {
+                    XCTAssertTrue(app.staticTexts.matching(NSPredicate(format: "label ==[c] %@", heading)).firstMatch.exists)
+                }
+                XCTAssertTrue(app.buttons["settings-finish-action"].exists)
+                XCTAssertTrue(app.buttons["settings-stop-action"].exists)
                 XCTAssertTrue(app.buttons["History"].exists)
             case "Safety":
                 XCTAssertTrue(app.switches["Confirm before stopping location spoofing"].exists)
@@ -42,7 +45,7 @@ final class MapGestureTests: XCTestCase {
                 }
             case "About":
                 XCTAssertTrue(app.staticTexts["TrollRoute"].exists)
-                XCTAssertTrue(app.links["Source code"].exists)
+                XCTAssertTrue(app.buttons["Source code"].exists)
             default: XCTFail("Unverified Settings group")
             }
             capture(app, "settings-\(title.lowercased())-awaiting-approval")
