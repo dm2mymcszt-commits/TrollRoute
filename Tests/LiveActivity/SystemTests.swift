@@ -252,5 +252,25 @@ final class LiveActivitySystemTests: XCTestCase {
         XCTAssertTrue(app.staticTexts["QA activity ready"].waitForExistence(timeout: 10))
         authorizeActivity(app, destination: "Original start")
         XCTAssertTrue(app.staticTexts["QA moving"].exists)
+        // Exercise the new variable-speed mode through the real widget/intents,
+        // in addition to every original driving assertion above.
+        app.buttons["Start flight"].tap()
+        XCTAssertTrue(app.staticTexts["QA activity ready"].waitForExistence(timeout: 10))
+        authorizeActivity(app, destination: "John F. Kennedy (JFK)")
+        goHome(); expand()
+        XCTAssertTrue(board.staticTexts["850 km/h"].waitForExistence(timeout: 10), board.debugDescription)
+        capture("system-plane-cruise")
+        tapSettledActivityControl("Pause")
+        XCTAssertTrue(board.buttons["Resume"].waitForExistence(timeout: 10), board.debugDescription)
+        XCTAssertTrue(board.staticTexts["0 km/h"].exists, "Paused flight displays actual zero speed")
+        capture("system-plane-paused")
+        tapSettledActivityControl("Resume")
+        XCTAssertTrue(board.staticTexts["850 km/h"].waitForExistence(timeout: 10))
+        tapSettledActivityControl("Stop")
+        XCTAssertTrue(board.buttons["Restore real location"].waitForExistence(timeout: 10))
+        tapSettledActivityControl("Restore real location")
+        app.activate()
+        XCTAssertTrue(app.staticTexts["QA stopped"].waitForExistence(timeout: 10))
+        XCTAssertTrue(app.staticTexts["QA no activity"].waitForExistence(timeout: 10))
     }
 }

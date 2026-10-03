@@ -22,6 +22,7 @@ struct ActivityQAView: View {
             VStack(alignment: .leading, spacing: 4) {
                 Button("Start real") { start(previous: false) }
                 Button("Start spoof") { start(previous: true) }
+                Button("Start flight") { startFlight() }
                 Button("Seek 46") { engine.seek(to: 0.46) }
                 Button("Speed 120") { engine.updateLiveSpeed(120) }
                 Button("Disable activity") { RouteActivityPreferences.shared.enabled = false }
@@ -39,6 +40,21 @@ struct ActivityQAView: View {
                 if let message = RouteActivityPreferences.shared.message { Text(message) }
             }.font(.caption).padding(8).background(.regularMaterial).padding(.top, 40)
         }
+    }
+    private func startFlight() {
+        engine.stopSimulation()
+        let a = FlightAirport(id: "LFPG", name: "Paris Charles de Gaulle", city: "Paris", country: "FR",
+            codes: ["CDG"], latitude: 49.0097, longitude: 2.5479, elevation: 119)
+        let b = FlightAirport(id: "KJFK", name: "John F. Kennedy", city: "New York", country: "US",
+            codes: ["JFK"], latitude: 40.6394, longitude: -73.7789, elevation: 4)
+        let plan = try! FlightPlan(departure: a, arrival: b)
+        engine.travelMode = .plane
+        engine.routeStart = a.coordinate; engine.routeEnd = b.coordinate
+        engine.availableRoutes = [RouteOption(route: RoutePath(flight: plan), index: 0)]
+        engine.selectRoute(at: 0); engine.updateSpeedKmh(850, for: .plane)
+        RouteActivityPreferences.shared.enabled = true
+        engine.startSimulation()
+        engine.seek(to: 0.5)
     }
     private func start(previous: Bool) {
         engine.stopSimulation()

@@ -745,7 +745,28 @@ func testHistoryEngine() {
         precondition(f.history.entries[0].coordinates == savedChina.coordinates)
         precondition(f.history.entries[0].start == savedChina.start && f.history.entries[0].destination == savedChina.destination)
     }
-    print("PASS: history records user starts, prepares without movement, and replays worldwide geometry without drift or duplication")
+    let departure = FlightAirport(id: "HISTORY-DEP", name: "Chosen departure", city: "", country: "XX", codes: ["DEP"],
+        latitude: 49, longitude: 2.5, elevation: 120)
+    let arrival = FlightAirport(id: "HISTORY-ARR", name: "Chosen arrival", city: "", country: "XX", codes: ["ARR"],
+        latitude: 40, longitude: -74, elevation: 20)
+    let flight = try! FlightPlan(departure: departure, arrival: arrival)
+    f.engine.travelMode = .plane
+    f.engine.routeStart = departure.coordinate; f.engine.routeEnd = arrival.coordinate
+    f.engine.availableRoutes = [RouteOption(route: RoutePath(flight: flight), index: 0)]
+    f.engine.selectRoute(at: 0); f.engine.updateSpeedKmh(900, for: .plane)
+    f.engine.configureFinish(.init(action: .returnOnce))
+    f.engine.startSimulation(startName: "Chosen start", destinationName: "Chosen destination")
+    let savedFlight = f.history.entries[0]
+    f.engine.stopSimulation()
+    let beforeReplay = f.driver.samples.count
+    precondition(f.engine.prepareHistory(savedFlight))
+    precondition(!f.engine.isSimulating && f.driver.samples.count == beforeReplay && !f.owner.isActive)
+    precondition(f.engine.departureAirport?.id == departure.id && f.engine.arrivalAirport?.id == arrival.id)
+    precondition(f.engine.travelMode == .plane && f.engine.currentSpeedKmh == 900)
+    precondition(f.engine.finishConfiguration.action == .returnOnce && f.engine.routePolyline is MKGeodesicPolyline)
+    f.engine.startSimulation(startName: savedFlight.start.name, destinationName: savedFlight.destination.name)
+    precondition(f.history.entries.count == 3 && f.history.entries[0].id == savedFlight.id)
+    print("PASS: history records user starts, prepares without movement, preserves flight choices and replays worldwide geometry without drift or duplication")
 }
 
 @main final class EngineApp: UIResponder, UIApplicationDelegate {

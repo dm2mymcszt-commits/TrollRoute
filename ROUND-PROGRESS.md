@@ -6,5 +6,5 @@
 - Plane: `99e1c15` model/data, `41c2585` altitude adapter, `9f6ce24` engine (phone tests), `ca4667f` UI. Run `37130603952` flight/elevation math passed; app compile failed on misplaced label helper, fixed separately in `99d7904`. Revalidation and screenshots pending.
 - History: `5c30507` store and Navigation UI tests passed in `37131557847`; owner approved both screenshots. Settings candidate `28551b8` pushed, run `37151990410`; screenshot approval pending.
 - Train: pending BRouter operator permission. Owner sends `docs/BROUTER-PERMISSION-REQUEST.md`; no send date known. No limited relations. On refusal or seven unanswered days, measure one-country offline data/storage/work and ask again. Follow-up scheduled from 2026-10-10, 10:00 Paris.
-- Next: validate Settings captures and flight Stop fixture correction; replay geometry fix `14e41f9` needs CI/phone check; finish F11/regression and promote only green work. Details: `ROUND-AUDIT.md`.
+- Next: collect Settings captures, validate full candidate (latest dispatched `37152530521`) and added flight History/system-widget checks; finish F11/regression and promote only green work. Details: `ROUND-AUDIT.md`.
 - Awaiting: rail permission, future Settings/History screenshot approval, all phone tests. No release; no README/docs/readme edits. Delete ROUND files only in final delivery commit.
