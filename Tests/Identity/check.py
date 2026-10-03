@@ -31,6 +31,12 @@ for path in ['TrollRouteShare/entitlements.plist', 'TrollRouteShare/TrollRouteSh
 for path in (root / 'TrollRoute/Translations').glob('*.xcstrings'):
     json.loads(path.read_text(encoding='utf-8'))
 
+share_icon = root / 'TrollRouteShare/Media.xcassets/AppIcon.appiconset'
+icon_manifest = json.loads((share_icon / 'Contents.json').read_text(encoding='utf-8'))
+assert {image['filename'] for image in icon_manifest['images']} == {'TrollRoute.png'}
+assert (share_icon / 'TrollRoute.png').read_bytes() == (root / 'TrollRoute/Assets.xcassets/AppIcon.appiconset/TrollRoute.png').read_bytes()
+assert not (share_icon / 'slice of cheese.png').exists(), 'Old share artwork must not ship'
+
 if len(sys.argv) > 1:
     with zipfile.ZipFile(sys.argv[1]) as package:
         def info(path):
@@ -67,6 +73,11 @@ if len(sys.argv) > 1:
         assert share['CFBundleExecutable'] == 'TrollRouteShare'
         assert share['CFBundleVersion'] == app['CFBundleVersion']
         assert share['MinimumOSVersion'] == '15.0'
+        share_prefix = prefix + 'PlugIns/TrollRouteShare.appex/'
+        assert share_prefix + 'Assets.car' in package.namelist(), 'Share extension icon catalog must be compiled'
+        share_primary = share['CFBundleIcons']['CFBundlePrimaryIcon']
+        assert share_primary['CFBundleIconName'] == 'AppIcon'
+        assert share_primary['CFBundleIconFiles'], 'Share extension must carry compiled icons'
 print('PASS: TrollRoute identity, shared groups and package components')
 assert plistlib.loads((root / 'TrollRouteActivity/entitlements.plist').read_bytes()) == {}, 'Widget has no extra privileges'
 
