@@ -674,8 +674,12 @@ func testFlightEngine() {
     }
     for choice in RouteStopAction.allCases {
         let f = EngineFixture(); defer { f.close() }
-        f.owner.receive(RouteLocationSample.make(coordinate: f.c, course: 0, speed: 0, timestamp: Date()),
-            kind: .stationary, newIntent: true)
+        // The existing Stop dialog offers Specific only when there is no
+        // previous spoof. Exercise each choice in the state that offers it.
+        if choice != .specific {
+            f.owner.receive(RouteLocationSample.make(coordinate: f.c, course: 0, speed: 0, timestamp: Date()),
+                kind: .stationary, newIntent: true)
+        }
         prepare(f); f.engine.startSimulation(); f.engine.seek(to: 0.5)
         f.engine.requestRouteStop()
         let request = f.engine.stopRequest!
@@ -685,6 +689,7 @@ func testFlightEngine() {
         precondition(f.engine.isSimulating && f.engine.stopRequest == nil)
         f.engine.requestRouteStop()
         let second = f.engine.stopRequest!
+        precondition(second.choices.contains(choice), "The fixture must offer the tested Stop choice")
         f.engine.confirmRouteStop(second.id, action: choice, place: .init(name: "Saved", address: "", coordinate: f.c))
         precondition(!f.engine.isSimulating && f.owner.altitudeController.flightAltitude == nil)
         switch choice {
