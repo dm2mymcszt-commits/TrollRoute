@@ -44,6 +44,7 @@ final class EngineFixture {
     let lease: LocationLeaseStore
     let leaseDirectory: URL
     let altitude: AltitudeSettings
+    let history: RouteHistoryStore
     var engine: RouteSimulator!
     var clock = 1000.0
     var notifications: [String] = []
@@ -64,12 +65,14 @@ final class EngineFixture {
         altitudeSettings.setCustom(250)
         let directory = FileManager.default.temporaryDirectory.appendingPathComponent(domain)
         leaseDirectory = directory
+        history = RouteHistoryStore(url: directory.appendingPathComponent("History/history.plist"))
         let authority = LocationLeaseStore(url: directory.appendingPathComponent("session.json"))
         lease = authority
         owner = LocationSession(driver: recording, defaults: storage, settings: altitudeSettings,
             injectionInterval: 0, lease: authority, lookup: { _ in nil }, batchLookup: { _ in nil })
         engine = RouteSimulator(locationSession: owner, finishDefaults: settings, stopDefaults: storage,
             now: { [unowned self] in realtime ? ProcessInfo.processInfo.systemUptime : self.clock },
+            history: history,
             notifyCompletion: { [unowned self] in self.notifications.append($0) })
     }
     func prepare() {
@@ -694,6 +697,31 @@ func testFlightEngine() {
     print("PASS: production flight injection, seeking, live cruise continuity, pause/resume, actual-speed Activity snapshots, six finish actions, reverse and all Route Stop outcomes")
 }
 
+func testHistoryEngine() {
+    let f = EngineFixture(); defer { f.close() }
+    f.prepare()
+    precondition(f.history.entries.isEmpty, "Preview never saves a run")
+    f.engine.configureFinish(.init(action: .backAndForth))
+    f.engine.startSimulation(startName: "First start", destinationName: "First destination")
+    precondition(f.history.entries.count == 1)
+    let entry = f.history.entries[0]
+    precondition(entry.start.name == "First start" && entry.destination.name == "First destination")
+    precondition(entry.mode == "Driving" && entry.speedKmh == 50 && entry.finish.action == .backAndForth)
+    f.engine.seek(to: 1); f.engine.seek(to: 1)
+    precondition(f.history.entries.count == 1 && f.history.entries[0].date == entry.date, "Internal legs do not create runs")
+    f.engine.stopSimulation()
+    let injections = f.driver.samples.count
+    precondition(f.engine.prepareHistory(entry))
+    precondition(!f.engine.isSimulating && f.driver.samples.count == injections && !f.owner.isActive)
+    precondition(f.engine.travelMode == .driving && f.engine.currentSpeedKmh == 50)
+    precondition(f.engine.finishConfiguration == entry.finish)
+    precondition(f.engine.routeStart!.latitude == f.a.latitude && f.engine.routeEnd!.longitude == f.b.longitude)
+    precondition(f.engine.availableRoutes.count == 1 && f.engine.availableRoutes[0].route.name == entry.routeName)
+    f.engine.startSimulation(startName: entry.start.name, destinationName: entry.destination.name)
+    precondition(f.history.entries.count == 1 && f.history.entries[0].id == entry.id)
+    print("PASS: history records successful user starts, excludes preview/internal legs, restores the complete draft and never auto-starts")
+}
+
 @main final class EngineApp: UIResponder, UIApplicationDelegate {
     var window: UIWindow?
     func application(_ application: UIApplication, didFinishLaunchingWithOptions options: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
@@ -706,6 +734,7 @@ func testFlightEngine() {
             testNotificationContent()
             testLazyModeCalculation()
             testFlightEngine()
+            testHistoryEngine()
             testActivityStateAndCommands()
             testRouteFinishEngine()
             testCompletedRouteClearsMap()

@@ -2,6 +2,8 @@ import SwiftUI
 
 @MainActor
 struct SettingsView: View {
+    @ObservedObject var history: RouteHistoryStore = .shared
+    var replayHistory: ((RouteHistoryEntry) -> Void)? = nil
     @Environment(\.dismiss) private var dismiss
     @AppStorage("mapAppearance", store: SharedPreferences.defaults) private var mapAppearance = "system"
     @AppStorage("mapStyle", store: SharedPreferences.defaults) private var mapStyle = "standard"
@@ -91,6 +93,9 @@ struct SettingsView: View {
                     Text("Permission is requested when you start a route with notifications enabled. Repeating routes notify only on the first arrival. Time Sensitive can notify during Focus or Do Not Disturb when allowed by iOS. If alerts are blocked, check TrollRoute's notification settings and Allow Time Sensitive Notifications in your Focus settings.")
                 }
                 RouteActivitySettings()
+                Section("History") {
+                    NavigationLink("History") { RouteHistoryView(store: history, replay: replayHistory) }
+                }
                 Section("About") {
                     HStack {
                         Text("TrollRoute")

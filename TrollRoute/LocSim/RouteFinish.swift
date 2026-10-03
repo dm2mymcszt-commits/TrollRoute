@@ -2,7 +2,7 @@ import Foundation
 import CoreLocation
 import Combine
 
-enum RouteFinishAction: String, CaseIterable, Identifiable {
+enum RouteFinishAction: String, CaseIterable, Identifiable, Codable {
     case stay, goToPlace, stop, loop, returnOnce, backAndForth
     var id: String { rawValue }
     func title(flying: Bool) -> String { flying && self == .returnOnce ? "Fly back to start" : title }
@@ -48,7 +48,7 @@ final class RouteFinishSettings: ObservableObject {
 }
 
 // A value copy for one prepared/active trip. Editing it never writes defaults.
-struct RouteFinishConfiguration: Equatable {
+struct RouteFinishConfiguration: Equatable, Codable {
     var action: RouteFinishAction
     var destination: RouteFinishDestination?
     init(action: RouteFinishAction = .stay, destination: RouteFinishDestination? = nil) {

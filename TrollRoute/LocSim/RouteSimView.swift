@@ -23,6 +23,7 @@ struct RouteSimSheet: View {
     @StateObject private var recentPlaces = RouteRecentPlaces()
     @State private var pickerField: ActiveField?
     @State private var airportField: ActiveField?
+    @State private var showHistory = false
     @State private var waitingForCurrentStart = false
     @State private var didInitializeStart = false
     @State private var loadedDraftRevision: UUID?
@@ -216,13 +217,17 @@ struct RouteSimSheet: View {
                     .accessibilityIdentifier("navigation-toolbar-stop")
                 }
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button(action: { showGPXPicker = true }) {
+                    HStack {
+                      Button { showHistory = true } label: { Image(systemName: "clock.arrow.circlepath") }
+                        .accessibilityLabel("History").accessibilityIdentifier("route-history")
+                      Button(action: { showGPXPicker = true }) {
                         Image(systemName: "doc.badge.plus")
                             .foregroundColor(.indigo)
                             .font(.title3)
                     }
                     .opacity(routeSimulator.isSimulating ? 0 : 1)
                     .disabled(routeSimulator.isSimulating)
+                    }
                 }
             }
             .sheet(item: $pickerField) { field in
@@ -234,6 +239,12 @@ struct RouteSimSheet: View {
                     useCurrentLocation: field == .start ? useCurrentStart : nil,
                     select: { selectPlace($0, field: field) }
                 )
+            }
+            .sheet(isPresented: $showHistory) {
+                NavigationView {
+                    RouteHistoryView(store: routeSimulator.history,
+                        replay: routeSimulator.isSimulating ? nil : replayHistory)
+                }
             }
             .sheet(item: $airportField) { field in
                 FlightAirportPicker(title: field == .start ? "Departure airport" : "Arrival airport",
@@ -563,6 +574,23 @@ struct RouteSimSheet: View {
         routeSimulator.clearCalculatedRoutes()
     }
 
+    private func replayHistory(_ entry: RouteHistoryEntry) {
+        guard routeSimulator.prepareHistory(entry) else {
+            UIApplication.shared.alert(body: routeSimulator.startError ?? "This saved route is unavailable.")
+            return
+        }
+        preparation.cancel()
+        currentLocation.cancel()
+        startRequestID = UUID(); isStarting = false; waitingForCurrentStart = false
+        draft.applySharedDraft(SharedRouteDraft(
+            start: RoutePlace(name: entry.start.name, coordinate: CoordTransform.wgs84ToGcj02(entry.start.coordinate)),
+            destination: RoutePlace(name: entry.destination.name, coordinate: CoordTransform.wgs84ToGcj02(entry.destination.coordinate))))
+        draft.needsRecalculation = false
+        loadDraft()
+        showHistory = false
+        showRouteOnMap()
+    }
+
     private func useCurrentStart() {
         invalidateRoute()
         startCoord = nil
@@ -696,6 +724,8 @@ struct FlightAirportPicker: View {
             .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } } }
         }
     }
+
+
 }
 
 struct RouteModeControls: View {

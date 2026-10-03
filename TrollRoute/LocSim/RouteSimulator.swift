@@ -408,6 +408,7 @@ class RouteSimulator: NSObject, ObservableObject, CLLocationManagerDelegate {
     @Published var isPaused: Bool = false
     @Published var routePolyline: MKPolyline? = nil
     let locationSession: LocationSession
+    let history: RouteHistoryStore
     var currentPosition: CLLocationCoordinate2D? {
         // Rendering follows geometry immediately, independently of injection slots.
         if isSimulating, let journey = journey {
@@ -546,8 +547,10 @@ class RouteSimulator: NSObject, ObservableObject, CLLocationManagerDelegate {
          stopDefaults: UserDefaults = SharedPreferences.defaults,
          now: @escaping () -> TimeInterval = { ProcessInfo.processInfo.systemUptime },
          directionsProvider: DirectionsProvider? = nil,
+         history: RouteHistoryStore = .shared,
          notifyCompletion: @escaping (String) -> Void = { RouteNotifications.shared.complete($0) }) {
         self.locationSession = locationSession
+        self.history = history
         self.finishDefaults = finishDefaults
         self.stopDefaults = stopDefaults
         finishConfiguration = RouteFinishConfiguration(defaults: finishDefaults)
@@ -668,7 +671,7 @@ class RouteSimulator: NSObject, ObservableObject, CLLocationManagerDelegate {
         guard !isSimulating else { return }
         locationSession.altitudeController.cancelPreparedRoute()
         travelMode = mode
-        if mode.calculatesLazily, modeCache.routes[mode] == nil,
+        if modeCache.routes[mode] == nil,
            !loadingModes.contains(mode), let start = routeStart, let end = routeEnd {
             loadingModes.insert(mode)
             isCalculatingRoute = true
@@ -775,7 +778,55 @@ class RouteSimulator: NSObject, ObservableObject, CLLocationManagerDelegate {
         updateBackgroundLocationAccess()
         startBackgroundTask()
         updateLocation()
-        if isSimulating { startTimer() }
+        if isSimulating {
+            recordHistory(startName: startName, destinationName: destinationName)
+            startTimer()
+        }
+    }
+
+    private func recordHistory(startName: String?, destinationName: String?) {
+        guard availableRoutes.indices.contains(selectedRouteIndex), let track = track else { return }
+        let path = availableRoutes[selectedRouteIndex].route
+        let start = routeStart.map(CoordTransform.gcj02ToWgs84) ?? track.coordinates[0]
+        let end = routeEnd.map(CoordTransform.gcj02ToWgs84) ?? track.coordinates.last!
+        history.record(RouteHistoryEntry(
+            start: .init(name: startName ?? activityStartName, address: "", coordinate: start),
+            destination: .init(name: destinationName ?? activityEndName, address: "", coordinate: end),
+            mode: travelMode.rawValue, symbol: travelMode.icon, speedKmh: currentSpeedKmh,
+            routeName: path.name, coordinates: track.coordinates.map(HistoryCoordinate.init),
+            distance: track.length, expectedTravelTime: path.expectedTravelTime, trafficLabel: path.trafficLabel,
+            finish: finishConfiguration, date: Date(), departureAirport: path.flight?.departure, arrivalAirport: path.flight?.arrival))
+    }
+
+    /// Reuse the recorded geometry as a prepared cache entry. Only the user's
+    /// subsequent Start action claims ownership and injects a location.
+    @discardableResult
+    func prepareHistory(_ entry: RouteHistoryEntry) -> Bool {
+        guard !isSimulating, entry.isValid, let mode = TravelMode(rawValue: entry.mode),
+              mode.speedRange.contains(entry.speedKmh) else { return false }
+        guard mode != .train else { startError = "Train routing is awaiting provider permission."; return false }
+        let path: RoutePath
+        if mode == .plane {
+            guard let a = entry.departureAirport, let b = entry.arrivalAirport,
+                  let flight = try? FlightPlan(departure: a, arrival: b) else {
+                startError = "This saved flight needs valid airport elevations."; return false
+            }
+            path = RoutePath(flight: flight)
+        } else {
+            let coordinates = entry.coordinates.map { CoordTransform.wgs84ToGcj02($0.coordinate) }
+            path = RoutePath(polyline: MKPolyline(coordinates: coordinates, count: coordinates.count),
+                distance: entry.distance, expectedTravelTime: entry.expectedTravelTime, name: entry.routeName,
+                trafficLabel: entry.trafficLabel)
+        }
+        clearCalculatedRoutes()
+        startError = nil
+        routeStart = CoordTransform.wgs84ToGcj02(entry.start.coordinate)
+        routeEnd = CoordTransform.wgs84ToGcj02(entry.destination.coordinate)
+        modeCache.store([path], for: mode)
+        speeds.set(entry.speedKmh, for: mode)
+        selectMode(mode)
+        configureFinish(entry.finish)
+        return !availableRoutes.isEmpty
     }
 
     private func startTimer() {

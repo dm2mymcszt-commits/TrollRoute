@@ -96,6 +96,14 @@ struct SessionHost: View {
                 speed: 0, timestamp: Date()), kind: .stationary, newIntent: true)
         }
         fixture.prepare()
+        if arguments.contains("--history") {
+            fixture.engine.startSimulation(startName: "Saved drive", destinationName: "Riverside")
+            fixture.engine.stopSimulation()
+            fixture.prepare(); fixture.engine.travelMode = .walking
+            fixture.engine.startSimulation(startName: "Saved walk", destinationName: "Riverside")
+            fixture.engine.stopSimulation()
+            fixture.prepare(); fixture.engine.travelMode = .driving
+        }
         if arguments.contains("--plane") {
             let departure = AirportCatalog.bundled.airports.first { $0.id == "LFPG" }!
             let arrival = AirportCatalog.bundled.airports.first { $0.id == "KJFK" }!

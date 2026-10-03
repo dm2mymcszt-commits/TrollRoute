@@ -42,6 +42,7 @@ struct LocSimView: View {
     @State private var showRouteFinish = false
     @State private var showSearchBar: Bool = false
     @State private var showSettings = false
+    @State private var openHistoryAfterSettings = false
     @StateObject private var recentPlaces = RouteRecentPlaces()
     @State private var mapRegion: MKCoordinateRegion? = nil
     
@@ -183,7 +184,12 @@ struct LocSimView: View {
         mapWithLifecycle.sheet(isPresented: $showAltitude, onDismiss: offerSharedPlace) {
             AltitudeSheet(settings: .shared, controller: locationSession.altitudeController)
         }
-        .sheet(isPresented: $showSettings, onDismiss: offerSharedPlace) { SettingsView() }
+        .sheet(isPresented: $showSettings, onDismiss: {
+            if openHistoryAfterSettings { openHistoryAfterSettings = false; showRouteSheet = true }
+            else { offerSharedPlace() }
+        }) {
+            SettingsView(history: routeSimulator.history, replayHistory: routeSimulator.isSimulating ? nil : replayHistory)
+        }
         .sheet(isPresented: $showSearchBar, onDismiss: offerSharedPlace) {
             RouteLocationPicker(title: "Find a place", region: mapRegion,
                 selectedCoordinate: nil, recents: recentPlaces) { place in
@@ -355,6 +361,19 @@ struct LocSimView: View {
     }
     
     // MARK: - Quick Menu Handler
+    private func replayHistory(_ entry: RouteHistoryEntry) {
+        guard routeSimulator.prepareHistory(entry) else {
+            UIApplication.shared.alert(body: routeSimulator.startError ?? "This saved route is unavailable.")
+            return
+        }
+        routeDraft.applySharedDraft(SharedRouteDraft(
+            start: RoutePlace(name: entry.start.name, coordinate: CoordTransform.wgs84ToGcj02(entry.start.coordinate)),
+            destination: RoutePlace(name: entry.destination.name, coordinate: CoordTransform.wgs84ToGcj02(entry.destination.coordinate))))
+        routeDraft.needsRecalculation = false
+        openHistoryAfterSettings = true
+        showSettings = false
+    }
+
     private func handleQuickMenuAction(_ action: QuickMenuAction) {
         longPressRoute.cancel()
         // A pending map proposal must not appear over a newly opened tool.
