@@ -17,6 +17,13 @@ final class RouteSessionTests: XCTestCase {
         expectation(for: expected, evaluatedWith: state)
         waitForExpectations(timeout: 10)
     }
+    private func scrollNavigation(_ app: XCUIApplication) {
+        // The route preview is an interactive map. A centre-screen swipe pans
+        // that map instead of scrolling once the preview reaches the centre.
+        // Use the ScrollView's left margin, outside the map's padded frame.
+        app.coordinate(withNormalizedOffset: CGVector(dx: 0.02, dy: 0.85))
+            .press(forDuration: 0.05, thenDragTo: app.coordinate(withNormalizedOffset: CGVector(dx: 0.02, dy: 0.3)))
+    }
     private func stop(_ app: XCUIApplication) {
         let button = app.buttons["Stop route"]
         XCTAssertTrue(button.waitForExistence(timeout: 10))
@@ -27,7 +34,7 @@ final class RouteSessionTests: XCTestCase {
         let app = launch(["--plane", "--navigation"])
         XCTAssertTrue(app.navigationBars["TrollRoute Navigation"].waitForExistence(timeout: 10))
         let departure = app.buttons["departure-airport"]
-        for _ in 0..<8 { if departure.isHittable { break }; app.swipeUp() }
+        for _ in 0..<8 { if departure.isHittable { break }; scrollNavigation(app) }
         XCTAssertTrue(app.buttons["Plane"].exists)
         XCTAssertTrue(departure.isHittable)
         capture(app, "plane-tab-and-airports")
@@ -44,7 +51,7 @@ final class RouteSessionTests: XCTestCase {
         expectation(for: NSPredicate(format: "label CONTAINS %@", "HND"), evaluatedWith: changed)
         waitForExpectations(timeout: 10)
         let start = app.buttons["Start Route Simulation"]
-        for _ in 0..<8 { if start.isHittable { break }; app.swipeUp() }
+        for _ in 0..<8 { if start.isHittable { break }; scrollNavigation(app) }
         XCTAssertTrue(start.isHittable)
         capture(app, "plane-flight-preview")
         waitState(app, "running=false")
@@ -151,7 +158,7 @@ final class RouteSessionTests: XCTestCase {
         let picker = app.buttons["route-finish-action"]
         for _ in 0..<8 {
             if picker.isHittable { break }
-            app.swipeUp()
+            scrollNavigation(app)
         }
         XCTAssertTrue(picker.isHittable)
         capture(app, "navigation-per-route-finish")
