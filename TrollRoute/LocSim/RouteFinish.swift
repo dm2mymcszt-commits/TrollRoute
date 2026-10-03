@@ -5,6 +5,7 @@ import Combine
 enum RouteFinishAction: String, CaseIterable, Identifiable {
     case stay, goToPlace, stop, loop, returnOnce, backAndForth
     var id: String { rawValue }
+    func title(flying: Bool) -> String { flying && self == .returnOnce ? "Fly back to start" : title }
     var title: String {
         switch self {
         case .stay: return "Stay at destination"
@@ -117,7 +118,6 @@ struct RouteNotificationPreferences {
         get { defaults.object(forKey: Self.finishedKey) as? Bool ?? true }
         nonmutating set { defaults.set(newValue, forKey: Self.finishedKey) }
     }
-    func title(flying: Bool) -> String { flying && self == .returnOnce ? "Fly back to start" : title }
     var timeSensitive: Bool {
         get { defaults.object(forKey: Self.timeSensitiveKey) as? Bool ?? false }
         nonmutating set { defaults.set(newValue, forKey: Self.timeSensitiveKey) }
