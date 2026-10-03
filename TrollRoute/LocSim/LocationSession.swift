@@ -346,7 +346,7 @@ final class LocationSession: ObservableObject {
 
     func receive(_ location: CLLocation, kind: LocationSessionSnapshot.Kind,
                  reason: LocationInjectionReason = .continuous, routeDistance: Double? = nil,
-                 newIntent: Bool = false) {
+                 newIntent: Bool = false, flightAltitude: Double? = nil) {
         guard SessionLocation(location).isValid else { return }
         if newIntent { guard claimForUserAction() else { return } }
         guard authorized() else { return }
@@ -358,7 +358,8 @@ final class LocationSession: ObservableObject {
         inputSample = location
         snapshot.kind = kind
         if kind != .route { snapshot.beforeRoute = nil }
-        altitudeController.receive(routeDistance: kind == .route ? routeDistance : nil)
+        altitudeController.receive(routeDistance: kind == .route ? routeDistance : nil,
+                                   flightAltitude: kind == .route ? flightAltitude : nil)
         deliveryReason = .continuous
     }
 
@@ -371,6 +372,7 @@ final class LocationSession: ObservableObject {
         snapshot.kind = snapshot.current == nil ? nil : .stationary
         snapshot.beforeRoute = nil
         persistSnapshot()
+        altitudeController.finishFlight()
     }
 
     /// Stop route movement without ever stopping the underlying location spoof.

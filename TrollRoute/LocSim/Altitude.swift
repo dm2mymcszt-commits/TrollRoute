@@ -74,6 +74,7 @@ enum ElevationLookup {
 // before injection, without changing any of the caller's motion metadata.
 final class AltitudeController: ObservableObject {
     @Published private(set) var currentMeters: Double?
+    @Published private(set) var flightAltitude: Double?
     var isActive: Bool { currentLocation() != nil }
     private var profile: AltitudeProfile
     private let currentLocation: () -> CLLocation?
@@ -150,15 +151,29 @@ final class AltitudeController: ObservableObject {
         preparedLoader = nil
     }
 
-    func receive(routeDistance: Double? = nil) {
+    func receive(routeDistance: Double? = nil, flightAltitude: Double? = nil) {
         if self.routeDistance != nil && routeDistance == nil { finishRoute() }
         if activeLoader == nil && routeDistance != nil { activatePreparedRoute() }
         self.routeDistance = routeDistance
-        if routeDistance != nil { cancelLookup() }
+        self.flightAltitude = flightAltitude.flatMap { $0.isFinite ? $0 : nil }
+        if routeDistance != nil || self.flightAltitude != nil { cancelLookup() }
         refresh(reissue: false)
     }
 
+    /// Only natural touchdown restores the normal preference here. Route Stop
+    /// instead retains its captured height through holdCaptured.
+    func finishFlight() {
+        guard let meters = flightAltitude else { return }
+        if let coordinate = currentLocation()?.coordinate {
+            cache.append((coordinate, meters))
+            if cache.count > 2048 { cache.removeFirst() }
+        }
+        finishRoute()
+        refresh()
+    }
+
     func finishRoute() {
+        flightAltitude = nil
         if let coordinate = currentLocation()?.coordinate, let meters = lastRouteMeters {
             cache.append((coordinate, meters))
             if cache.count > 2048 { cache.removeFirst() }
@@ -171,6 +186,7 @@ final class AltitudeController: ObservableObject {
     }
 
     func stop() {
+        flightAltitude = nil
         cancelLookup()
         activeLoader?.cancel()
         preparedLoader?.cancel()
@@ -215,6 +231,12 @@ final class AltitudeController: ObservableObject {
 
     private func refresh(reissue: Bool = true) {
         guard let location = currentLocation() else { return }
+        if let height = flightAltitude {
+            currentMeters = height
+            deliver(Self.applying(height, to: location, accuracy: 10,
+                                  timestamp: reissue ? Date() : nil))
+            return
+        }
         let terrain: Double?
         if let distance = routeDistance {
             terrain = routeProfile?.meters(at: distance) ?? lastRouteMeters ?? cached(location.coordinate)

@@ -93,6 +93,26 @@ import CoreLocation
         precondition(delivered.count == count && !controller.isActive && controller.currentMeters == nil)
         settings.setCustom(250)
         precondition(delivered.count == count) // Changing settings after Stop never restarts spoofing.
+        inputLocation = sample(start, speed: 230)
+        controller.receive(routeDistance: 1000, flightAltitude: 9000)
+        precondition(controller.flightAltitude == 9000 && delivered.last!.altitude == 9000)
+        precondition(delivered.last!.speed == 230 && delivered.last!.course == 271.5)
+        precondition(delivered.last!.horizontalAccuracy == 5 && delivered.last!.speedAccuracy == 0)
+        settings.setCustom(888)
+        precondition(delivered.last!.altitude == 9000, "Custom changes are saved but cannot override a flight")
+        settings.reset()
+        precondition(delivered.last!.altitude == 9000, "Automatic cannot override a flight")
+        inputLocation = sample(next, speed: 0)
+        controller.receive(routeDistance: 2000, flightAltitude: 37)
+        controller.finishFlight()
+        precondition(controller.flightAltitude == nil && delivered.last!.altitude == 37)
+        settings.setCustom(250)
+        precondition(delivered.last!.altitude == 250, "Normal altitude applies after landing")
+        controller.receive(routeDistance: 1000, flightAltitude: 8000)
+        controller.holdCaptured(AltitudeController.applying(7000, to: sample(next, speed: 0), accuracy: 10))
+        precondition(controller.flightAltitude == nil && delivered.last!.altitude == 7000)
+        inputLocation = nil
+        controller.stop()
         print("PASS: saved altitude, decimal parsing, unknown validity, current motion, cache, stale results, and Stop")
     }
 }

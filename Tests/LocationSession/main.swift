@@ -82,6 +82,17 @@ final class RecordingDriver: LocationSimulationDriver {
         let restored = try! JSONDecoder().decode(SessionLocation.self, from: JSONEncoder().encode(unknown))
         precondition(restored == unknown && restored.meters == nil)
         precondition(restored.location.verticalAccuracy == -1 && restored.location.speedAccuracy == 0)
+        session.beginRoute()
+        session.receive(sample(45, 2, speed: 230), kind: .route, routeDistance: 1000, flightAltitude: 10_500)
+        precondition(session.current?.altitude == 10_500 && session.current?.speed == 230)
+        settings.setCustom(123)
+        precondition(session.current?.altitude == 10_500)
+        session.receive(sample(46, 3, speed: 0), kind: .route, routeDistance: 2000, flightAltitude: 80)
+        precondition(session.current?.altitude == 80 && session.current?.speed == 0)
+        session.finishHolding()
+        precondition(session.current?.altitude == 123 && session.current?.speed == 0)
+        precondition(session.snapshot.kind == .stationary && session.altitudeController.flightAltitude == nil)
+        session.stop()
         print("PASS: location ownership, previous spoof/altitude, real start, joystick, held destination, group round-trip, no replay, stop and unchanged motion")
     }
 }
