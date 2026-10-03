@@ -1,6 +1,7 @@
 # Map data and software credits
 
 - Apple Maps results use MapKit and Core Location.
+- Plane endpoints use a bundled subset of [OurAirports](https://ourairports.com/data/), whose data is public domain. It contains 4,134 scheduled-service land airports; names, cities and codes are searched locally. See [dataset details](docs/AIRPORT-DATA.md). Flight geometry and the speed/altitude profile are calculated on the device. Missing airport elevations use the same budgeted Open-Meteo service below, with a persistent 30-day cache and one-minute failed-lookup cache. No additional entitlement or API key is required.
 - OpenStreetMap contributors supply OSM results under the [Open Database License](https://www.openstreetmap.org/copyright), through [Photon](https://github.com/komoot/photon). Its public service permits moderate use, including search as you type. TrollRoute debounces typing, caches repeated queries, and spaces requests by at least 1.25 seconds.
 - Bicycle directions use the worldwide [FOSSGIS OSRM service](https://routing.openstreetmap.de/about.html) and OpenStreetMap data. TrollRoute identifies its requests, reserves at least 1.1 seconds between requests, and reuses calculated routes when switching modes or changing speed. Maps displaying bicycle routes include attribution and a map-correction link.
 - IGN Geoplateforme supplies address data from the Base Adresse Nationale under its applicable [open-data terms](https://geoservices.ign.fr/services-geoplateforme-geocodage). It is an automatic supplemental source.

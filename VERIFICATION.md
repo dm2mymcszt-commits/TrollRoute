@@ -12,18 +12,19 @@ Earlier evidence remains in Git history: [build 53](https://github.com/dm2mymcsz
 
 | Item | Status and evidence |
 | --- | --- |
-| Phase 0 | Plan/audit committed as `e477baa`. [Documentation CI](https://github.com/dm2mymcszt-commits/TrollRoute/actions/runs/37113319872) reproduced a light Live Activity failure; dark, sharing, route-session and icons passed, build/map still running at last check. Green-CI acceptance not met. Existing source findings rechecked. |
-| Plane | Design only. OurAirports public-domain subset measured at 4,134 scheduled-service land airports, approximately 690 KB. No new runtime source or entitlement yet. |
-| Train | Pending owner source decision. No public endpoint yet verified for permitted app use, coverage and reliability; no substitute implemented. |
-| History and Settings | Not implemented. Simulator screenshots and owner layout approval still required. |
-| F7/F8 | Prepared locally: existing TrollRoute icon reused in share extension; system symbols replace emoji; unused translated emoji string removed. Identity and emoji checks pass locally; iOS build/package verification pending. |
-| F9 | Separate injection-adapter change prepared locally. Time-zone notification bounded to once/minute after 5 km, or after five minutes and 250 m. No injection cadence/start/stop change. Actual-adapter tests added; execution in Actions and device clock/driving Bitmoji checks pending. |
-| F10 | This documentation update records build 54 and the new device checklist. |
-| F11 | Investigation only. First failed dark artifact contains 25 nil-archive renderer errors, and a failed companion teardown precedes later presentation failures. Root-cause fix and several unchanged-code runs remain required. No assertions removed. |
-| Delivery | No 3.1 package/version bump yet. Full regression and device checks outstanding. No 3.1 Release created. |
+| Phase 0 | Source/code audit recorded in `ROUND-AUDIT.md`. Free rail service permission remains unresolved; no limited-relation substitute is authorized. |
+| Plane | Great-circle/profile/elevation tests and airport/preview/playback UI passed in [validation 37131557847](https://github.com/dm2mymcszt-commits/TrollRoute/actions/runs/37131557847). Full engine and on-device acceptance still pending. OurAirports bundle: 4,134 airports, 711,086 bytes, public domain. |
+| Train | Pending BRouter operator permission. Owner sends [the prepared request](docs/BROUTER-PERMISSION-REQUEST.md); no known send date. No endpoint connected. On refusal or seven unanswered days, measure one-country offline data/storage/work before another decision. |
+| History | Local store and replay/delete/clear UI passed in validation 37131557847. Owner approved populated and empty History screenshots. Additional exact-coordinate replay regression is validating. |
+| Settings | Seven groups implemented on the validation branch. All storage definitions/defaults match a snapshot of `fd7d417`; screenshot approval remains pending. |
+| F7/F8 | Share artwork and system symbols committed; identity and no-emoji checks passed in CI. Scan also covers bundled JSON display strings. |
+| F9 | Separate bounded time-zone notification change committed; actual-driver checks passed in [validation 37151742655](https://github.com/dm2mymcszt-commits/TrollRoute/actions/runs/37151742655). Device clock/driving Bitmoji checks pending. |
+| F10 | Build 54 release provenance and this round's checklist recorded; documentation tracks incomplete acceptance explicitly. |
+| F11 | Fresh simulator per original scenario, one bounded retry of executed UI failures, distinct attempt evidence. Screenshot revealed an undismissed Live Activity consent card; explicit consent setup is validating. Several unchanged-code runs still required. No outcome assertions removed. |
+| Delivery | Candidates remain on `codex/round31-validation`; nothing promoted to `experiment/route-motion`. Full green CI, Settings approval, Train and device checks remain outstanding. No 3.1 Release created. |
 
 ## Verification gate
 
 Use the existing full workflow for package identity/signatures/entitlements, migration, motion metadata, session ownership/injection, route models/engine/finish actions, altitude budgets, access/map safety, worldwide search, sharing, map/picker previews, and UI/system controls. Add each phase's required model/fixture/UI tests. Preserve every unrelated assertion. A green package job alone is not a green workflow.
 
-The [device checklist](BUILD-TROLLSTORE.md) covers private injection, clock changes, Snapchat, background/locked operation, sharing and new-mode playback. All are pending for the eventual 3.1 candidate. Settings/History approval is also outstanding. README.md and docs/readme are maintained separately and have not been edited.
+The [device checklist](BUILD-TROLLSTORE.md) covers private injection, clock changes, Snapchat, background/locked operation, sharing and new-mode playback. All are pending for the eventual 3.1 candidate. Settings approval is outstanding; History layout is approved. README.md and docs/readme are maintained separately and have not been edited.

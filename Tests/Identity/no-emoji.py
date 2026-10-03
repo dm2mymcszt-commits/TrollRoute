@@ -31,14 +31,14 @@ def check():
     count = 0
     for directory in ('TrollRoute', 'TrollRouteShare', 'TrollRouteActivity'):
         for path in (ROOT / directory).rglob('*'):
-            if path.suffix not in ('.swift', '.strings', '.xcstrings', '.plist'):
+            if path.suffix not in ('.swift', '.strings', '.xcstrings', '.plist', '.json'):
                 continue
             count += 1
             if path.suffix == '.plist':
                 text = str(plistlib.loads(path.read_bytes()))
             else:
                 text = path.read_text(encoding='utf-8')
-                if path.suffix == '.xcstrings':
+                if path.suffix in ('.xcstrings', '.json'):
                     text = json.dumps(json.loads(text), ensure_ascii=False)
                 else:
                     text = decode_source(text)
@@ -46,7 +46,7 @@ def check():
             if found:
                 failures.append(f'{path.relative_to(ROOT)}: {", ".join(found)}')
     assert not failures, 'Emoji/pictographs in shipped text:\n' + '\n'.join(failures)
-    print(f'PASS: no emoji in {count} app source, string and property-list files')
+    print(f'PASS: no emoji in {count} app source, string, data and property-list files')
 
 
 if __name__ == '__main__':
