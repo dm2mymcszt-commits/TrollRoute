@@ -188,7 +188,7 @@ struct LocSimView: View {
             if openHistoryAfterSettings { openHistoryAfterSettings = false; showRouteSheet = true }
             else { offerSharedPlace() }
         }) {
-            SettingsView(history: routeSimulator.history, replayHistory: routeSimulator.isSimulating ? nil : replayHistory)
+            settingsSheet
         }
         .sheet(isPresented: $showSearchBar, onDismiss: offerSharedPlace) {
             RouteLocationPicker(title: "Find a place", region: mapRegion,
@@ -242,6 +242,11 @@ struct LocSimView: View {
             Button("OK", role: .cancel) { sharedPlaceError = nil }
         } message: { Text(sharedPlaceError ?? "") }
 
+    }
+
+    private var settingsSheet: some View {
+        let replay: ((RouteHistoryEntry) -> Void)? = routeSimulator.isSimulating ? nil : { entry in replayHistory(entry) }
+        return SettingsView(history: routeSimulator.history, replayHistory: replay)
     }
 
     private func offerSharedPlace() {
