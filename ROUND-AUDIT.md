@@ -98,8 +98,24 @@ First-attempt failures are not exclusively waits for initial system presentation
 
 F11 must preserve every assertion. Prefer deterministic lifecycle/presentation synchronization and test isolation. If evidence establishes simulator infrastructure failure, retry only affected jobs with a small bound, retain all attempt artifacts, and report first-attempt failures separately. Validate several consecutive unchanged-code runs. Do not hide failures with continue-on-error or accept any subset of tests as success.
 
+Additional artifact inspection: first dark artifact `11244988750` downloaded to ignored `build/round-audit/live-first-dark` (272,060,893-byte zip). Its activity-system.log contains 25 `Archive was nil` errors, including compact/minimal/expanded presentations at 18:36:42, 18:37:23, 18:38:45 and 18:39:12 UTC. Tests.log shows Companion End tapped immediately after activation at t=39.93s; Companion ended never appears. That failure exits before Companion termination and can leave a second activity alive for later tests. Later tests press a hard-coded Island coordinate without waiting for the correct compact presentation. This is a concrete isolation/synchronization defect in the harness and a plausible source of cascading failures; validate a cleanup/presentation fix before claiming all failures solved. Metadata-fetch errors also occur; establish whether they are causal by comparison with a passing attempt, not by counting generic log errors.
+
+## Local preparation after audit commit
+
+- Phase 0 committed/pushed as `e477baa`; explicitly dispatched full CI `37113319872` because Markdown-only push is ignored.
+- F9 prepared only: actual driver tracks last notification position and monotonic time. Minimum 60 seconds with 5 km displacement, or 300 seconds with 250 m displacement. Immediate start/jump/stop retained. Test suite covers all five mode speeds/date line, no restart and stationary behavior. No actual injection timing changed. Tests require macOS; do not claim executed.
+- F7 prepared only: exact existing TrollRoute PNG copied to share AppIcon; old PNG removed; identity checks compare both source files and require compiled extension icon metadata/catalog in package.
+- F8 prepared only: joystick SF Symbols and accessibility labels/selection, favorite system pin via AlertKit custom UIImage, removed unused `made by c22dev` catalog entry containing a translated heart. New Python source/catalog/plist scan passes across 55 files and runs in package CI. Verified AlertKit 5.1.8 custom image API from its source.
+- F10 prepared only: short BUILD-TROLLSTORE and VERIFICATION replacements, verified released tag target/date, baseline CI rerun caveat and full requested on-device checklist. Do not describe 3.1 as shipped.
+- Required workflow clarification posted under A2.2/A3: only CI can compile iOS, yet owner requires build/tests before commit/push. Proposed candidate commits on a temporary validation branch, then move passing items to experiment/route-motion, or direct candidate pushes. Until answered, implementation changes remain local and uncommitted. Do not treat timeout as approval.
+- Audit CI on unchanged app code reproduced light Live Activity failure; dark, sharing, route-session and icon checks passed, build/map still running at last check. Phase 0 green-CI acceptance remains unmet. Do not mark the audit complete based only on documentation or the older successful rerun.
+
 ## Suggestions and delivery tracking
 
 Planned suggestions accepted: lazy new modes; 850/300...1000 plane speed; 11 km ceiling lowered for short trips; flight altitude override; scheduled airports with searchable names/codes; Train 130/1...350 if approved; history at start, 50 entries/dedup, Navigation button, prepare-only replay, swipe delete/confirmed clear; proposed Settings groups and shorter explanations; version 3.1.0 with increasing build. CI retry suggestion remains conditional on evidence. None are implemented in Phase 0.
 
 README facts at final delivery: five modes only if all shipped; endpoint selection and rail availability constraints; variable flight speed/altitude; history/replay/delete; Settings groups; timezone updates; share/joystick icons; exact version/build, verified CI/package status, data credits and outstanding device checks. README itself and docs/readme remain untouched. No GitHub Release created.
+
+## Owner decisions after first checkpoint (2026-10-03)
+
+Owner approved candidate commits/pushes on a temporary validation branch, with only passing work promoted to experiment/route-motion. Locally prepared F7/F8/F9/F10 are now committed separately. Train remains pending BRouter permission; owner sends the request. Limited relation coverage is rejected. Upon refusal or one week without an answer, measure a one-country offline graph (download/storage/work) and ask again. No permission request sent by Codex.

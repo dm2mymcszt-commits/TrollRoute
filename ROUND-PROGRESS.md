@@ -1,9 +1,11 @@
 # Round progress
 
-- Status: Phase 0 findings documented. No behavior changes. Baseline app CI green on attempt 3; docs-only commit CI next.
-- Baseline: `experiment/route-motion`, `d7f68df`; pulled 2026-10-03, already up to date. App baseline `fd7d417`, 3.0.0 build 54.
-- Decisions: Preserve README and docs/readme. No release. Free sources only. Injection changes in a separate commit. Settings/History screenshots require owner approval.
-- Findings: Part B confirmed, except baseline CI is now green after reruns. Airport subset 4,134 airports / 690,014 bytes, public domain; 78 elevations need resolution. Full evidence and architecture in ROUND-AUDIT.md.
-- Next: commit/push Phase 0 documentation, dispatch CI explicitly (Markdown-only pushes are ignored). Then independent implementation; Train source decision remains pending.
-- Pending question: no public rail service yet verified for permission, reliability and coverage. Owner asked to choose pending provider permission, offline-graph investigation, or limited relation coverage. Do not implement a substitute without an answer.
-- Pending: Settings and History approval; all phone checks; all implementation phases. No release; no README edits.
+- Branch: `codex/round31-validation`; owner approved candidate pushes here and promotion to `experiment/route-motion` only after CI passes. No implementation promoted yet.
+- Baseline: app `fd7d417`, 3.0.0 build 54; README-only `d7f68df`; audit `e477baa`.
+- Candidate commits: F9 `5113b09` (separate injection adapter/timezone commit, device test required); F7 `73bbb18`; F8 `b6e3d8f`; F10 `bf31681`. Local identity/no-emoji checks pass; full Actions pending.
+- Phase 0: audit complete as a document; green-CI acceptance unmet. Audit run `37113319872` reproduced light Live Activity failure.
+- Train decision: pending BRouter provider permission. Draft request/contact for owner to send. No limited relations. If refused or unanswered after one week, measure offline option for one country, storage and implementation work, then ask owner.
+- Next: push candidate branch and dispatch full Actions; draft BRouter request and follow-up; fix CI isolation/presentation issue; continue mode foundation, Plane, History and Settings.
+- F11 evidence: first dark failed artifact has 25 nil-archive errors, failed companion End cleanup and later unguarded Island expansion. Fix/validation outstanding; assertions must remain.
+- Pending approvals: Settings/History simulator screenshots; rail provider permission. All device checks pending.
+- Constraints: no README/docs/readme edits, no release, no paid services, no new privilege without need. Delete ROUND files only in final delivery commit.
