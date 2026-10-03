@@ -145,6 +145,45 @@ struct FlightPlan {
     func reversed() throws -> FlightPlan { try FlightPlan(departure: arrival, arrival: departure) }
 }
 
+actor AirportElevationResolver {
+    static let shared = AirportElevationResolver()
+    private struct Entry: Codable {
+        let meters: Double
+        let date: Date
+        let latitude: Double
+        let longitude: Double
+        let source: String
+    }
+    private let defaults: UserDefaults
+    private var entries: [String: Entry]
+    private var failedUntil: [String: Date] = [:]
+    init(defaults: UserDefaults = .standard) {
+        self.defaults = defaults
+        entries = defaults.data(forKey: "flightAirportElevations.v1").flatMap {
+            try? JSONDecoder().decode([String: Entry].self, from: $0)
+        } ?? [:]
+    }
+    func resolve(_ airport: FlightAirport,
+                 lookup: (CLLocationCoordinate2D) async -> Double?) async throws -> FlightAirport {
+        if let elevation = airport.elevation, elevation.isFinite { return airport }
+        if let saved = entries[airport.id], saved.meters.isFinite,
+           saved.latitude == airport.latitude, saved.longitude == airport.longitude,
+           Date().timeIntervalSince(saved.date) < 30 * 86400 {
+            return airport.withElevation(saved.meters)
+        }
+        guard (failedUntil[airport.id] ?? .distantPast) <= Date() else { throw FlightError.elevationUnavailable }
+        guard let height = await lookup(airport.coordinate), height.isFinite else {
+            failedUntil[airport.id] = Date().addingTimeInterval(60)
+            throw FlightError.elevationUnavailable
+        }
+        entries[airport.id] = Entry(meters: height, date: Date(), latitude: airport.latitude,
+            longitude: airport.longitude, source: "Open-Meteo")
+        if entries.count > 256, let oldest = entries.min(by: { $0.value.date < $1.value.date })?.key { entries[oldest] = nil }
+        defaults.set(try? JSONEncoder().encode(entries), forKey: "flightAirportElevations.v1")
+        return airport.withElevation(height)
+    }
+}
+
 /// Distance-based altitude never changes when the cruise setting changes.
 /// Speed envelope sqrt(2u-u*u) has an analytic time integral, including its
 /// stationary endpoints. Thus seeking, long ticks and ETA need no time steps.

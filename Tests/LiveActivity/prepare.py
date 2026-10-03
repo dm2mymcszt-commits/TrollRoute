@@ -32,7 +32,7 @@ app_files = [
     'TrollRoute/Storage/SharedPreferences.swift', 'TrollRoute/Storage/FavoritesStore.swift',
     'TrollRoute/LocSim/PlaceModels.swift', 'TrollRoute/LocSim/PlaceInput.swift',
     'TrollRoute/LocSim/AddressQuery.swift', 'TrollRoute/LocSim/PlaceSearch.swift',
-    'TrollRoute/LocSim/CoordTransform.swift', 'TrollRoute/LocSim/RouteSimulator.swift',
+    'TrollRoute/LocSim/CoordTransform.swift', 'TrollRoute/LocSim/RouteSimulator.swift', 'TrollRoute/LocSim/Flight.swift',
     'TrollRoute/LocSim/LocationSession.swift', 'TrollRoute/LocSim/RouteFinish.swift',
     'TrollRoute/LocSim/RouteStop.swift', 'TrollRoute/LocSim/RouteElevation.swift',
     'TrollRoute/LocSim/Altitude.swift', 'TrollRoute/LocSim/AltitudeSheet.swift',

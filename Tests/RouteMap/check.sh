@@ -18,7 +18,7 @@ Path(sys.argv[1]).with_name('RouteModels.swift').write_text(models)
 PY
 PREVIEW_APP="$QA_DIR/RouteMapPreview.app"
 mkdir -p "$PREVIEW_APP"
-xcrun --sdk iphonesimulator swiftc TrollRoute/Storage/SharedPreferences.swift -target arm64-apple-ios17.0-simulator \
+xcrun --sdk iphonesimulator swiftc TrollRoute/LocSim/Flight.swift TrollRoute/Storage/SharedPreferences.swift -target arm64-apple-ios17.0-simulator \
   -sdk "$(xcrun --sdk iphonesimulator --show-sdk-path)" \
   TrollRoute/LocSim/CustomMapView.swift TrollRoute/LocSim/CoordTransform.swift TrollRoute/LocSim/RouteFinish.swift TrollRoute/LocSim/FloatingQuickMenu.swift "$QA_DIR/RouteChoiceCard.swift" "$QA_DIR/RouteModels.swift" Tests/RouteMap/Preview.swift \
   -o "$PREVIEW_APP/RouteMapPreview"

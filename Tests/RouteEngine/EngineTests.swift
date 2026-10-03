@@ -599,6 +599,101 @@ func testLazyModeCalculation() {
     print("PASS: production lazy requests, pending coalescing, tab caching, speed independence and stale response rejection")
 }
 
+func testFlightEngine() {
+    let departure = FlightAirport(id: "DEP", name: "Departure", city: "", country: "XX", codes: ["DEP"],
+        latitude: 49, longitude: 2.5, elevation: 120)
+    let arrival = FlightAirport(id: "ARR", name: "Arrival", city: "", country: "XX", codes: ["ARR"],
+        latitude: 36, longitude: 140, elevation: 20)
+    let flight = try! FlightPlan(departure: departure, arrival: arrival)
+    func prepare(_ f: EngineFixture) {
+        f.engine.clearCalculatedRoutes()
+        f.engine.travelMode = .plane
+        f.engine.routeStart = departure.coordinate; f.engine.routeEnd = arrival.coordinate
+        f.engine.availableRoutes = [RouteOption(route: RoutePath(flight: flight), index: 0)]
+        f.engine.selectRoute(at: 0)
+        f.engine.updateSpeedKmh(850, for: .plane)
+    }
+    func at(_ f: EngineFixture, _ airport: FlightAirport) -> Bool {
+        f.owner.current!.location.distance(from: CLLocation(latitude: airport.latitude, longitude: airport.longitude)) < 0.1
+    }
+    for action in RouteFinishAction.allCases {
+        let f = EngineFixture(); defer { f.close() }
+        prepare(f)
+        precondition(!f.engine.isSimulating && f.driver.samples.isEmpty)
+        precondition(f.engine.routePolyline is MKGeodesicPolyline)
+        f.engine.configureFinish(.init(action: action, destination: .init(name: "Saved", address: "", coordinate: f.c)))
+        f.engine.startSimulation()
+        precondition(f.engine.isSimulating && f.owner.current?.meters == 120 && f.owner.current?.speed == 0)
+        precondition(f.engine.activitySnapshot?.destination == arrival.title)
+        for fraction in [0.03, 0.5, 0.97, 0.1] {
+            f.engine.seek(to: fraction)
+            let sample = f.owner.current!
+            precondition(abs(sample.altitude - flight.profile.altitude(at: fraction * flight.path.length)) < 0.001)
+            precondition(sample.speed > 0 && sample.horizontalAccuracy == 5 && sample.courseAccuracy == 0 && sample.speedAccuracy == 0)
+            precondition(abs(sample.course - flight.path.position(fraction).course) < 0.0001)
+            precondition(abs(f.engine.activitySnapshot!.speedKmh - sample.speed * 3.6) < 0.001)
+            f.engine.updateLiveSpeed(300)
+            precondition(abs(f.owner.current!.speed - sample.speed) < 0.001, "Cruise edits cannot jump the injected speed")
+            precondition(f.owner.current!.altitude == sample.altitude)
+            let before = f.engine.progress
+            f.engine.togglePause()
+            precondition(f.owner.current!.speed == 0 && f.engine.activitySnapshot!.speedKmh == 0)
+            f.clock += 20; f.engine.advanceRoute()
+            precondition(f.engine.progress == before)
+            f.engine.seek(to: fraction / 2)
+            precondition(f.engine.isPaused && f.owner.current!.speed == 0)
+            f.engine.togglePause()
+            precondition(f.owner.current!.speed > 0)
+            f.engine.updateLiveSpeed(1000)
+        }
+        // A timed arrival must use the variable-speed ETA and preserve all six outcomes.
+        f.clock += f.engine.activitySnapshot!.remainingSeconds + 0.000001
+        f.engine.advanceRoute()
+        switch action {
+        case .stay: precondition(!f.engine.isSimulating && at(f, arrival) && f.owner.current?.meters == 250)
+        case .goToPlace: precondition(!f.engine.isSimulating && f.at(f.c) && f.owner.current?.meters == 250)
+        case .stop: precondition(!f.engine.isSimulating && !f.owner.isActive)
+        case .loop:
+            precondition(f.engine.isSimulating && at(f, departure) && f.owner.current?.meters == 120)
+            f.engine.seek(to: 1)
+            precondition(at(f, departure) && f.notifications.count == 1)
+        case .returnOnce, .backAndForth:
+            precondition(f.engine.isSimulating && at(f, arrival) && f.owner.current?.meters == 20)
+            precondition(f.engine.routePolyline is MKGeodesicPolyline)
+            precondition(f.engine.activitySnapshot?.destination == departure.title)
+            f.engine.seek(to: 0.4)
+            let reversed = try! flight.reversed()
+            precondition(abs(f.owner.current!.altitude - reversed.profile.altitude(at: 0.4 * reversed.path.length)) < 0.001)
+            f.engine.seek(to: 1)
+            precondition(at(f, departure))
+            precondition(f.engine.isSimulating == (action == .backAndForth))
+        }
+    }
+    for choice in RouteStopAction.allCases {
+        let f = EngineFixture(); defer { f.close() }
+        f.owner.receive(RouteLocationSample.make(coordinate: f.c, course: 0, speed: 0, timestamp: Date()),
+            kind: .stationary, newIntent: true)
+        prepare(f); f.engine.startSimulation(); f.engine.seek(to: 0.5)
+        f.engine.requestRouteStop()
+        let request = f.engine.stopRequest!
+        precondition(request.current.meters == flight.profile.cruiseAltitude && request.start.meters == 120)
+        f.clock += 1; f.engine.advanceRoute()
+        f.engine.cancelRouteStop(request.id)
+        precondition(f.engine.isSimulating && f.engine.stopRequest == nil)
+        f.engine.requestRouteStop()
+        let second = f.engine.stopRequest!
+        f.engine.confirmRouteStop(second.id, action: choice, place: .init(name: "Saved", address: "", coordinate: f.c))
+        precondition(!f.engine.isSimulating && f.owner.altitudeController.flightAltitude == nil)
+        switch choice {
+        case .current: precondition(f.owner.current?.meters == second.current.meters)
+        case .start: precondition(at(f, departure) && f.owner.current?.meters == 120)
+        case .previous, .specific: precondition(f.at(f.c) && f.owner.current?.meters == 250)
+        case .real: precondition(!f.owner.isActive)
+        }
+    }
+    print("PASS: production flight injection, seeking, live cruise continuity, pause/resume, actual-speed Activity snapshots, six finish actions, reverse and all Route Stop outcomes")
+}
+
 @main final class EngineApp: UIResponder, UIApplicationDelegate {
     var window: UIWindow?
     func application(_ application: UIApplication, didFinishLaunchingWithOptions options: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
@@ -610,6 +705,7 @@ func testLazyModeCalculation() {
             testLocationPermissionAdapter()
             testNotificationContent()
             testLazyModeCalculation()
+            testFlightEngine()
             testActivityStateAndCommands()
             testRouteFinishEngine()
             testCompletedRouteClearsMap()

@@ -49,7 +49,19 @@ enum RouteSimulationMath {
 struct RouteTrack {
     let coordinates: [CLLocationCoordinate2D]
     let cumulative: [Double]
-    var length: Double { cumulative.last ?? 0 }
+    let flight: FlightPlan?
+    var length: Double { flight?.path.length ?? cumulative.last ?? 0 }
+
+    init(flight: FlightPlan) {
+        self.flight = flight
+        let points = flight.path.coordinates
+        coordinates = points
+        cumulative = points.indices.map { Double($0) / Double(points.count - 1) * flight.path.length }
+    }
+    func reversed() -> RouteTrack? {
+        if let flight = flight { return (try? flight.reversed()).map { RouteTrack(flight: $0) } }
+        return RouteTrack(coordinates: Array(coordinates.reversed()))
+    }
 
     init?(coordinates: [CLLocationCoordinate2D]) {
         guard coordinates.count >= 2, coordinates.allSatisfy(CLLocationCoordinate2DIsValid) else { return nil }
@@ -65,9 +77,11 @@ struct RouteTrack {
         guard points.count >= 2 else { return nil }
         self.coordinates = points
         cumulative = distances
+        flight = nil
     }
 
     func position(at distance: Double) -> (coordinate: CLLocationCoordinate2D, course: Double) {
+        if let flight = flight { return flight.path.position(distance / length) }
         let distance = min(length, max(0, distance.isFinite ? distance : 0))
         var low = 1, high = cumulative.count - 1
         while low < high {
@@ -95,38 +109,47 @@ struct RouteTrack {
 struct RouteJourney {
     let track: RouteTrack
     let mode: TravelMode
-    private(set) var distance = 0.0
-    private(set) var elapsed = 0.0
-    private(set) var speedKmh: Double
+    private var groundDistance = 0.0
+    private var groundElapsed = 0.0
+    private var groundSpeedKmh: Double
+    private var flight: FlightJourney?
+    var distance: Double { flight?.distance ?? groundDistance }
+    var elapsed: Double { flight?.elapsed ?? groundElapsed }
+    var speedKmh: Double { flight?.cruiseKmh ?? groundSpeedKmh }
+    var altitude: Double? { flight?.altitude }
     var progress: Double { distance / track.length }
     var remainingDistance: Double { max(0, track.length - distance) }
-    var remainingSeconds: Double { remainingDistance / (speedKmh / 3.6) }
+    var remainingSeconds: Double { flight?.remainingSeconds ?? (remainingDistance / (speedKmh / 3.6)) }
     var isFinished: Bool { distance >= track.length }
 
     init(track: RouteTrack, speedKmh: Double, mode: TravelMode = .driving) {
         self.track = track
         self.mode = mode
-        self.speedKmh = mode.clampedSpeed(speedKmh)
+        self.groundSpeedKmh = mode.clampedSpeed(speedKmh)
+        self.flight = track.flight.map { FlightJourney(plan: $0, cruiseKmh: mode.clampedSpeed(speedKmh)) }
     }
     mutating func advance(seconds: Double) {
+        if flight != nil { flight?.advance(seconds: seconds); return }
         guard seconds.isFinite, seconds > 0 else { return }
         let remaining = remainingSeconds
         let used = min(seconds, remaining)
-        elapsed += used
-        distance = min(track.length, distance + speedKmh / 3.6 * used)
-        if used == remaining { distance = track.length }
+        groundElapsed += used
+        groundDistance = min(track.length, distance + speedKmh / 3.6 * used)
+        if used == remaining { groundDistance = track.length }
     }
     mutating func seek(_ fraction: Double) {
+        if flight != nil { flight?.seek(fraction); return }
         guard fraction.isFinite else { return }
-        distance = min(1, max(0, fraction)) * track.length
+        groundDistance = min(1, max(0, fraction)) * track.length
     }
     mutating func changeSpeed(_ kmh: Double) {
         guard kmh.isFinite else { return }
-        speedKmh = mode.clampedSpeed(kmh)
+        if flight != nil { flight?.changeSpeed(mode.clampedSpeed(kmh)); return }
+        groundSpeedKmh = mode.clampedSpeed(kmh)
     }
     func motion(paused: Bool) -> (coordinate: CLLocationCoordinate2D, course: Double, speed: Double) {
         let point = track.position(at: distance)
-        return (point.coordinate, point.course, paused || isFinished ? 0 : speedKmh / 3.6)
+        return (point.coordinate, point.course, paused || isFinished ? 0 : (flight?.speed ?? speedKmh / 3.6))
     }
 }
 
@@ -225,6 +248,7 @@ struct RoutePath {
     let expectedTravelTime: TimeInterval
     let name: String
     let trafficLabel: String
+    let flight: FlightPlan?
 
     init(_ route: MKRoute, mode: TravelMode) {
         polyline = route.polyline
@@ -232,21 +256,32 @@ struct RoutePath {
         expectedTravelTime = route.expectedTravelTime
         name = route.name
         trafficLabel = mode == .driving ? "Real traffic" : "Typical travel"
+        flight = nil
     }
 
     init(polyline: MKPolyline, distance: Double, expectedTravelTime: TimeInterval,
-         name: String, trafficLabel: String = "Typical travel") {
+         name: String, trafficLabel: String = "Typical travel", flight: FlightPlan? = nil) {
         self.polyline = polyline
         self.distance = distance
         self.expectedTravelTime = expectedTravelTime
         self.name = name
         self.trafficLabel = trafficLabel
+        self.flight = flight
+    }
+
+    init(flight: FlightPlan) {
+        let coordinates = flight.path.coordinates.map(CoordTransform.wgs84ToGcj02)
+        self.init(polyline: MKGeodesicPolyline(coordinates: coordinates, count: coordinates.count),
+            distance: flight.path.length,
+            expectedTravelTime: FlightJourney(plan: flight, cruiseKmh: TravelMode.plane.defaultSpeedKmh).remainingSeconds,
+            name: "\(flight.departure.code) to \(flight.arrival.code)", trafficLabel: "Flight at default cruise", flight: flight)
     }
 }
 
 struct RouteModeCache {
     private(set) var routes: [TravelMode: [RouteOption]] = [:]
     private(set) var selections: [TravelMode: Int] = [:]
+    mutating func remove(_ mode: TravelMode) { routes[mode] = nil; selections[mode] = nil }
     mutating func store(_ paths: [RoutePath], for mode: TravelMode) {
         let valid = paths.filter { $0.polyline.pointCount >= 2 && $0.distance.isFinite && $0.distance > 0 }
         routes[mode] = RouteSimulationMath.rankedIndices(distances: valid.map(\.distance))
@@ -355,7 +390,10 @@ class RouteOption: Identifiable, ObservableObject {
     }
 
     func simulationTimeText(speedKmh: Double) -> String {
-        RouteSimulationMath.durationText(RouteSimulationMath.simulationSeconds(
+        if let flight = route.flight {
+            return RouteSimulationMath.durationText(FlightJourney(plan: flight, cruiseKmh: speedKmh).remainingSeconds)
+        }
+        return RouteSimulationMath.durationText(RouteSimulationMath.simulationSeconds(
             distance: route.distance, speed: speedKmh / 3.6))
     }
     
@@ -410,7 +448,7 @@ class RouteSimulator: NSObject, ObservableObject, CLLocationManagerDelegate {
         }
         return RouteActivityState(tripID: tripID, progress: journey.progress,
             remainingSeconds: journey.remainingSeconds, remainingMeters: journey.remainingDistance,
-            speedKmh: journey.speedKmh,
+            speedKmh: journey.track.flight == nil ? journey.speedKmh : journey.motion(paused: isPaused).speed * 3.6,
             destination: finishState.returning ? activityStartName : activityEndName,
             paused: isPaused, stop: stop, leg: finishState.completedLegs + 1,
             finishAction: finishConfiguration.action.rawValue, revision: activityRevision)
@@ -449,6 +487,8 @@ class RouteSimulator: NSObject, ObservableObject, CLLocationManagerDelegate {
     @Published var selectedRouteIndex: Int = 0
     @Published var routeStart: CLLocationCoordinate2D? = nil
     @Published var routeEnd: CLLocationCoordinate2D? = nil
+    @Published private(set) var departureAirport: FlightAirport?
+    @Published private(set) var arrivalAirport: FlightAirport?
     
     private var track: RouteTrack?
     @Published private var journey: RouteJourney?
@@ -461,7 +501,11 @@ class RouteSimulator: NSObject, ObservableObject, CLLocationManagerDelegate {
         guard let journey = journey else { return 0 }
         return (1 - (seekFraction ?? journey.progress)) * journey.track.length
     }
-    var remainingTime: String { RouteSimulationMath.durationText(remainingMeters / (currentSpeedKmh / 3.6)) }
+    var remainingTime: String {
+        guard var preview = journey else { return RouteSimulationMath.durationText(0) }
+        if let fraction = seekFraction { preview.seek(fraction) }
+        return RouteSimulationMath.durationText(preview.remainingSeconds)
+    }
     var remainingDistance: String {
         let meters = remainingMeters
         return meters >= 1000 ? String(format: "%.1f km", meters / 1000) : "\(Int(ceil(meters))) m"
@@ -472,9 +516,13 @@ class RouteSimulator: NSObject, ObservableObject, CLLocationManagerDelegate {
     @Published private(set) var modeErrors: [TravelMode: String] = [:]
     func speedKmh(for mode: TravelMode) -> Double { speeds[mode] }
     var currentSpeedKmh: Double { isSimulating ? (journey?.speedKmh ?? speeds[travelMode]) : speeds[travelMode] }
+    var actualSpeedKmh: Double { (journey?.motion(paused: isPaused).speed ?? 0) * 3.6 }
     func modeDuration(_ mode: TravelMode) -> String? { modeCache.duration(for: mode, kmh: speeds[mode]) }
     var simulatedRouteETAs: [String] {
         if isSimulating, let journey = journey {
+            if let flight = journey.track.flight {
+                return [RouteSimulationMath.durationText(FlightJourney(plan: flight, cruiseKmh: currentSpeedKmh).remainingSeconds)]
+            }
             return [RouteSimulationMath.durationText(journey.track.length / (currentSpeedKmh / 3.6))]
         }
         return availableRoutes.map { $0.simulationTimeText(speedKmh: currentSpeedKmh) }
@@ -482,6 +530,7 @@ class RouteSimulator: NSObject, ObservableObject, CLLocationManagerDelegate {
     private let updateInterval: TimeInterval = 0.25
     private var pendingDirections: [TravelMode: MKDirections] = [:]
     private var bicycleTask: Task<Void, Never>?
+    private var flightTask: Task<Void, Never>?
     typealias DirectionsCompletion = ([RoutePath], String?) -> Void
     typealias DirectionsProvider = (TravelMode, CLLocationCoordinate2D, CLLocationCoordinate2D, @escaping DirectionsCompletion) -> Void
     private let directionsProvider: DirectionsProvider?
@@ -579,9 +628,40 @@ class RouteSimulator: NSObject, ObservableObject, CLLocationManagerDelegate {
                 do { completion(try await BicycleDirections.shared.routes(from: start, to: end), nil) }
                 catch { completion([], error.localizedDescription) }
             }
+        } else if mode == .plane {
+            departureAirport = departureAirport ?? AirportCatalog.bundled.nearest(to: CoordTransform.gcj02ToWgs84(start))
+            arrivalAirport = arrivalAirport ?? AirportCatalog.bundled.nearest(to: CoordTransform.gcj02ToWgs84(end))
+            guard let departure = departureAirport, let arrival = arrivalAirport else {
+                completion([], FlightError.airportsUnavailable.localizedDescription); return
+            }
+            guard departure.id != arrival.id else { completion([], FlightError.sameAirport.localizedDescription); return }
+            let id = calculationID
+            flightTask = Task { @MainActor [weak self] in
+                do {
+                    let a = try await AirportElevationResolver.shared.resolve(departure, lookup: ElevationLookup.fetchForShare)
+                    let b = try await AirportElevationResolver.shared.resolve(arrival, lookup: ElevationLookup.fetchForShare)
+                    try Task.checkCancellation()
+                    guard let self = self, self.calculationID == id else { return }
+                    self.departureAirport = a; self.arrivalAirport = b
+                    completion([RoutePath(flight: try FlightPlan(departure: a, arrival: b))], nil)
+                } catch {
+                    guard !Task.isCancelled, self?.calculationID == id else { return }
+                    completion([], error.localizedDescription)
+                }
+            }
         } else {
             completion([], mode == .train ? "Train routing is awaiting provider permission." : "Choose airports to calculate a flight.")
         }
+    }
+
+    func chooseAirport(_ airport: FlightAirport, departure: Bool) {
+        guard !isSimulating else { return }
+        flightTask?.cancel()
+        loadingModes.remove(.plane)
+        if departure { departureAirport = airport } else { arrivalAirport = airport }
+        modeCache.remove(.plane)
+        modeErrors[.plane] = nil
+        selectMode(.plane)
     }
 
     func selectMode(_ mode: TravelMode) {
@@ -621,7 +701,7 @@ class RouteSimulator: NSObject, ObservableObject, CLLocationManagerDelegate {
         var coords = [CLLocationCoordinate2D](repeating: CLLocationCoordinate2D(), count: pointCount)
         route.polyline.getCoordinates(&coords, range: NSRange(location: 0, length: pointCount))
         
-        track = RouteTrack(coordinates: coords.map(CoordTransform.gcj02ToWgs84))
+        track = route.flight.map { RouteTrack(flight: $0) } ?? RouteTrack(coordinates: coords.map(CoordTransform.gcj02ToWgs84))
         prepareElevation()
         journey = nil
         routePolyline = route.polyline
@@ -643,6 +723,10 @@ class RouteSimulator: NSObject, ObservableObject, CLLocationManagerDelegate {
         pendingDirections = [:]
         bicycleTask?.cancel()
         bicycleTask = nil
+        flightTask?.cancel()
+        flightTask = nil
+        departureAirport = nil
+        arrivalAirport = nil
         modeCache = RouteModeCache()
         loadingModes = []
         modeErrors = [:]
@@ -676,8 +760,8 @@ class RouteSimulator: NSObject, ObservableObject, CLLocationManagerDelegate {
         func endpointLabel(_ coordinate: CLLocationCoordinate2D) -> String {
             String(format: "%.5f, %.5f", coordinate.latitude, coordinate.longitude)
         }
-        activityStartName = RouteActivityState.destinationName(startName, fallback: endpointLabel(track.coordinates[0]))
-        activityEndName = RouteActivityState.destinationName(destinationName, fallback: endpointLabel(track.coordinates.last!))
+        activityStartName = RouteActivityState.destinationName(track.flight?.departure.title ?? startName, fallback: endpointLabel(track.coordinates[0]))
+        activityEndName = RouteActivityState.destinationName(track.flight?.arrival.title ?? destinationName, fallback: endpointLabel(track.coordinates.last!))
         stopRequest = nil
         finishState = RouteFinishState(action: finishConfiguration.action)
         timer?.invalidate()
@@ -769,11 +853,13 @@ class RouteSimulator: NSObject, ObservableObject, CLLocationManagerDelegate {
         guard isSimulating, let tripID = tripID, let journey = journey, let track = track else { return }
         let motion = journey.motion(paused: true)
         let distance = finishState.returning ? track.length - journey.distance : journey.distance
-        let current = locationSession.altitudeController.routeSample(RouteLocationSample.make(
-            coordinate: motion.coordinate, course: motion.course, speed: 0, timestamp: Date()), at: distance)
+        let base = RouteLocationSample.make(coordinate: motion.coordinate, course: motion.course, speed: 0, timestamp: Date())
+        let current = journey.altitude.map { AltitudeController.applying($0, to: base, accuracy: 10) } ??
+            locationSession.altitudeController.routeSample(base, at: distance)
         let start = track.position(at: 0)
-        let startSample = locationSession.altitudeController.routeSample(RouteLocationSample.make(
-            coordinate: start.coordinate, course: start.course, speed: 0, timestamp: Date()), at: 0)
+        let baseStart = RouteLocationSample.make(coordinate: start.coordinate, course: start.course, speed: 0, timestamp: Date())
+        let startSample = track.flight.map { AltitudeController.applying($0.profile.departureElevation, to: baseStart, accuracy: 10) } ??
+            locationSession.altitudeController.routeSample(baseStart, at: 0)
         stopRequest = RouteStopRequest(tripID: tripID, previous: locationSession.snapshot.beforeRoute,
             current: SessionLocation(current), start: SessionLocation(startSample),
             preferred: RouteStopAction.savedDefault(in: stopDefaults))
@@ -849,13 +935,13 @@ class RouteSimulator: NSObject, ObservableObject, CLLocationManagerDelegate {
             guard isSimulating, !isPaused, seconds > 0 else { break }
             // A delayed background tick may span many very short repeated legs.
             // Skip their elapsed time arithmetically without a notification flood.
-            if finishState.action == .loop || finishState.action == .backAndForth,
+            if (finishState.action == .loop || finishState.action == .backAndForth), track?.flight == nil,
                let journey = journey, journey.remainingSeconds > 0 {
                 let count = Int(min(Double(Int.max / 2), floor(seconds / journey.remainingSeconds)))
                 if count > 0 {
                     finishState.skipRepeatedLegs(count)
                     seconds -= Double(count) * journey.remainingSeconds
-                    let next = finishState.returning ? RouteTrack(coordinates: Array(track!.coordinates.reversed()))! : track!
+                    let next = finishState.returning ? track!.reversed()! : track!
                     beginLeg(next, speedKmh: journey.speedKmh)
                 }
             }
@@ -870,7 +956,7 @@ class RouteSimulator: NSObject, ObservableObject, CLLocationManagerDelegate {
             if let track = track { beginLeg(track, speedKmh: currentSpeedKmh) }
             return
         case .reverse:
-            if let journey = journey, let reversed = RouteTrack(coordinates: Array(journey.track.coordinates.reversed())) {
+            if let journey = journey, let reversed = journey.track.reversed() {
                 beginLeg(reversed, speedKmh: journey.speedKmh)
             }
             return
@@ -893,7 +979,8 @@ class RouteSimulator: NSObject, ObservableObject, CLLocationManagerDelegate {
         let previous = locationSession.inputSample?.coordinate
         journey = RouteJourney(track: track, speedKmh: speedKmh, mode: travelMode)
         let coords = track.coordinates.map(CoordTransform.wgs84ToGcj02)
-        routePolyline = MKPolyline(coordinates: coords, count: coords.count)
+        routePolyline = track.flight == nil ? MKPolyline(coordinates: coords, count: coords.count) :
+            MKGeodesicPolyline(coordinates: coords, count: coords.count)
         // A held scrub always previews the current leg, including when a loop
         // or reverse transition occurs before the finger is released.
         if let fraction = seekFraction {
@@ -940,11 +1027,12 @@ class RouteSimulator: NSObject, ObservableObject, CLLocationManagerDelegate {
         let location = RouteLocationSample.make(coordinate: motion.coordinate,
             course: motion.course, speed: motion.speed, timestamp: Date())
         let distance = finishState.returning ? (track?.length ?? journey.track.length) - journey.distance : journey.distance
-        locationSession.receive(location, kind: .route, reason: reason, routeDistance: distance)
+        locationSession.receive(location, kind: .route, reason: reason, routeDistance: distance, flightAltitude: journey.altitude)
     }
 
     private func prepareElevation() {
         guard let track = track else { return }
+        guard track.flight == nil else { locationSession.altitudeController.cancelPreparedRoute(); return }
         locationSession.altitudeController.prepareRoute(ElevationRoutePlan(length: track.length,
             position: { track.position(at: $0).coordinate }))
     }
