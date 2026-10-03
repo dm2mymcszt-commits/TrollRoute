@@ -16,7 +16,7 @@ enum BordeauxFixture {
     static let simulations = [7_500.0, 7_800.0, 7_900.0].map {
         RouteSimulationMath.durationText(RouteSimulationMath.simulationSeconds(distance: $0, speed: 500 / 3.6))
     }
-    static let roads = ["A630 · Pont d'Aquitaine", "A630 · Mérignac", "Bordeaux centre"]
+    static let roads = ["A630 Â· Pont d'Aquitaine", "A630 Â· MÃ©rignac", "Bordeaux centre"]
 
     static func routes(latitudeOffset: Double = 0) -> [MKPolyline] {
         let paths: [[(Double, Double)]] = [
@@ -314,7 +314,7 @@ private struct RouteMapFixtureView: View {
                                 select: { selected = index }
                             )
                         }
-                        Text("Synthetic Bordeaux routes · Visual QA fixture")
+                        Text("Synthetic Bordeaux routes Â· Visual QA fixture")
                             .font(.caption2).foregroundColor(.secondary).id("bottom")
                     }
                     .padding(16)
@@ -339,7 +339,7 @@ private struct RouteMapFixtureView: View {
                                       atomically: true, encoding: .utf8)
                 }
             }
-            .navigationTitle("Bordeaux · QA fixture")
+            .navigationTitle("Bordeaux Â· QA fixture")
             .navigationBarTitleDisplayMode(.inline)
         }
         .preferredColorScheme(appearance == "dark" ? .dark : .light)
@@ -350,6 +350,7 @@ private struct RouteMapFixtureView: View {
         case .walking: return [5_000, 5_500, 5_900]
         case .cycling: return [6_000, 6_500, 7_000]
         case .driving: return [7_500, 7_800, 7_900]
+        case .train, .plane: return [50_000]
         }
     }
 }

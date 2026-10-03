@@ -560,6 +560,45 @@ func testLocationPermissionAdapter() {
     }
 }
 
+func testLazyModeCalculation() {
+    let fixture = EngineFixture()
+    defer { fixture.close() }
+    var requests: [TravelMode] = []
+    var responses: [TravelMode: RouteSimulator.DirectionsCompletion] = [:]
+    let engine = RouteSimulator(locationSession: fixture.owner,
+        finishDefaults: fixture.settings, stopDefaults: fixture.defaults,
+        directionsProvider: { mode, _, _, complete in
+            requests.append(mode); responses[mode] = complete
+        }, notifyCompletion: { _ in })
+    let coordinates = [fixture.a, fixture.b]
+    let path = RoutePath(polyline: MKPolyline(coordinates: coordinates, count: coordinates.count),
+        distance: 1000, expectedTravelTime: 100, name: "Provider fixture")
+    var completed = false
+    engine.calculateRoutes(from: fixture.a, to: fixture.b, mode: .driving) { ok, _ in completed = ok }
+    precondition(requests == [.walking, .cycling, .driving] && !completed)
+    for mode in requests { responses[mode]?([path], nil) }
+    precondition(completed && engine.availableRoutes.count == 1)
+    engine.selectMode(.plane)
+    precondition(requests == [.walking, .cycling, .driving, .plane])
+    engine.selectMode(.plane)
+    precondition(requests.count == 4, "Pending tab selection must not duplicate requests")
+    engine.selectMode(.driving)
+    responses[.plane]?([path], nil)
+    precondition(engine.travelMode == .driving, "Late response must not switch the selected tab")
+    engine.selectMode(.plane)
+    precondition(engine.availableRoutes.count == 1 && requests.count == 4)
+    engine.updateSpeedKmh(900, for: .plane)
+    precondition(requests.count == 4, "Speed edits and cached tab switches never call the provider")
+    let stale = responses[.plane]!
+    engine.calculateRoutes(from: fixture.b, to: fixture.c, mode: .walking) { _, _ in }
+    stale([path], nil)
+    engine.selectMode(.plane)
+    precondition(engine.availableRoutes.isEmpty, "Old endpoint response cannot populate the new cache")
+    precondition(requests.filter { $0 == .plane }.count == 2)
+    precondition(!engine.isSimulating && fixture.driver.samples.isEmpty, "Calculation never starts playback")
+    print("PASS: production lazy requests, pending coalescing, tab caching, speed independence and stale response rejection")
+}
+
 @main final class EngineApp: UIResponder, UIApplicationDelegate {
     var window: UIWindow?
     func application(_ application: UIApplication, didFinishLaunchingWithOptions options: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
@@ -570,6 +609,7 @@ func testLocationPermissionAdapter() {
         DispatchQueue.main.async {
             testLocationPermissionAdapter()
             testNotificationContent()
+            testLazyModeCalculation()
             testActivityStateAndCommands()
             testRouteFinishEngine()
             testCompletedRouteClearsMap()

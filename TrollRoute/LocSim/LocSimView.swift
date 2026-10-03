@@ -114,7 +114,7 @@ struct LocSimView: View {
                     progress: routeSimulator.progress, elapsed: routeSimulator.elapsedTime,
                     remaining: routeSimulator.remainingTime, remainingDistance: routeSimulator.remainingDistance,
                     isPaused: routeSimulator.isPaused,
-                    legName: routeSimulator.legName,
+                    legName: routeSimulator.legName, mode: routeSimulator.travelMode,
                     speedKmh: Binding(get: { routeSimulator.currentSpeedKmh }, set: { routeSimulator.updateLiveSpeed($0) }),
                     collapsed: $routeControlsCollapsed,
                     preview: routeSimulator.previewSeek, seek: routeSimulator.seek,

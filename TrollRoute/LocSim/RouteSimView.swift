@@ -182,6 +182,12 @@ struct RouteSimSheet: View {
                 .padding(.vertical)
                 .disabled(routeSimulator.isCalculatingRoute || isStarting)
             }
+            .onChange(of: routeSimulator.isCalculatingRoute) { calculating in
+                if !calculating {
+                    routeReady = !routeSimulator.availableRoutes.isEmpty
+                    showRouteOnMap()
+                }
+            }
             .navigationTitle("TrollRoute Navigation")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -619,8 +625,9 @@ struct RouteModeControls: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
-            HStack(spacing: 8) {
-                ForEach(TravelMode.allCases, id: \.self) { mode in
+            ScrollView(.horizontal, showsIndicators: false) {
+              HStack(spacing: 8) {
+                ForEach(TravelMode.availableCases, id: \.self) { mode in
                     Button { select(mode) } label: {
                         VStack(spacing: 6) {
                             Image(systemName: mode.icon).font(.title2)
@@ -629,7 +636,8 @@ struct RouteModeControls: View {
                                 Text(duration(mode)).font(.subheadline.weight(.semibold)).monospacedDigit()
                             }
                         }
-                        .frame(maxWidth: .infinity)
+                        .frame(minWidth: 88)
+                        .padding(.horizontal, 8)
                         .padding(.vertical, 12)
                         .background(selectedMode == mode ? Color.accentColor.opacity(0.15) : Color(UIColor.secondarySystemBackground))
                         .clipShape(RoundedRectangle(cornerRadius: 12))
@@ -640,16 +648,17 @@ struct RouteModeControls: View {
                     .accessibilityAddTraits(selectedMode == mode ? [.isSelected] : [])
                 }
             }
+            }
             HStack {
-                Text("\(selectedMode.rawValue) speed").font(.headline)
+                Text(selectedMode.variableSpeed ? "Cruise speed" : "\(selectedMode.rawValue) speed").font(.headline)
                 Spacer()
                 Text("\(Int(speedKmh)) km/h").monospacedDigit()
             }
             HStack {
-                Button { speedKmh = max(1, speedKmh - 1) } label: { Image(systemName: "minus.circle.fill").font(.title2) }
+                Button { speedKmh = selectedMode.clampedSpeed(speedKmh - 1) } label: { Image(systemName: "minus.circle.fill").font(.title2) }
                     .accessibilityLabel("Decrease speed")
-                Slider(value: $speedKmh, in: 1...500, step: 1).accessibilityLabel("Speed in kilometres per hour")
-                Button { speedKmh = min(500, speedKmh + 1) } label: { Image(systemName: "plus.circle.fill").font(.title2) }
+                Slider(value: $speedKmh, in: selectedMode.speedRange, step: 1).accessibilityLabel("Speed in kilometres per hour")
+                Button { speedKmh = selectedMode.clampedSpeed(speedKmh + 1) } label: { Image(systemName: "plus.circle.fill").font(.title2) }
                     .accessibilityLabel("Increase speed")
             }
             Text("Saved for \(selectedMode.rawValue.lowercased()) trips.").font(.caption).foregroundColor(.secondary)
@@ -665,6 +674,7 @@ struct RoutePlaybackPanel: View {
     let remainingDistance: String
     let isPaused: Bool
     var legName = "Route in progress"
+    var mode: TravelMode = .driving
     @Binding var speedKmh: Double
     @Binding var collapsed: Bool
     let preview: (Double) -> Void
@@ -739,10 +749,10 @@ struct RoutePlaybackPanel: View {
                     Text("\(Int(speedKmh)) km/h").monospacedDigit()
                 }
                 HStack(spacing: 12) {
-                    Button { speedKmh = max(1, speedKmh - 1) } label: { Image(systemName: "minus.circle.fill").font(.title2) }
+                    Button { speedKmh = mode.clampedSpeed(speedKmh - 1) } label: { Image(systemName: "minus.circle.fill").font(.title2) }
                         .accessibilityLabel("Decrease trip speed")
-                    Slider(value: $speedKmh, in: 1...500, step: 1).accessibilityLabel("Trip speed in kilometres per hour")
-                    Button { speedKmh = min(500, speedKmh + 1) } label: { Image(systemName: "plus.circle.fill").font(.title2) }
+                    Slider(value: $speedKmh, in: mode.speedRange, step: 1).accessibilityLabel("Trip speed in kilometres per hour")
+                    Button { speedKmh = mode.clampedSpeed(speedKmh + 1) } label: { Image(systemName: "plus.circle.fill").font(.title2) }
                         .accessibilityLabel("Increase trip speed")
                 }
                 if let title = finishActionTitle, let edit = editFinish {

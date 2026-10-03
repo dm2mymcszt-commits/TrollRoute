@@ -79,10 +79,10 @@ defer { defaults.removePersistentDomain(forName: suiteName) }
 var speeds = RouteSpeeds(defaults: defaults)
 require(speeds[.walking] == 5 && speeds[.cycling] == 20 && speeds[.driving] == 50, "Exact default km/h for each mode")
 for mode in TravelMode.allCases {
-    speeds.set(1, for: mode)
-    require(RouteSpeeds(defaults: defaults)[mode] == 1, "Persist minimum speed in every mode")
-    speeds.set(500, for: mode)
-    require(RouteSpeeds(defaults: defaults)[mode] == 500, "Persist maximum speed in every mode")
+    speeds.set(mode.speedRange.lowerBound, for: mode)
+    require(RouteSpeeds(defaults: defaults)[mode] == mode.speedRange.lowerBound, "Persist minimum speed in every mode")
+    speeds.set(mode.speedRange.upperBound, for: mode)
+    require(RouteSpeeds(defaults: defaults)[mode] == mode.speedRange.upperBound, "Persist maximum speed in every mode")
 }
 speeds.set(7, for: .walking)
 speeds.set(26, for: .cycling)
@@ -215,3 +215,15 @@ require(mutedLoop.arrive().notification == nil, "Enabling midway must not replay
 require(notificationPreferences.delivery != .disabled, "Existing preference readers must observe mid-route changes")
 notificationDefaults.removePersistentDomain(forName: notificationSuite)
 print("PASS: notification defaults, persistence, all toggle combinations and mid-trip changes")
+
+require(TravelMode.plane.speedRange == 300...1000 && TravelMode.train.speedRange == 1...350, "Distinct new mode limits")
+require(TravelMode.plane.variableSpeed && !TravelMode.train.variableSpeed, "Flight owns a variable-speed profile")
+require(TravelMode.initialCalculations(selected: .driving) == [.walking, .cycling, .driving], "New providers remain lazy")
+require(TravelMode.initialCalculations(selected: .plane) == [.walking, .cycling, .driving, .plane], "Only selected new provider is requested")
+for mode in TravelMode.allCases {
+    var trip = RouteJourney(track: track, speedKmh: -1, mode: mode)
+    require(trip.speedKmh == mode.speedRange.lowerBound, "Journey minimum is mode-specific")
+    trip.changeSpeed(2000)
+    require(trip.speedKmh == mode.speedRange.upperBound, "Journey maximum is mode-specific")
+    require(mode.clampedSpeed(.nan) == mode.defaultSpeedKmh, "Invalid initial speed uses mode default")
+}

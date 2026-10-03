@@ -94,6 +94,7 @@ struct RouteTrack {
 
 struct RouteJourney {
     let track: RouteTrack
+    let mode: TravelMode
     private(set) var distance = 0.0
     private(set) var elapsed = 0.0
     private(set) var speedKmh: Double
@@ -102,9 +103,10 @@ struct RouteJourney {
     var remainingSeconds: Double { remainingDistance / (speedKmh / 3.6) }
     var isFinished: Bool { distance >= track.length }
 
-    init(track: RouteTrack, speedKmh: Double) {
+    init(track: RouteTrack, speedKmh: Double, mode: TravelMode = .driving) {
         self.track = track
-        self.speedKmh = speedKmh.isFinite ? min(500, max(1, speedKmh)) : 50
+        self.mode = mode
+        self.speedKmh = mode.clampedSpeed(speedKmh)
     }
     mutating func advance(seconds: Double) {
         guard seconds.isFinite, seconds > 0 else { return }
@@ -120,7 +122,7 @@ struct RouteJourney {
     }
     mutating func changeSpeed(_ kmh: Double) {
         guard kmh.isFinite else { return }
-        speedKmh = min(500, max(1, kmh))
+        speedKmh = mode.clampedSpeed(kmh)
     }
     func motion(paused: Bool) -> (coordinate: CLLocationCoordinate2D, course: Double, speed: Double) {
         let point = track.position(at: distance)
@@ -132,12 +134,45 @@ enum TravelMode: String, CaseIterable {
     case walking = "Walking"
     case cycling = "Cycling"
     case driving = "Driving"
+    case train = "Train"
+    case plane = "Plane"
+
+    enum Provider { case appleWalking, appleDriving, bicycle, railway, flight }
+    var provider: Provider {
+        switch self {
+        case .walking: return .appleWalking
+        case .cycling: return .bicycle
+        case .driving: return .appleDriving
+        case .train: return .railway
+        case .plane: return .flight
+        }
+    }
+    var speedRange: ClosedRange<Double> {
+        switch self {
+        case .walking, .cycling, .driving: return 1...500
+        case .train: return 1...350
+        case .plane: return 300...1000
+        }
+    }
+    var variableSpeed: Bool { self == .plane }
+    var calculatesLazily: Bool { self == .train || self == .plane }
+    // Providers become visible when their implementation is ready. Train also
+    // requires operator permission; the shared model can already retain it.
+    static var availableCases: [TravelMode] { [.walking, .cycling, .driving] }
+    static func initialCalculations(selected: TravelMode) -> [TravelMode] {
+        allCases.filter { !$0.calculatesLazily || $0 == selected }
+    }
+    func clampedSpeed(_ value: Double) -> Double {
+        value.isFinite ? min(speedRange.upperBound, max(speedRange.lowerBound, value)) : defaultSpeedKmh
+    }
     
     var defaultSpeedKmh: Double {
         switch self {
         case .walking: return 5
         case .cycling: return 20
         case .driving: return 50
+        case .train: return 130
+        case .plane: return 850
         }
     }
     
@@ -146,13 +181,15 @@ enum TravelMode: String, CaseIterable {
         case .walking: return "figure.walk"
         case .cycling: return "bicycle"
         case .driving: return "car.fill"
+        case .train: return "tram.fill"
+        case .plane: return "airplane"
         }
     }
     
     var appleTransportType: MKDirectionsTransportType? {
         switch self {
         case .walking: return .walking
-        case .cycling: return nil // MapKit has no bicycle directions API.
+        case .cycling, .train, .plane: return nil // These modes have their own providers.
         case .driving: return .automobile
         }
     }
@@ -166,7 +203,7 @@ struct RouteSpeeds {
         self.defaults = defaults
         for mode in TravelMode.allCases {
             let saved = defaults.double(forKey: Self.key(mode))
-            values[mode] = saved.isFinite && (1...500).contains(saved) ? saved : mode.defaultSpeedKmh
+            values[mode] = saved.isFinite && mode.speedRange.contains(saved) ? saved : mode.defaultSpeedKmh
         }
     }
 
@@ -174,7 +211,7 @@ struct RouteSpeeds {
     private static func key(_ mode: TravelMode) -> String { "routeSpeedKmh." + mode.rawValue.lowercased() }
     mutating func set(_ kmh: Double, for mode: TravelMode) {
         guard kmh.isFinite else { return }
-        let speed = min(500, max(1, kmh))
+        let speed = mode.clampedSpeed(kmh)
         values[mode] = speed
         defaults.set(speed, forKey: Self.key(mode))
     }
@@ -445,6 +482,10 @@ class RouteSimulator: NSObject, ObservableObject, CLLocationManagerDelegate {
     private let updateInterval: TimeInterval = 0.25
     private var pendingDirections: [TravelMode: MKDirections] = [:]
     private var bicycleTask: Task<Void, Never>?
+    typealias DirectionsCompletion = ([RoutePath], String?) -> Void
+    typealias DirectionsProvider = (TravelMode, CLLocationCoordinate2D, CLLocationCoordinate2D, @escaping DirectionsCompletion) -> Void
+    private let directionsProvider: DirectionsProvider?
+    private var loadingModes = Set<TravelMode>()
     private var calculationID = UUID()
     
     // Background handling
@@ -455,12 +496,14 @@ class RouteSimulator: NSObject, ObservableObject, CLLocationManagerDelegate {
          finishDefaults: RouteFinishSettings = .shared,
          stopDefaults: UserDefaults = SharedPreferences.defaults,
          now: @escaping () -> TimeInterval = { ProcessInfo.processInfo.systemUptime },
+         directionsProvider: DirectionsProvider? = nil,
          notifyCompletion: @escaping (String) -> Void = { RouteNotifications.shared.complete($0) }) {
         self.locationSession = locationSession
         self.finishDefaults = finishDefaults
         self.stopDefaults = stopDefaults
         finishConfiguration = RouteFinishConfiguration(defaults: finishDefaults)
         self.now = now
+        self.directionsProvider = directionsProvider
         self.notifyCompletion = notifyCompletion
         super.init()
         locationSession.onOwnershipLost = { [weak self] in
@@ -490,43 +533,54 @@ class RouteSimulator: NSObject, ObservableObject, CLLocationManagerDelegate {
         routeStart = start
         routeEnd = end
         let requestID = calculationID
-        var remaining = TravelMode.allCases.count
+        let modes = TravelMode.initialCalculations(selected: mode)
+        loadingModes = Set(modes)
+        var remaining = modes.count
         // All results belong to the same endpoint snapshot. Cancellation discards
         // the entire generation, including a late bicycle response after swapping.
         let receive: (TravelMode, [RoutePath], String?) -> Void = { [weak self] mode, routes, error in
             guard let self = self, self.calculationID == requestID else { return }
             self.pendingDirections[mode] = nil
+            self.loadingModes.remove(mode)
             self.modeCache.store(routes, for: mode)
             if routes.isEmpty { self.modeErrors[mode] = error ?? "No route found for this mode." }
             remaining -= 1
             guard remaining == 0 else { return }
             self.bicycleTask = nil
-            self.isCalculatingRoute = false
+            self.isCalculatingRoute = !self.loadingModes.isEmpty
             self.selectMode(self.travelMode)
             // Keep successful modes available even if another mode has no route.
             completion(!self.availableRoutes.isEmpty, self.modeErrors[self.travelMode])
         }
-        for mode in TravelMode.allCases {
-            if let transport = mode.appleTransportType {
-                let request = MKDirections.Request()
-                request.source = MKMapItem(placemark: MKPlacemark(coordinate: start))
-                request.destination = MKMapItem(placemark: MKPlacemark(coordinate: end))
-                request.transportType = transport
-                request.requestsAlternateRoutes = true
-                request.departureDate = Date()
-                let directions = MKDirections(request: request)
-                pendingDirections[mode] = directions
-                directions.calculate { response, error in
-                    DispatchQueue.main.async {
-                        receive(mode, (response?.routes ?? []).map { RoutePath($0, mode: mode) }, error?.localizedDescription)
-                    }
-                }
-            } else {
-                bicycleTask = Task { @MainActor in
-                    do { receive(mode, try await BicycleDirections.shared.routes(from: start, to: end), nil) }
-                    catch { receive(mode, [], error.localizedDescription) }
+        for mode in modes {
+            requestRoutes(mode, from: start, to: end) { paths, error in receive(mode, paths, error) }
+        }
+    }
+
+    private func requestRoutes(_ mode: TravelMode, from start: CLLocationCoordinate2D,
+                               to end: CLLocationCoordinate2D, completion: @escaping DirectionsCompletion) {
+        if let provider = directionsProvider { provider(mode, start, end, completion); return }
+        if let transport = mode.appleTransportType {
+            let request = MKDirections.Request()
+            request.source = MKMapItem(placemark: MKPlacemark(coordinate: start))
+            request.destination = MKMapItem(placemark: MKPlacemark(coordinate: end))
+            request.transportType = transport
+            request.requestsAlternateRoutes = true
+            request.departureDate = Date()
+            let directions = MKDirections(request: request)
+            pendingDirections[mode] = directions
+            directions.calculate { response, error in
+                DispatchQueue.main.async {
+                    completion((response?.routes ?? []).map { RoutePath($0, mode: mode) }, error?.localizedDescription)
                 }
             }
+        } else if mode == .cycling {
+            bicycleTask = Task { @MainActor in
+                do { completion(try await BicycleDirections.shared.routes(from: start, to: end), nil) }
+                catch { completion([], error.localizedDescription) }
+            }
+        } else {
+            completion([], mode == .train ? "Train routing is awaiting provider permission." : "Choose airports to calculate a flight.")
         }
     }
 
@@ -534,6 +588,20 @@ class RouteSimulator: NSObject, ObservableObject, CLLocationManagerDelegate {
         guard !isSimulating else { return }
         locationSession.altitudeController.cancelPreparedRoute()
         travelMode = mode
+        if mode.calculatesLazily, modeCache.routes[mode] == nil,
+           !loadingModes.contains(mode), let start = routeStart, let end = routeEnd {
+            loadingModes.insert(mode)
+            isCalculatingRoute = true
+            let id = calculationID
+            requestRoutes(mode, from: start, to: end) { [weak self] paths, error in
+                guard let self = self, self.calculationID == id else { return }
+                self.loadingModes.remove(mode)
+                self.isCalculatingRoute = !self.loadingModes.isEmpty
+                self.modeCache.store(paths, for: mode)
+                self.modeErrors[mode] = paths.isEmpty ? (error ?? "No route found for this mode.") : nil
+                if self.travelMode == mode { self.selectMode(mode) }
+            }
+        }
         availableRoutes = modeCache.routes[mode] ?? []
         allRoutePolylines = availableRoutes.map { $0.route.polyline }
         routePolyline = nil
@@ -576,6 +644,7 @@ class RouteSimulator: NSObject, ObservableObject, CLLocationManagerDelegate {
         bicycleTask?.cancel()
         bicycleTask = nil
         modeCache = RouteModeCache()
+        loadingModes = []
         modeErrors = [:]
         isCalculatingRoute = false
         availableRoutes = []
@@ -612,7 +681,7 @@ class RouteSimulator: NSObject, ObservableObject, CLLocationManagerDelegate {
         stopRequest = nil
         finishState = RouteFinishState(action: finishConfiguration.action)
         timer?.invalidate()
-        journey = RouteJourney(track: track, speedKmh: speeds[travelMode])
+        journey = RouteJourney(track: track, speedKmh: speeds[travelMode], mode: travelMode)
         isSimulating = true
         isPaused = false
         progress = 0
@@ -822,7 +891,7 @@ class RouteSimulator: NSObject, ObservableObject, CLLocationManagerDelegate {
 
     private func beginLeg(_ track: RouteTrack, speedKmh: Double) {
         let previous = locationSession.inputSample?.coordinate
-        journey = RouteJourney(track: track, speedKmh: speedKmh)
+        journey = RouteJourney(track: track, speedKmh: speedKmh, mode: travelMode)
         let coords = track.coordinates.map(CoordTransform.wgs84ToGcj02)
         routePolyline = MKPolyline(coordinates: coords, count: coords.count)
         // A held scrub always previews the current leg, including when a loop
