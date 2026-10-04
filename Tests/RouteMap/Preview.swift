@@ -263,7 +263,7 @@ private final class InsertionProbeMap: MKMapView {
 private struct RouteMapFixtureView: View {
     @State private var selected = 0
     @State private var mode: TravelMode = .driving
-    @State private var modeSpeeds: [TravelMode: Double] = [.walking: 5, .cycling: 20, .driving: 50]
+    @State private var modeSpeeds = Dictionary(uniqueKeysWithValues: TravelMode.allCases.map { ($0, $0.defaultSpeedKmh) })
     private let routes = BordeauxFixture.routes()
     private let arguments = ProcessInfo.processInfo.arguments
 
@@ -350,7 +350,7 @@ private struct RouteMapFixtureView: View {
         case .walking: return [5_000, 5_500, 5_900]
         case .cycling: return [6_000, 6_500, 7_000]
         case .driving: return [7_500, 7_800, 7_900]
-        case .train, .plane: return [50_000]
+        case .train, .plane: return [50_000, 55_000, 59_000]
         }
     }
 }

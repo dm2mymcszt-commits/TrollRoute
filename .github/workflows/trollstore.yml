@@ -25,6 +25,8 @@ jobs:
         run: bash Tests/History/check.sh
       - name: Check Settings keys and defaults against 3.0.0
         run: python3 Tests/Settings/check.py
+      - name: Check bounded Live Activity retry outcomes
+        run: python3 Tests/LiveActivity/retry-policy.py
   live-activity-ui:
     runs-on: macos-15
     timeout-minutes: 50

@@ -46,7 +46,8 @@ for appearance in dark light; do
     xcrun simctl terminate "$DEVICE" local.trollroute.routemappreview 2>/dev/null || true
     RESULT="$CONTAINER/Documents/route-map-$appearance-$section.txt"
     rm -f "$RESULT"
-    xcrun simctl launch "$DEVICE" local.trollroute.routemappreview --appearance "$appearance" --section "$section"
+    xcrun simctl launch --stdout="$QA_DIR/$appearance-$section-stdout.log" \
+      --stderr="$QA_DIR/$appearance-$section-stderr.log" "$DEVICE" local.trollroute.routemappreview --appearance "$appearance" --section "$section"
     ready=false
     for attempt in $(seq 1 40); do
       if test -s "$RESULT"; then ready=true; break; fi
@@ -54,6 +55,7 @@ for appearance in dark light; do
     done
     if test "$ready" != true; then
       echo "Route map preview did not report completion ($appearance/$section)."
+      cat "$QA_DIR/$appearance-$section-stdout.log" "$QA_DIR/$appearance-$section-stderr.log"
       exit 1
     fi
     cat "$RESULT"

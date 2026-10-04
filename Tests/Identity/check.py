@@ -42,6 +42,9 @@ if len(sys.argv) > 1:
         def info(path):
             return plistlib.loads(package.read(path))
         prefix = 'Payload/TrollRoute.app/'
+        airports = json.loads(package.read(prefix + 'Airports.json'))
+        assert airports == json.loads((root / 'TrollRoute/Resources/Airports.json').read_text(encoding='utf-8'))
+        assert len(airports) == 4134, 'The actual app must carry the complete approved airport subset'
         built = info(prefix + 'Info.plist')
         for key in ['CFBundleIdentifier', 'CFBundleDisplayName', 'CFBundleExecutable',
                     'CFBundleShortVersionString', 'CFBundleVersion']:

@@ -3,6 +3,24 @@ set -euo pipefail
 cd "$(dirname "$0")/../.."
 QA_DIR="${ACTIVITY_QA_DIR:-$PWD/build/live-activity-qa}"
 mkdir -p "$QA_DIR"
+all_methods=(testDynamicIslandControls testMinimalAndLockScreen testNotificationCentreControls
+  testSpecificPlaceOpensPickerAndAppliesFavorite testSpeedSeekReturnAndToggleDoNotStopRoute)
+methods=("${all_methods[@]}")
+if [ -n "${ACTIVITY_TEST_METHODS:-}" ]; then
+  methods=()
+  while IFS= read -r method; do
+    allowed=false
+    for original in "${all_methods[@]}"; do
+      if [ "$method" = "$original" ]; then allowed=true; break; fi
+    done
+    if [ "$allowed" != true ]; then echo "Invalid retry scenario: $method"; exit 1; fi
+    for previous in "${methods[@]}"; do
+      if [ "$previous" = "$method" ]; then echo "Duplicate retry scenario: $method"; exit 1; fi
+    done
+    methods+=("$method")
+  done <<< "$ACTIVITY_TEST_METHODS"
+fi
+: > "$QA_DIR/failed-methods.txt"
 python3 Tests/LiveActivity/prepare.py "$QA_DIR"
 xcodebuild -project "$QA_DIR/LiveActivityQA.xcodeproj" -target LiveActivityQA -configuration Debug \
   -sdk iphonesimulator SYMROOT="$QA_DIR/Products" OBJROOT="$QA_DIR/Objects" \
@@ -33,8 +51,7 @@ python3 Tests/MapWorkspace/ui-project.py "$QA_DIR" Tests/LiveActivity/SystemTest
 # A failed companion End or locked SpringBoard must never contaminate another
 # scenario. Each original test runs, with all its assertions, on a fresh device.
 failed=0
-for method in testDynamicIslandControls testMinimalAndLockScreen testNotificationCentreControls \
-  testSpecificPlaceOpensPickerAndAppliesFavorite testSpeedSeekReturnAndToggleDoNotStopRoute; do
+for method in "${methods[@]}"; do
 CASE_DIR="$QA_DIR/$method"
 mkdir -p "$CASE_DIR"
 DEVICE=$(xcrun simctl create LiveActivityQA com.apple.CoreSimulator.SimDeviceType.iPhone-15-Pro "$RUNTIME")
@@ -62,6 +79,7 @@ else
     exit 1
   fi
   failed=1
+  printf '%s\n' "$method" >> "$QA_DIR/failed-methods.txt"
 fi
 cat "$CASE_DIR/tests.log"
 xcrun xcresulttool export attachments --path "$CASE_DIR/System.xcresult" --output-path "$CASE_DIR/attachments" || true
