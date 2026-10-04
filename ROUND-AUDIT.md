@@ -171,3 +171,26 @@ Continuation 2026-10-04: reread plan/progress and actual Git state. `ec347b2` wa
 Consent validation `37151742655`: dark passed on retry (first attempt Specific Stop menu did not appear); light first attempt Notification Centre Pause did not expose Resume, second attempt passed the four finished scenarios but hit the 50-minute job limit before completing the last. Re-running every passing scenario doubles costly simulator boots and can erase useful evidence at timeout. Narrow the second attempt to only explicitly recorded first-attempt failures; compile/setup errors still do not retry, every original scenario still runs first, every outcome assertion stays, and failures remain visible. Later full run Live Activity jobs were also cancelled; no complete green or repeatability claim.
 
 Owner approved the refreshed seven-group Settings layout and full route-action labels on 2026-10-04; both History and Settings approval checkpoints are complete. Local retry-policy integration test executes the actual wrapper with controlled process results: first-pass success, recovery of only two failed scenarios, persistent failure, setup failure and unidentified failure. All five cases pass, including the two-attempt cap and retained failure status. CI runs this guard beside the model tests. Actual-package identity check now verifies all 4,134 bundled airports against the source catalog.
+
+`e32fe73` committed/pushed these checks and the map fixture fix; full build-55 validation `37187432732` dispatched. Models/History/Settings defaults/retry guard passed. Earlier run `37152992093` light log was retrieved: all five original scenarios eventually passed, including the added real Plane activity checks, but the old wrapper unnecessarily repeated already passing cases and reached the job timeout. This is individual-scenario evidence, not an overall green result. No README/docs/readme difference from `d7f68df` and no entitlement changes from `fd7d417`.
+
+### Suggestion ledger for final delivery
+
+| Suggestion | Implementation or outstanding choice |
+| --- | --- |
+| Lazy new modes and cached tabs | New-mode requests occur only for the selected tab; pending requests coalesce and successful/failed results cache for that endpoint generation. Original ground-mode calculation behavior remains. Train is hidden until permitted. |
+| Scheduled airports; name/city/code search | Followed; bundled scheduled-service land airports, with country search also supported. Missing elevations resolve through the existing budgeted free elevation service, with persistent caching. |
+| Flight cruise 850 km/h, range 300-1,000 | Followed; live edits ramp smoothly. Short flights may need a lower actual speed, explained in the UI. |
+| 11,000 m cruise, lower for short flights | Followed with bounded vertical rates and exact airport heights; profile errors are explicit if elevations/distance cannot support a realistic flight. |
+| Flight altitude replaces normal setting | Followed during the flight, explained in the altitude sheet; existing setting applies again after landing. Explicit Stop choices retain their defined captured locations/heights. |
+| Train 130 km/h, range 1-350 | Defined in mode metadata only. Routing, stations, source credit and all Train acceptance remain pending permission. |
+| History saved at start with route details | Followed for explicit successful user starts; internal return/repeat legs do not add entries. Chosen airport IDs/elevations and exact WGS-84 geometry are also preserved. |
+| 50 entries, newest first, no duplicate trip | Followed; repeated same endpoints/mode/geometry/airports updates the existing entry and date. Speed and finish edits replace its saved settings. |
+| History in Navigation | Followed; also linked from Settings > Routes. Both approved layouts retained. |
+| Replay prepares route, user presses Start | Followed; the saved geometry is restored directly, retaining the chosen route without another provider call. No ownership change or location injection on preparation. |
+| Swipe delete and confirmed Clear | Followed; cancel preserves entries, store persists across relaunch. History remains local and excluded from backups. |
+| Seven Settings groups; shorter explanations | Followed with disclosure rows; storage keys/defaults and conditional options remain guarded against build 54. Owner approved all captures. |
+| Bounded retry with first-attempt reporting | Evidence justified fresh simulators and explicit system consent. Only failed scenarios get one retry; setup failures never retry. Original outcome assertions remain. Repeatability still pending. |
+| Version 3.1.0, increasing build | Followed as validation candidate 3.1.0 build 55. No Release. |
+
+Device checklist now explicitly includes long-press/share entry in both new modes and repeated China History replay. Generic share/long-press assertions and engine Plane checks are automated separately; full new-mode device entry flows remain on-device acceptance.

@@ -13,18 +13,18 @@ Earlier evidence remains in Git history: [build 53](https://github.com/dm2mymcsz
 | Item | Status and evidence |
 | --- | --- |
 | Phase 0 | Source/code audit recorded in `ROUND-AUDIT.md`. Free rail service permission remains unresolved; no limited-relation substitute is authorized. |
-| Plane | Great-circle/profile/elevation tests and airport/preview/playback UI passed in [validation 37131557847](https://github.com/dm2mymcszt-commits/TrollRoute/actions/runs/37131557847). Full engine and on-device acceptance still pending. OurAirports bundle: 4,134 airports, 711,086 bytes, public domain. |
+| Plane | Great-circle/profile/elevation, full engine, all finish/Stop actions and airport/preview/playback UI passed in [validation 37152992093](https://github.com/dm2mymcszt-commits/TrollRoute/actions/runs/37152992093). Its light Live Activity flight scenario passed, but the job later timed out repeating other scenarios. Device acceptance pending. OurAirports: 4,134 airports, 711,086 bytes, public domain. |
 | Train | Pending BRouter operator permission. Owner sends [the prepared request](docs/BROUTER-PERMISSION-REQUEST.md); no known send date. No endpoint connected. On refusal or seven unanswered days, measure one-country offline data/storage/work before another decision. |
-| History | Local store and replay/delete/clear UI passed in validation 37131557847. Owner approved populated and empty History screenshots. Additional exact-coordinate replay regression is validating. |
-| Settings | Seven groups implemented on the validation branch. All storage definitions/defaults match a snapshot of `fd7d417`; screenshot approval remains pending. |
+| History | Store, replay/delete/clear UI, exact-coordinate repeated replay in China and chosen-airport flight replay passed in validation 37152992093. Owner approved populated and empty History screenshots. |
+| Settings | Seven groups and full action labels passed UI checks in validation 37152992093. All storage definitions/defaults match `fd7d417`. Owner approved every Settings screenshot. |
 | F7/F8 | Share artwork and system symbols committed; identity and no-emoji checks passed in CI. Scan also covers bundled JSON display strings. |
 | F9 | Separate bounded time-zone notification change committed; actual-driver checks passed in [validation 37151742655](https://github.com/dm2mymcszt-commits/TrollRoute/actions/runs/37151742655). Device clock/driving Bitmoji checks pending. |
 | F10 | Build 54 release provenance and this round's checklist recorded; documentation tracks incomplete acceptance explicitly. |
-| F11 | Fresh simulator per original scenario, one bounded retry of executed UI failures, distinct attempt evidence. Screenshot revealed an undismissed Live Activity consent card; explicit consent setup is validating. Several unchanged-code runs still required. No outcome assertions removed. |
-| Delivery | 3.1.0 build 55 is the validation candidate on `codex/round31-validation`; nothing promoted to `experiment/route-motion`. Full green CI, Settings approval, Train and device checks remain outstanding. No 3.1 Release created. |
+| F11 | Fresh simulator per original scenario, explicit system consent, one retry of only failed scenarios and distinct attempt evidence. Wrapper success/recovery/persistent/setup-failure checks pass locally. Full CI and several unchanged-code runs still required. No outcome assertions removed. |
+| Delivery | 3.1.0 build 55 is the validation candidate on `codex/round31-validation`; nothing promoted to `experiment/route-motion`. Full green CI, Train and device checks remain outstanding. No 3.1 Release created. |
 
 ## Verification gate
 
 Use the existing full workflow for package identity/signatures/entitlements, migration, motion metadata, session ownership/injection, route models/engine/finish actions, altitude budgets, access/map safety, worldwide search, sharing, map/picker previews, and UI/system controls. Add each phase's required model/fixture/UI tests. Preserve every unrelated assertion. A green package job alone is not a green workflow.
 
-The [device checklist](BUILD-TROLLSTORE.md) covers private injection, clock changes, Snapchat, background/locked operation, sharing and new-mode playback. All are pending for the eventual 3.1 candidate. Settings approval is outstanding; History layout is approved. README.md and docs/readme are maintained separately and have not been edited.
+The [device checklist](BUILD-TROLLSTORE.md) covers private injection, clock changes, Snapchat, background/locked operation, sharing and new-mode playback. All are pending for the eventual 3.1 candidate. History and Settings layouts are approved. README.md and docs/readme are maintained separately and have not been edited.

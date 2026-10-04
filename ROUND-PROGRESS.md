@@ -6,5 +6,5 @@
 - Plane/History: implemented and engine/model/UI checks passed; all four Plane captures obtained. History layouts approved; exact WGS-84 replay fix `14e41f9` passed. Injection/flight/replay phone tests pending.
 - Settings: refined seven-group layout and unchanged-default guard passed in `37152992093`; owner approved all Settings captures. Both layout checkpoints complete.
 - Train: pending BRouter operator permission. Owner sends `docs/BROUTER-PERMISSION-REQUEST.md`; no send date known. No limited relations. On refusal or seven unanswered days, measure one-country offline data/storage/work and ask again. Follow-up scheduled from 2026-10-10, 10:00 Paris.
-- Next: commit remaining package assertion/fixture fix; validate build 55 and targeted Live Activity retries, then repeat unchanged-code CI and promote only green work. Details: `ROUND-AUDIT.md`.
+- Next: `e32fe73` committed/pushed package assertion, mode-preview fix and targeted retries (local retry-policy guard passes). Full build-55 run `37187432732` active; inspect results, repeat unchanged-code CI, promote only green work. Details: `ROUND-AUDIT.md`.
 - Awaiting: rail permission, all phone tests. Candidate 3.1.0 build 55; no release or README/docs/readme edits. Delete ROUND files only in final delivery commit.

@@ -17,6 +17,8 @@ These are acceptance checks for the eventual 3.1 candidate, not claims that unfi
 - [ ] Train: station selection, track-following geometry and a clear error for an unavailable route.
 - [ ] Both new modes: seek forward/back while moving and paused; change speed in flight phases and on the train; pause/resume.
 - [ ] Both new modes: all six finish actions, changes mid-trip, return/repeat, Route Stop/Cancel, notifications and Live Activity controls.
+- [ ] Both new modes: prepare from a long press and from shared Start/Destination places, then check the selected airports/stations before starting. Repeat with each long-press confirmation/auto-start setting.
+- [ ] History in China: redo the same saved route repeatedly and confirm its endpoints stay fixed and it remains one history entry.
 - [ ] Snapchat during a flight and train trip: record what it displays; a plane or train Bitmoji is not guaranteed.
 - [ ] Driving Bitmoji still works after the time-zone/injection-adapter change, including seeking, pause/resume and speed changes.
 - [ ] Share action shows TrollRoute artwork. Joystick modes and the favorite toast show system icons.
