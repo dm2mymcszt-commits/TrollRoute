@@ -20,9 +20,19 @@ final class LiveActivitySystemTests: XCTestCase {
     }
     private func goHome() {
         XCUIDevice.shared.press(.home)
+        XCTAssertTrue(board.wait(for: .runningForeground, timeout: 10))
         let icon = board.icons["Activity QA"].firstMatch
         XCTAssertTrue(icon.waitForExistence(timeout: 10), board.debugDescription)
-        let settled = XCTNSPredicateExpectation(predicate: NSPredicate(format: "hittable == true"), object: icon)
+        var previous = CGRect.null
+        var stableSince: Date?
+        let settled = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
+            guard icon.exists, icon.isHittable else { stableSince = nil; return false }
+            let frame = icon.frame
+            if frame != previous || stableSince == nil {
+                previous = frame; stableSince = Date(); return false
+            }
+            return Date().timeIntervalSince(stableSince!) >= 2
+        }, object: nil)
         XCTAssertEqual(XCTWaiter.wait(for: [settled], timeout: 10), .completed)
     }
     private func authorizeActivity(_ app: XCUIApplication, destination: String = "Test destination") {
@@ -59,7 +69,8 @@ final class LiveActivitySystemTests: XCTestCase {
             }
             let frame = button.frame
             guard !frame.isEmpty, !frame.isNull, !frame.isInfinite,
-                  [frame.minX, frame.minY, frame.maxX, frame.maxY].allSatisfy(\.isFinite) else {
+                  [frame.minX, frame.minY, frame.maxX, frame.maxY].allSatisfy(\.isFinite),
+                  self.board.frame.contains(frame) else {
                 stableSince = nil
                 return false
             }
@@ -68,13 +79,13 @@ final class LiveActivitySystemTests: XCTestCase {
                 stableSince = Date()
                 return false
             }
-            return Date().timeIntervalSince(stableSince!) >= 2 && button.isHittable
+            return Date().timeIntervalSince(stableSince!) >= 2
         }, object: nil)
-        // SpringBoard exposes replacement controls before chronod finishes the
-        // preceding action/transition, sometimes with an infinite hit point.
-        // Wait for a stable, tappable control; never retry the action itself.
+        // XCTest can throw while reading SpringBoard's activation point even
+        // when the button has finite, visible bounds. Tap those stable bounds
+        // once. All subsequent Pause/Resume/Stop outcome assertions remain.
         XCTAssertEqual(XCTWaiter.wait(for: [ready], timeout: 15), .completed, board.debugDescription)
-        button.tap()
+        button.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
     }
     private func waitForPresentation(_ identifiers: [String]) {
         var previous: [CGRect] = []

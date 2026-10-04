@@ -1,8 +1,19 @@
 import XCTest
 
 final class RouteSessionTests: XCTestCase {
+    private var activeApp: XCUIApplication?
+    override func setUp() { super.setUp(); continueAfterFailure = false }
+    override func tearDown() {
+        if let app = activeApp {
+            app.terminate()
+            XCTAssertTrue(app.wait(for: .notRunning, timeout: 10), "Previous scenario must finish before the next app launch")
+        }
+        activeApp = nil
+        super.tearDown()
+    }
     private func launch(_ arguments: [String] = []) -> XCUIApplication {
         let app = XCUIApplication(bundleIdentifier: "local.trollroute.sessionui")
+        activeApp = app
         app.launchArguments = arguments
         app.launch()
         return app

@@ -2,6 +2,7 @@ import XCTest
 import CoreLocation
 
 final class ShareLifecycleTests: XCTestCase {
+    override func setUp() { super.setUp(); continueAfterFailure = false }
     private func fixture() throws -> (XCUIApplication, URL, SharedPlaceInbox) {
         let root = FileManager.default.temporaryDirectory.appendingPathComponent("ShareLifecycle-\(UUID())")
         try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
@@ -58,10 +59,12 @@ final class ShareLifecycleTests: XCTestCase {
         app.launch()
         XCTAssertTrue(app.buttons["Search"].waitForExistence(timeout: 10))
         XCUIDevice.shared.press(.home)
-        let backgrounded = expectation(for: NSPredicate { _, _ in
-            app.state == .runningBackground || app.state == .runningBackgroundSuspended
-        }, evaluatedWith: app)
-        wait(for: [backgrounded], timeout: 5)
+        // Use XCTest's process-state wait. Predicate expectations evaluated with
+        // a background app repeatedly query its unavailable accessibility tree.
+        // Keep the same two accepted states and the same five-second deadline.
+        let backgrounded = app.wait(for: .runningBackground, timeout: 5)
+            || app.state == .runningBackgroundSuspended
+        XCTAssertTrue(backgrounded, "App must be backgrounded before enqueueing; state=\(app.state.rawValue)")
         let destination = request("Background destination", .destination)
         try inbox.enqueue(destination)
         app.activate()
