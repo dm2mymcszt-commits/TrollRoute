@@ -1,6 +1,6 @@
 # BRouter permission request
 
-Status: draft for the owner to send; not sent by Codex. Send date and response are not yet known.
+Status: owner reports that the operator refused permission (2026-10-04). No public BRouter endpoint will be connected. The original request below is retained for context; Codex did not send it.
 
 ## Where to send it
 
@@ -39,4 +39,4 @@ Thank you for your time and for BRouter.
 
 ## Follow-up
 
-Tell Codex when this was sent and paste the operator's response. If refused, or unanswered seven days after sending, measure the offline option before asking for the next decision. No limited route-relation fallback is authorized. A chat follow-up is scheduled from 2026-10-10 at 10:00 Europe/Paris; without a known send date it asks for that date rather than assuming the deadline elapsed.
+The refusal triggers the owner's requested offline assessment: measure data size, device storage and implementation work for one country, then ask for a decision. Metropolitan France is the measurement sample, not an approved geographic restriction. No limited route-relation fallback is authorized. The unanswered-permission reminder was deleted after the refusal.

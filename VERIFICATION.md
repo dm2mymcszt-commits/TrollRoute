@@ -12,9 +12,9 @@ Earlier evidence remains in Git history: [build 53](https://github.com/dm2mymcsz
 
 | Item | Status and evidence |
 | --- | --- |
-| Phase 0 | Source/code audit recorded in `ROUND-AUDIT.md`. Free rail service permission remains unresolved; no limited-relation substitute is authorized. |
+| Phase 0 | Source/code audit recorded in `ROUND-AUDIT.md`. BRouter operator refused permission; offline feasibility measurement underway. No limited-relation substitute is authorized. |
 | Plane | Great-circle/profile/elevation, full engine, all finish/Stop actions and airport/preview/playback UI passed in [validation 37152992093](https://github.com/dm2mymcszt-commits/TrollRoute/actions/runs/37152992093). Its light Live Activity flight scenario passed, but the job later timed out repeating other scenarios. Device acceptance pending. OurAirports: 4,134 airports, 711,086 bytes, public domain. |
-| Train | Pending BRouter operator permission. Owner sends [the prepared request](docs/BROUTER-PERMISSION-REQUEST.md); no known send date. No endpoint connected. On refusal or seven unanswered days, measure one-country offline data/storage/work before another decision. |
+| Train | BRouter operator refused permission, as reported by owner on 2026-10-04. No endpoint connected. Measuring metropolitan France offline data/storage/work before another owner decision; audit adds no app behavior. [Request record](docs/BROUTER-PERMISSION-REQUEST.md). |
 | History | Store, replay/delete/clear UI, exact-coordinate repeated replay in China and chosen-airport flight replay passed in validation 37152992093. Owner approved populated and empty History screenshots. |
 | Settings | Seven groups and full action labels passed UI checks in validation 37152992093. All storage definitions/defaults match `fd7d417`. Owner approved every Settings screenshot. |
 | F7/F8 | Share artwork and system symbols committed; identity and no-emoji checks passed in CI. Scan also covers bundled JSON display strings. |
