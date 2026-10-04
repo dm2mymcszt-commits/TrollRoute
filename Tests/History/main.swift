@@ -18,8 +18,8 @@ import CoreLocation
                 finish: .init(action: .returnOnce), date: Date(timeIntervalSince1970: Double(i)),
                 departureAirport: nil, arrivalAirport: nil)
         }
-        for mode in ["Walking", "Cycling", "Driving", "Train", "Plane"] { precondition(store.record(entry(1, mode: mode))) }
-        precondition(store.entries.count == 5, "Different modes remain separate trips")
+        for mode in ["Walking", "Cycling", "Driving", "Plane"] { precondition(store.record(entry(1, mode: mode))) }
+        precondition(store.entries.count == 4, "Different modes remain separate trips")
         precondition(store.clear())
         for i in 1...55 { precondition(store.record(entry(i))) }
         precondition(store.entries.count == 50)

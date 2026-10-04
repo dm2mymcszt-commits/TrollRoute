@@ -1,6 +1,6 @@
 # TrollRoute: build and device checks
 
-TrollRoute 3.0.0 (build 54) was released as [v3.0.0](https://github.com/dm2mymcszt-commits/TrollRoute/releases/tag/v3.0.0) on 2026-10-03 from `fd7d417`. It clears completed route paths and alternatives. The 3.1.0 (build 55) candidate is on the validation branch. Plane, History and grouped Settings are implemented there. BRouter permission was refused; Train stays unavailable while the offline option is measured for an owner decision. Full validation and device checks are incomplete, and this is not a release.
+TrollRoute 3.0.0 (build 54) was released as [v3.0.0](https://github.com/dm2mymcszt-commits/TrollRoute/releases/tag/v3.0.0) on 2026-10-03 from `fd7d417`. It clears completed route paths and alternatives. The 3.1.0 (build 56) candidate is on the validation branch. Plane, History and grouped Settings are implemented there. The owner cancelled Train after the provider refusal and offline assessment. Full validation and device checks are incomplete, and this is not a release.
 
 GitHub Actions builds on macOS 15 with Xcode 16.4. Open a successful [package workflow](https://github.com/dm2mymcszt-commits/TrollRoute/actions/workflows/trollstore.yml), download `TrollRoute-<version>-<commit>`, extract `TrollRoute.tipa`, and install it using TrollStore's + button. Install over TrollRoute to retain data. This is TrollStore-only: iOS 15.0-16.6.1, 16.7 RC and 17.0. No Mac is needed for installation.
 
@@ -14,12 +14,11 @@ These are acceptance checks for the eventual 3.1 candidate, not claims that unfi
 - [ ] Settings: every existing option/default remains present and works after reorganization.
 - [ ] Long flight: airport selection, continuous altitude and speed, heading, date-line crossing, and the clock following time zones. Check Automatic and Custom altitude restoration after landing.
 - [ ] Short flight: lower cruise altitude, departure/arrival ground elevations and smooth landing.
-- [ ] Train: station selection, track-following geometry and a clear error for an unavailable route.
-- [ ] Both new modes: seek forward/back while moving and paused; change speed in flight phases and on the train; pause/resume.
-- [ ] Both new modes: all six finish actions, changes mid-trip, return/repeat, Route Stop/Cancel, notifications and Live Activity controls.
-- [ ] Both new modes: prepare from a long press and from shared Start/Destination places, then check the selected airports/stations before starting. Repeat with each long-press confirmation/auto-start setting.
+- [ ] Plane: seek forward/back while moving and paused; change speed in each flight phase; pause/resume.
+- [ ] Plane: all six finish actions, changes mid-trip, return/repeat, Route Stop/Cancel, notifications and Live Activity controls.
+- [ ] Plane: prepare from a long press and from shared Start/Destination places, then check the selected airports before starting. Repeat with each long-press confirmation/auto-start setting.
 - [ ] History in China: redo the same saved route repeatedly and confirm its endpoints stay fixed and it remains one history entry.
-- [ ] Snapchat during a flight and train trip: record what it displays; a plane or train Bitmoji is not guaranteed.
+- [ ] Snapchat during a flight: record what it displays; a plane Bitmoji is not guaranteed.
 - [ ] Driving Bitmoji still works after the time-zone/injection-adapter change, including seeking, pause/resume and speed changes.
 - [ ] Share action shows TrollRoute artwork. Joystick modes and the favorite toast show system icons.
 

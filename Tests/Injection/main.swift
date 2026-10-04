@@ -105,7 +105,7 @@ final class TestClock {
         print("PASS: explicit jumps, latest-wins, cancellation race, pause/arrival/resume, Stop and restart; sample metadata unchanged")
 
         // The real adapter is mode-independent: test distance and elapsed time
-        // at walking, cycling, driving, train and plane speeds across the date line.
+        // at walking, cycling, driving and plane speeds across the date line.
         for kmh in [5.0, 20, 50, 130, 850, 1000] {
             var time = 0.0
             var posts = 0

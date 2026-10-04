@@ -157,31 +157,26 @@ enum TravelMode: String, CaseIterable {
     case walking = "Walking"
     case cycling = "Cycling"
     case driving = "Driving"
-    case train = "Train"
     case plane = "Plane"
 
-    enum Provider { case appleWalking, appleDriving, bicycle, railway, flight }
+    enum Provider { case appleWalking, appleDriving, bicycle, flight }
     var provider: Provider {
         switch self {
         case .walking: return .appleWalking
         case .cycling: return .bicycle
         case .driving: return .appleDriving
-        case .train: return .railway
         case .plane: return .flight
         }
     }
     var speedRange: ClosedRange<Double> {
         switch self {
         case .walking, .cycling, .driving: return 1...500
-        case .train: return 1...350
         case .plane: return 300...1000
         }
     }
     var variableSpeed: Bool { self == .plane }
-    var calculatesLazily: Bool { self == .train || self == .plane }
-    // Providers become visible when their implementation is ready. Train also
-    // requires operator permission; the shared model can already retain it.
-    static var availableCases: [TravelMode] { [.walking, .cycling, .driving, .plane] }
+    var calculatesLazily: Bool { self == .plane }
+    static var availableCases: [TravelMode] { allCases }
     static func initialCalculations(selected: TravelMode) -> [TravelMode] {
         allCases.filter { !$0.calculatesLazily || $0 == selected }
     }
@@ -194,7 +189,6 @@ enum TravelMode: String, CaseIterable {
         case .walking: return 5
         case .cycling: return 20
         case .driving: return 50
-        case .train: return 130
         case .plane: return 850
         }
     }
@@ -204,7 +198,6 @@ enum TravelMode: String, CaseIterable {
         case .walking: return "figure.walk"
         case .cycling: return "bicycle"
         case .driving: return "car.fill"
-        case .train: return "tram.fill"
         case .plane: return "airplane"
         }
     }
@@ -212,7 +205,7 @@ enum TravelMode: String, CaseIterable {
     var appleTransportType: MKDirectionsTransportType? {
         switch self {
         case .walking: return .walking
-        case .cycling, .train, .plane: return nil // These modes have their own providers.
+        case .cycling, .plane: return nil // These modes have their own providers.
         case .driving: return .automobile
         }
     }
@@ -660,7 +653,7 @@ class RouteSimulator: NSObject, ObservableObject, CLLocationManagerDelegate {
                 }
             }
         } else {
-            completion([], mode == .train ? "Train routing is awaiting provider permission." : "Choose airports to calculate a flight.")
+            completion([], "Choose airports to calculate a flight.")
         }
     }
 
@@ -812,7 +805,6 @@ class RouteSimulator: NSObject, ObservableObject, CLLocationManagerDelegate {
     func prepareHistory(_ entry: RouteHistoryEntry) -> Bool {
         guard !isSimulating, entry.isValid, let mode = TravelMode(rawValue: entry.mode),
               mode.speedRange.contains(entry.speedKmh) else { return false }
-        guard mode != .train else { startError = "Train routing is awaiting provider permission."; return false }
         let path: RoutePath
         if mode == .plane {
             guard let a = entry.departureAirport, let b = entry.arrivalAirport,

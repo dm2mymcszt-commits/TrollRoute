@@ -1,6 +1,6 @@
 # BRouter permission request
 
-Status: owner reports that the operator refused permission (2026-10-04). No public BRouter endpoint will be connected. The original request below is retained for context; Codex did not send it.
+Closed: owner reports that the operator refused permission (2026-10-04), then cancelled Train completely after the offline assessment. No public BRouter endpoint will be connected and no follow-up is planned. The original request below is retained for context; Codex did not send it.
 
 ## Where to send it
 
@@ -39,4 +39,4 @@ Thank you for your time and for BRouter.
 
 ## Follow-up
 
-The refusal triggered the [measured offline assessment](OFFLINE-RAIL-AUDIT.md): data size, device storage and implementation work for one country. The owner has been asked for a decision. Metropolitan France is the measurement sample, not an approved geographic restriction. No limited route-relation fallback is authorized. The unanswered-permission reminder was deleted after the refusal.
+The refusal triggered the [measured offline assessment](OFFLINE-RAIL-AUDIT.md): data size, device storage and implementation work for one country. The owner then cancelled Train completely. The unanswered-permission reminder was deleted; no further action is pending.

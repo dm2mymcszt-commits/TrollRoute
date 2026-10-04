@@ -216,8 +216,9 @@ require(notificationPreferences.delivery != .disabled, "Existing preference read
 notificationDefaults.removePersistentDomain(forName: notificationSuite)
 print("PASS: notification defaults, persistence, all toggle combinations and mid-trip changes")
 
-require(TravelMode.plane.speedRange == 300...1000 && TravelMode.train.speedRange == 1...350, "Distinct new mode limits")
-require(TravelMode.plane.variableSpeed && !TravelMode.train.variableSpeed, "Flight owns a variable-speed profile")
+require(TravelMode.allCases == [.walking, .cycling, .driving, .plane], "Four supported travel modes")
+require(TravelMode.plane.speedRange == 300...1000, "Distinct flight speed limits")
+require(TravelMode.plane.variableSpeed && [TravelMode.walking, .cycling, .driving].allSatisfy { !$0.variableSpeed }, "Flight owns a variable-speed profile")
 require(TravelMode.initialCalculations(selected: .driving) == [.walking, .cycling, .driving], "New providers remain lazy")
 require(TravelMode.initialCalculations(selected: .plane) == [.walking, .cycling, .driving, .plane], "Only selected new provider is requested")
 for mode in TravelMode.allCases {

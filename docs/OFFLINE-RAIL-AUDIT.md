@@ -1,6 +1,6 @@
 # Offline Train assessment
 
-BRouter permission was refused, as reported by the owner on 2026-10-04. The public service remains disconnected. This is the requested measurement of an alternative, not approval to change Train's scope or ship it.
+BRouter permission was refused, as reported by the owner on 2026-10-04. After reviewing these measurements, the owner cancelled Train completely. This report is retained as completed feasibility evidence; no provider, offline pack or further rail work is planned. The audit scripts remain reproducible from commit `5b2bf92`; the active workflow and tools were removed after cancellation.
 
 ## Measured result: metropolitan France
 
@@ -44,9 +44,11 @@ OSM data requires [OpenStreetMap attribution](https://www.openstreetmap.org/copy
 
 A manual Files-import route avoids depending on a new public routing server or paid hosting. CI can generate selected country packs as downloadable artifacts, with their retention and download-access limitations made explicit. A convenient permanent in-app country catalog needs a separately settled free distribution/update plan. No GitHub Release is required or created by this audit.
 
-## Owner decision required
+## Decision presented and outcome
 
 1. Approve offline country packs, starting with a France pilot and explicit installed-area limits, then expand country coverage and border support. Files import is the simplest initial distribution option. This changes the original immediately-worldwide experience and requires approval before implementation.
 2. Keep Train pending and continue completing the other 3.1 work. No relation-only or straight-line fallback.
 
 The measured files were used only in the audit runner. No pack is bundled in TrollRoute, no Train UI is enabled, and no new entitlement was added.
+
+The owner selected neither proposal and instead cancelled Train completely. The 3.1 scope is Walking, Cycling, Driving and Plane; all Train-specific acceptance checks are withdrawn.

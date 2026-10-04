@@ -350,7 +350,7 @@ private struct RouteMapFixtureView: View {
         case .walking: return [5_000, 5_500, 5_900]
         case .cycling: return [6_000, 6_500, 7_000]
         case .driving: return [7_500, 7_800, 7_900]
-        case .train, .plane: return [50_000, 55_000, 59_000]
+        case .plane: return [50_000, 55_000, 59_000]
         }
     }
 }

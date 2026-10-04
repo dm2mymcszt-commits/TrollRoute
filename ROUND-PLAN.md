@@ -202,3 +202,7 @@ Everything delivered in 3.0.0 keeps working:
   - any new entitlements or data sources, with their licenses;
   - the README facts to update;
   - confirmation that no GitHub Release was created.
+
+## Owner scope decision (2026-10-04)
+
+After BRouter refused permission and the offline France option was measured, the owner cancelled Train completely. Phase 3 and all Train-specific requirements, tests, screenshots and device checks are withdrawn. Finish the round with Walking, Cycling, Driving and Plane, plus History, Settings and the remaining fixes. Remove unused Train scaffolding; no offline pack or relation-only substitute. All other requirements above remain in force.
