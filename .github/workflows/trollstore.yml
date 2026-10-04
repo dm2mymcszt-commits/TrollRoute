@@ -42,6 +42,8 @@ jobs:
         with:
           persist-credentials: false
       - name: Exercise real Live Activity surfaces and intents
+        # Reserve five minutes for diagnostics if the simulator stalls.
+        timeout-minutes: 45
         run: bash Tests/LiveActivity/run.sh
       - name: Upload Live Activity system evidence
         if: always()

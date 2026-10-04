@@ -38,6 +38,7 @@ failed=0
 for method in "${methods[@]}"; do
 CASE_DIR="$QA_DIR/$method"
 mkdir -p "$CASE_DIR"
+echo "Live Activity $method: creating and booting a fresh simulator"
 DEVICE=$(xcrun simctl create LiveActivityQA com.apple.CoreSimulator.SimDeviceType.iPhone-15-Pro "$RUNTIME")
 xcrun simctl boot "$DEVICE"
 xcrun simctl bootstatus "$DEVICE" -b
@@ -45,6 +46,7 @@ xcrun simctl ui "$DEVICE" appearance "${ACTIVITY_APPEARANCE:-dark}"
 xcrun simctl install "$DEVICE" "$QA_DIR/Products/Debug-iphonesimulator/LiveActivityQA.app"
 xcrun simctl install "$DEVICE" "$QA_DIR/Products/Debug-iphonesimulator/CompanionQA.app"
 xcrun simctl privacy "$DEVICE" grant location local.trollroute.activityqa
+echo "Live Activity $method: running all scenario assertions"
 if xcodebuild test -project "$QA_DIR/LiveActivityTests.xcodeproj" -scheme LiveActivityTests \
   -destination "platform=iOS Simulator,id=$DEVICE" -parallel-testing-enabled NO \
   -only-testing:"LiveActivityTests/LiveActivitySystemTests/$method" \
@@ -66,8 +68,10 @@ else
   printf '%s\n' "$method" >> "$QA_DIR/failed-methods.txt"
 fi
 cat "$CASE_DIR/tests.log"
+echo "Live Activity $method: exporting attachments and system diagnostics"
 xcrun xcresulttool export attachments --path "$CASE_DIR/System.xcresult" --output-path "$CASE_DIR/attachments" || true
 finish
+echo "Live Activity $method: scenario and cleanup complete"
 done
 # Distinguish an executed UI failure from a build/setup failure. Only the former
 # is eligible for the bounded clean-environment retry in run.sh.

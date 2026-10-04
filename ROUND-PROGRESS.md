@@ -5,6 +5,6 @@
 - CI: `d04cb0d` passes seven jobs, including dark Activity (one case recovered on bounded retry). Light hit 50-minute job timeout with no usable retained log; isolated rerun active. iOS 15 launch `37213194146` passed. No full green/repeatability or promotion.
 - Plane/History: implemented and engine/model/UI checks passed; all four Plane captures obtained. History layouts approved; exact WGS-84 replay fix `14e41f9` passed. Injection/flight/replay phone tests pending.
 - Settings: refined seven-group layout and unchanged-default guard passed in `37152992093`; owner approved all Settings captures. Both layout checkpoints complete.
-- Train: cancelled completely by owner after refusal/offline audit. Remove unused mode/provider scaffolding and audit workflow/tools; all Train acceptance withdrawn. Measurements retained as historical evidence. No rail work pending.
-- Next: inspect light-job rerun `111508073347` in `37211910709`, fix any evidenced cause, then several unchanged-code full runs. Older `37211359365` timed out in both Activity jobs. Details: `ROUND-AUDIT.md`.
+- Train: cancelled completely by owner after refusal/offline audit. Scaffolding/audit workflow/tools removed in `71c1b0a`; all Train acceptance withdrawn. Build 56 full validation `37227273239` active. Measurements retained as historical evidence; no rail work pending.
+- Next: inspect build 56 `37227273239` and light diagnostic rerun `111508073347` in `37211910709`, fix any evidenced cause, then several unchanged-code full runs. Older `37211359365` timed out in both Activity jobs. Details: `ROUND-AUDIT.md`.
 - Awaiting: final CI/repeatability and phone tests. Candidate 3.1.0 build 56; no release or README/docs/readme edits. Delete ROUND files only in final delivery commit.
