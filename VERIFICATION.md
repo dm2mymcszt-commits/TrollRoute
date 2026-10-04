@@ -12,16 +12,16 @@ Earlier evidence remains in Git history: [build 53](https://github.com/dm2mymcsz
 
 | Item | Status and evidence |
 | --- | --- |
-| Phase 0 | Source/code audit recorded in `ROUND-AUDIT.md`. BRouter operator refused permission; offline feasibility measurement underway. No limited-relation substitute is authorized. |
+| Phase 0 | Source/code audit recorded in `ROUND-AUDIT.md`. BRouter refused permission; [offline France audit](docs/OFFLINE-RAIL-AUDIT.md) passed. Alternate scope awaits owner decision. No limited-relation substitute is authorized. |
 | Plane | Great-circle/profile/elevation, full engine, all finish/Stop actions and airport/preview/playback UI passed in [validation 37152992093](https://github.com/dm2mymcszt-commits/TrollRoute/actions/runs/37152992093). Its light Live Activity flight scenario passed, but the job later timed out repeating other scenarios. Device acceptance pending. OurAirports: 4,134 airports, 711,086 bytes, public domain. |
-| Train | BRouter operator refused permission, as reported by owner on 2026-10-04. No endpoint connected. Measuring metropolitan France offline data/storage/work before another owner decision; audit adds no app behavior. [Request record](docs/BROUTER-PERMISSION-REQUEST.md). |
+| Train | BRouter refused permission. [France audit](https://github.com/dm2mymcszt-commits/TrollRoute/actions/runs/37213117463): 88.6 MB compressed, 273.1 MB installed, 634.7 MB temporary update peak. Prototype only; station/router/pack/app work remains. Asked owner about offline country packs; no substitute implemented. |
 | History | Store, replay/delete/clear UI, exact-coordinate repeated replay in China and chosen-airport flight replay passed in validation 37152992093. Owner approved populated and empty History screenshots. |
 | Settings | Seven groups and full action labels passed UI checks in validation 37152992093. All storage definitions/defaults match `fd7d417`. Owner approved every Settings screenshot. |
 | F7/F8 | Share artwork and system symbols committed; identity and no-emoji checks passed in CI. Scan also covers bundled JSON display strings. |
 | F9 | Separate bounded time-zone notification change committed; actual-driver checks passed in [validation 37151742655](https://github.com/dm2mymcszt-commits/TrollRoute/actions/runs/37151742655). Device clock/driving Bitmoji checks pending. |
 | F10 | Build 54 release provenance and this round's checklist recorded; documentation tracks incomplete acceptance explicitly. |
-| F11 | Fresh simulator per original scenario, explicit system consent, one retry of only failed scenarios and distinct attempt evidence. Wrapper success/recovery/persistent/setup-failure checks pass locally. Full CI and several unchanged-code runs still required. No outcome assertions removed. |
-| Delivery | 3.1.0 build 55 is the validation candidate on `codex/round31-validation`; nothing promoted to `experiment/route-motion`. Full green CI, Train and device checks remain outstanding. No 3.1 Release created. |
+| F11 | Seven jobs pass in [37211910709](https://github.com/dm2mymcszt-commits/TrollRoute/actions/runs/37211910709); dark Activity needed one targeted scenario retry. Light exceeded the 50-minute job deadline and is being rerun for missing diagnostics. Bash 3.2 selector and harness guards pass. Several unchanged-code full runs still required. No outcome assertions removed. |
+| Delivery | 3.1.0 build 55 is the validation candidate; [current iOS 15 launch check](https://github.com/dm2mymcszt-commits/TrollRoute/actions/runs/37213194146) passed. Nothing promoted to `experiment/route-motion`. Full green/repeatability, Train and device checks remain outstanding. No 3.1 Release created. |
 
 ## Verification gate
 

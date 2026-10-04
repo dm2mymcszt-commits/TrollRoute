@@ -39,4 +39,4 @@ Thank you for your time and for BRouter.
 
 ## Follow-up
 
-The refusal triggers the owner's requested offline assessment: measure data size, device storage and implementation work for one country, then ask for a decision. Metropolitan France is the measurement sample, not an approved geographic restriction. No limited route-relation fallback is authorized. The unanswered-permission reminder was deleted after the refusal.
+The refusal triggered the [measured offline assessment](OFFLINE-RAIL-AUDIT.md): data size, device storage and implementation work for one country. The owner has been asked for a decision. Metropolitan France is the measurement sample, not an approved geographic restriction. No limited route-relation fallback is authorized. The unanswered-permission reminder was deleted after the refusal.

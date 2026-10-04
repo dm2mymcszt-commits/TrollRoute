@@ -1,0 +1,54 @@
+{
+  "scope": "metropolitan France extract; physical rail/narrow_gauge/light_rail ways",
+  "status": "measurement prototype, not a usable or approved Train provider",
+  "source": "https://download.geofabrik.de/europe/france-261003.osm.pbf",
+  "credit": "OpenStreetMap contributors; ODbL 1.0; extract by Geofabrik",
+  "filtered_pbf_bytes": 16776045,
+  "sqlite_bytes": 273072128,
+  "gzip_download_bytes": 88569356,
+  "replace_update_peak_bytes": 634713612,
+  "counts": {
+    "nodes": 1524866,
+    "ways": 136721,
+    "edges": 1541178,
+    "stations": 4002
+  },
+  "rail_way_types": {
+    "rail": 133450,
+    "narrow_gauge": 2851,
+    "light_rail": 420
+  },
+  "station_object_types": {
+    "node": 3653,
+    "way": 339,
+    "relation": 10
+  },
+  "graph_vertices": 1516628,
+  "connected_components_undirected": 2292,
+  "largest_component_vertices": 1451980,
+  "top_10_component_sizes": [
+    1451980,
+    10018,
+    3401,
+    2648,
+    1509,
+    1235,
+    1210,
+    1185,
+    1153,
+    1112
+  ],
+  "track_geometry_km": 65914.6199370926,
+  "missing_reference_segments": 0,
+  "graph_and_compression_seconds": 80.58060851500005,
+  "linux_builder_peak_rss_bytes": 662265856,
+  "sqlite_sha256": "55902b8558ff9e65caac1b2a2308231351fe9913f6b7b0603055d9fbaf417557",
+  "limitations": [
+    "Undirected connectivity only; tags retained but gauge, direction, access and service not enforced.",
+    "No station deduplication, platform assignment, routing or gap repair.",
+    "Station relation centroids unresolved; way centroids are measurement-only.",
+    "Stored coordinates include station/reference-only geometry as well as rail vertices.",
+    "R-tree included; iOS runtime memory and routing time not measured.",
+    "Country borders and disconnected real networks require explicit product scope."
+  ]
+}
