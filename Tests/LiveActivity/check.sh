@@ -3,23 +3,7 @@ set -euo pipefail
 cd "$(dirname "$0")/../.."
 QA_DIR="${ACTIVITY_QA_DIR:-$PWD/build/live-activity-qa}"
 mkdir -p "$QA_DIR"
-all_methods=(testDynamicIslandControls testMinimalAndLockScreen testNotificationCentreControls
-  testSpecificPlaceOpensPickerAndAppliesFavorite testSpeedSeekReturnAndToggleDoNotStopRoute)
-methods=("${all_methods[@]}")
-if [ -n "${ACTIVITY_TEST_METHODS:-}" ]; then
-  methods=()
-  while IFS= read -r method; do
-    allowed=false
-    for original in "${all_methods[@]}"; do
-      if [ "$method" = "$original" ]; then allowed=true; break; fi
-    done
-    if [ "$allowed" != true ]; then echo "Invalid retry scenario: $method"; exit 1; fi
-    for previous in "${methods[@]}"; do
-      if [ "$previous" = "$method" ]; then echo "Duplicate retry scenario: $method"; exit 1; fi
-    done
-    methods+=("$method")
-  done <<< "$ACTIVITY_TEST_METHODS"
-fi
+source Tests/LiveActivity/methods.sh
 : > "$QA_DIR/failed-methods.txt"
 python3 Tests/LiveActivity/prepare.py "$QA_DIR"
 xcodebuild -project "$QA_DIR/LiveActivityQA.xcodeproj" -target LiveActivityQA -configuration Debug \
