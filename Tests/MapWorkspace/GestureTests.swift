@@ -1,11 +1,32 @@
 import XCTest
 
 final class MapGestureTests: XCTestCase {
+    private var activeApp: XCUIApplication?
+    override func setUp() { super.setUp(); continueAfterFailure = false }
+    override func tearDown() {
+        if let app = activeApp { stopProcess(app) }
+        super.tearDown()
+    }
+    private func stopProcess(_ app: XCUIApplication) {
+        if app.state != .notRunning { app.terminate() }
+        XCTAssertTrue(app.wait(for: .notRunning, timeout: 10),
+                      "The previous preview process must exit before relaunch")
+        activeApp = nil
+    }
+    private func startProcess(_ app: XCUIApplication) {
+        if let previous = activeApp { stopProcess(previous) }
+        // terminate() returning does not establish the next launch boundary.
+        // The recorded failure occurred between the labels-on/off variants.
+        stopProcess(app)
+        activeApp = app
+        app.launch()
+    }
+
     func testSettingsGroupsRetainEveryControl() {
         let app = XCUIApplication(bundleIdentifier: "local.trollroute.workspacepreview")
         app.launchArguments = ["--screen", "settings-enabled"]
-        app.launch()
-        defer { app.terminate() }
+        startProcess(app)
+        defer { stopProcess(app) }
         XCTAssertTrue(app.navigationBars["Settings"].waitForExistence(timeout: 15))
         let groups = ["Map", "Gestures", "Routes", "Safety", "Notifications and Live Activity", "Access", "About"]
         for group in groups { XCTAssertTrue(app.buttons[group].exists, group) }
@@ -57,7 +78,7 @@ final class MapGestureTests: XCTestCase {
     func testLocationOverviewExplainsSystemRegistrationAndDeniedAccess() {
         let app = XCUIApplication(bundleIdentifier: "local.trollroute.workspacepreview")
         app.launchArguments = ["--screen", "access-good"]
-        app.launch()
+        startProcess(app)
         XCTAssertTrue(app.staticTexts["While Using the App"].waitForExistence(timeout: 10))
         XCTAssertTrue(app.staticTexts["System"].exists)
         XCTAssertTrue(app.staticTexts["On"].exists)
@@ -73,9 +94,9 @@ final class MapGestureTests: XCTestCase {
             app.buttons["Done"].tap()
             XCTAssertTrue(app.buttons["access-TrollStore registration"].waitForExistence(timeout: 5))
         }
-        app.terminate()
+        stopProcess(app)
         app.launchArguments = ["--screen", "access-bad"]
-        app.launch()
+        startProcess(app)
         XCTAssertTrue(app.staticTexts["Never"].waitForExistence(timeout: 10))
         XCTAssertTrue(app.staticTexts["Unavailable"].exists)
         for _ in 0..<3 {
@@ -86,13 +107,13 @@ final class MapGestureTests: XCTestCase {
             app.buttons["Done"].tap()
             XCTAssertTrue(app.buttons["access-Location access"].waitForExistence(timeout: 5))
         }
-        app.terminate()
+        stopProcess(app)
     }
 
     private func launch(_ screen: String = "gestures", labels: Bool = true) -> XCUIApplication {
         let app = XCUIApplication(bundleIdentifier: "local.trollroute.workspacepreview")
         app.launchArguments = ["--screen", screen, "--labels", labels ? "yes" : "no"]
-        app.launch()
+        startProcess(app)
         XCTAssertTrue(app.buttons["Search"].waitForExistence(timeout: 15))
         let ready = NSPredicate { _, _ in self.mapState(app).count == 4 }
         expectation(for: ready, evaluatedWith: app)
@@ -121,9 +142,9 @@ final class MapGestureTests: XCTestCase {
         XCTAssertTrue(alert.waitForExistence(timeout: 5))
         alert.buttons["Stop"].tap()
         XCTAssertTrue(app.staticTexts["toolbar-state"].label.contains("running=false"))
-        app.terminate()
+        stopProcess(app)
         app.launchArguments = ["--screen", "gestures", "--stop-without-confirmation"]
-        app.launch()
+        startProcess(app)
         XCTAssertTrue(app.buttons["Route"].waitForExistence(timeout: 15))
         app.buttons["Route"].tap()
         app.buttons["Stop"].tap()
@@ -182,7 +203,7 @@ final class MapGestureTests: XCTestCase {
             screenshot.name = labels ? "toolbar-labels-after-map-pan" : "toolbar-icons-after-map-pan"
             screenshot.lifetime = .keepAlways
             add(screenshot)
-            app.terminate()
+            stopProcess(app)
         }
     }
 
@@ -261,7 +282,7 @@ final class MapGestureTests: XCTestCase {
     func testSaveSearchAndMapPinWithoutSelectingLocation() {
         let app = XCUIApplication(bundleIdentifier: "local.trollroute.workspacepreview")
         app.launchArguments = ["--screen", "favorites"]
-        app.launch()
+        startProcess(app)
         let star = app.buttons["Save Pasted location as favorite"]
         XCTAssertTrue(star.waitForExistence(timeout: 15))
         star.tap()
