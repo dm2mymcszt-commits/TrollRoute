@@ -126,6 +126,8 @@ jobs:
           name: route-session-ui
           path: |
             build/route-session-ui/tests.log
+            build/route-session-ui/launch-system.log
+            build/route-session-ui/crashes
             build/route-session-ui/attachments
             build/route-session-ui/Session.xcresult
           if-no-files-found: ignore

@@ -6,7 +6,7 @@ This is an interim record for 3.1.0 build 56. Delivery is not complete: F11 repe
 
 | Item | Status | Verification and choices |
 | --- | --- | --- |
-| F11 | Partial | Build 56 run 37227547248 passed seven jobs; only a second simulator launch in the map tests failed. Process lifecycle fix 8beb5e7 is under validation in 37280386452. Several unchanged-code full green runs remain required. All original outcome assertions retained. |
+| F11 | Partial | Build 56 run 37227547248 passed seven jobs; only a second simulator launch in the map tests failed. Process lifecycle fix 8beb5e7 passes all ten map/Settings cases in 37280386452, but Navigation has one launch timeout; Home-screen readiness/startup diagnostics are the next candidate. Several unchanged-code full green runs remain required. All original outcome assertions retained. |
 | Phase 6 / Part D | Partial | Package, model, engine, migration, injection, altitude, search, sharing, Navigation, picker and Activity regression checks pass. Full workflow consistency and promotion remain pending. Detailed device checklist remains open. |
 | T1-T4 / Phase 3 | Not done; cancelled by owner | BRouter refused permission. France offline prototype measured 88.6 MB download, 273.1 MB installed and 634.7 MB during replacement. Owner withdrew Train instead of approving country packs. No rail provider, station selection, limited-relation substitute or rail tab ships. |
 | P1 | Needs phone test for complete acceptance | Great-circle, date-line, polar, antipodal, long-haul and heading/metadata tests pass; geodesic map rendering captured. Initial build-56 device feedback is positive. No promise about Snapchat's plane appearance. |
@@ -47,7 +47,7 @@ This is an interim record for 3.1.0 build 56. Delivery is not complete: F11 repe
 ## CI and package evidence
 
 - [Build 56, 315f598](https://github.com/dm2mymcszt-commits/TrollRoute/actions/runs/37227547248): package and all feature/engine checks pass; overall failure due to one map simulator launch timeout. Dark Activity 5/5 first attempt; light 4/5 then only the failed Dynamic Island case passed on one retry.
-- [Map lifecycle fix, 8beb5e7](https://github.com/dm2mymcszt-commits/TrollRoute/actions/runs/37280386452): active; no result claimed yet.
+- [Map lifecycle fix, 8beb5e7](https://github.com/dm2mymcszt-commits/TrollRoute/actions/runs/37280386452): package/models/sharing and all ten map cases pass; Navigation has one launch timeout, seven passes. Activity jobs still active.
 - [iOS 15 launch](https://github.com/dm2mymcszt-commits/TrollRoute/actions/runs/37213194146): unmodified app launched on runtime 15.5. This check predates Train removal/build-number bump; no subsequent app API additions.
 - [Tested build-56 package](https://github.com/dm2mymcszt-commits/TrollRoute/actions/runs/37227547248/artifacts/11313480503): 5,143,667 bytes; SHA-256 `98b4e1c3de46c068bcaf1354a35ed94928b8af117e960ab97298599444ec784c`. Local inspection confirms all three binaries' identity/signing/entitlements, airport bundle and share artwork.
 - Owner's 2026-10-05 reply to the driving Bitmoji, long-flight speed/altitude/time-zone and Plane Activity check request: "i checked it works for now". This is a positive initial smoke check, not individually completed evidence for every detailed checklist item.

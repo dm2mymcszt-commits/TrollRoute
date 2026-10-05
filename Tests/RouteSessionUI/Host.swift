@@ -87,7 +87,9 @@ struct SessionHost: View {
     var window: UIWindow?
     var fixture: EngineFixture?
     func application(_ app: UIApplication, didFinishLaunchingWithOptions options: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
+        NSLog("RouteSessionUI startup: entered application delegate")
         let fixture = EngineFixture(realtime: true)
+        NSLog("RouteSessionUI startup: initialized engine fixture")
         self.fixture = fixture
         let arguments = ProcessInfo.processInfo.arguments
         SharedPreferences.defaults.set(false, forKey: "mapButtonLabels")
@@ -96,6 +98,7 @@ struct SessionHost: View {
                 speed: 0, timestamp: Date()), kind: .stationary, newIntent: true)
         }
         fixture.prepare()
+        NSLog("RouteSessionUI startup: prepared route")
         if arguments.contains("--history") {
             fixture.engine.startSimulation(startName: "Saved drive", destinationName: "Riverside")
             fixture.engine.stopSimulation()
@@ -126,6 +129,7 @@ struct SessionHost: View {
         window.rootViewController = UIHostingController(rootView: SessionHost(fixture: fixture, navigation: navigation))
         window.makeKeyAndVisible()
         self.window = window
+        NSLog("RouteSessionUI startup: made window visible")
         return true
     }
 }

@@ -43,7 +43,18 @@ xcrun --sdk iphonesimulator swiftc -target arm64-apple-ios17.0-simulator \
   "$QA_DIR/Bookmarks.swift" Tests/RouteSessionUI/Host.swift -o "$PREVIEW_APP/RouteSessionUI"
 RUNTIME=$(xcrun simctl list runtimes -j | python3 -c 'import json,sys; print(next(r["identifier"] for r in json.load(sys.stdin)["runtimes"] if r["isAvailable"] and "iOS" in r["name"]))')
 DEVICE=$(xcrun simctl create RouteSessionUI com.apple.CoreSimulator.SimDeviceType.iPhone-12 "$RUNTIME")
-trap 'xcrun simctl shutdown "$DEVICE" || true; xcrun simctl delete "$DEVICE" || true' EXIT
+finish() {
+  # Preserve the launch boundary even when XCTest never obtains an app PID.
+  xcrun simctl spawn "$DEVICE" log show --last 15m --style compact --info \
+    --predicate 'process == "RouteSessionUI" OR eventMessage CONTAINS "local.trollroute.sessionui"' \
+    > "$QA_DIR/launch-system.log" 2>&1 || true
+  mkdir -p "$QA_DIR/crashes"
+  find "$HOME/Library/Logs/DiagnosticReports" -maxdepth 1 -name 'RouteSessionUI*' \
+    -exec cp {} "$QA_DIR/crashes/" \; 2>/dev/null || true
+  xcrun simctl shutdown "$DEVICE" || true
+  xcrun simctl delete "$DEVICE" || true
+}
+trap finish EXIT
 xcrun simctl boot "$DEVICE"
 xcrun simctl bootstatus "$DEVICE" -b
 xcrun simctl status_bar "$DEVICE" override --time '9:41' --batteryState charged --batteryLevel 100

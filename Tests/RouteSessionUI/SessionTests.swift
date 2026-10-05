@@ -12,6 +12,24 @@ final class RouteSessionTests: XCTestCase {
         super.tearDown()
     }
     private func launch(_ arguments: [String] = []) -> XCUIApplication {
+        // Process exit alone did not prevent a recorded blank launch screen.
+        // Finish SpringBoard's transition before requesting another launch.
+        XCUIDevice.shared.press(.home)
+        let board = XCUIApplication(bundleIdentifier: "com.apple.springboard")
+        XCTAssertTrue(board.wait(for: .runningForeground, timeout: 10))
+        let icon = board.icons["RouteSessionUI"].firstMatch
+        XCTAssertTrue(icon.waitForExistence(timeout: 10))
+        var previous = CGRect.null
+        var stableSince: Date?
+        let settled = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
+            guard icon.exists, icon.isHittable else { stableSince = nil; return false }
+            let frame = icon.frame
+            if frame != previous || stableSince == nil {
+                previous = frame; stableSince = Date(); return false
+            }
+            return Date().timeIntervalSince(stableSince!) >= 2
+        }, object: nil)
+        XCTAssertEqual(XCTWaiter.wait(for: [settled], timeout: 10), .completed)
         let app = XCUIApplication(bundleIdentifier: "local.trollroute.sessionui")
         activeApp = app
         app.launchArguments = arguments
