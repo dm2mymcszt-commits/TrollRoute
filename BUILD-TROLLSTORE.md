@@ -8,7 +8,7 @@ The app installs beside Andromeda. Optional import is offered while Andromeda is
 
 ## Device checklist for this round
 
-These are acceptance checks for the eventual 3.1 candidate, not claims that unfinished features are available. See [verification](VERIFICATION.md) for current status.
+The owner reported that build 56 worked in an initial device check on 2026-10-05, after being asked about the driving Bitmoji, long-flight altitude/speed/time zones and Plane Live Activity controls. The detailed checks below remain open until individually confirmed. See [verification](VERIFICATION.md) for CI status.
 
 - [ ] History: run two routes, redo one without automatic movement, delete one, clear all with confirmation, then relaunch.
 - [ ] Settings: every existing option/default remains present and works after reorganization.
