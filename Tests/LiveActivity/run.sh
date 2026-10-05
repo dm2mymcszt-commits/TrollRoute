@@ -3,7 +3,8 @@ set -euo pipefail
 cd "$(dirname "$0")/../.."
 root="$PWD/build/live-activity-qa"
 mkdir -p "$root"
-retry_methods=""
+# CI assigns one original scenario per job; local runs still default to all five.
+retry_methods="${ACTIVITY_TEST_METHODS:-}"
 for attempt in 1 2; do
   status=0
   ACTIVITY_TEST_METHODS="$retry_methods" ACTIVITY_QA_DIR="$root/attempt-$attempt" bash Tests/LiveActivity/check.sh || status=$?

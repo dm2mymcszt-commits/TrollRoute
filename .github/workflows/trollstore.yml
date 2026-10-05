@@ -29,27 +29,29 @@ jobs:
         run: python3 Tests/LiveActivity/retry-policy.py
   live-activity-ui:
     runs-on: macos-15
-    timeout-minutes: 50
+    timeout-minutes: 35
     strategy:
       fail-fast: false
       matrix:
         appearance: [dark, light]
+        scenario: ["testDynamicIslandControls", "testMinimalAndLockScreen", "testNotificationCentreControls", "testSpecificPlaceOpensPickerAndAppliesFavorite", "testSpeedSeekReturnAndToggleDoNotStopRoute"]
     env:
       DEVELOPER_DIR: /Applications/Xcode_16.4.app/Contents/Developer
       ACTIVITY_APPEARANCE: ${{ matrix.appearance }}
+      ACTIVITY_TEST_METHODS: ${{ matrix.scenario }}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           persist-credentials: false
       - name: Exercise real Live Activity surfaces and intents
         # Reserve five minutes for diagnostics if the simulator stalls.
-        timeout-minutes: 45
+        timeout-minutes: 30
         run: bash Tests/LiveActivity/run.sh
       - name: Upload Live Activity system evidence
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
-          name: live-activity-ui-${{ matrix.appearance }}
+          name: live-activity-ui-${{ matrix.appearance }}-${{ matrix.scenario }}
           path: |
             build/live-activity-qa/attempts.txt
             build/live-activity-qa/**/build.log
