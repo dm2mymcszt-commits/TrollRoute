@@ -17,7 +17,9 @@ final class RouteSessionTests: XCTestCase {
         XCUIDevice.shared.press(.home)
         let board = XCUIApplication(bundleIdentifier: "com.apple.springboard")
         XCTAssertTrue(board.wait(for: .runningForeground, timeout: 10))
-        let icon = board.icons["RouteSessionUI"].firstMatch
+        // The preview icon can be on another Home page. Safari stays in the
+        // dock, so it verifies the visible Home surface without scrolling it.
+        let icon = board.icons["Safari"].firstMatch
         XCTAssertTrue(icon.waitForExistence(timeout: 10))
         var previous = CGRect.null
         var stableSince: Date?

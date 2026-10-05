@@ -1,0 +1,30 @@
+name: Navigation UI diagnostic
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  navigation:
+    runs-on: macos-15
+    timeout-minutes: 20
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_16.4.app/Contents/Developer
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - name: Exercise all Navigation scenarios
+        run: bash Tests/RouteSessionUI/check.sh
+      - name: Upload Navigation startup and UI evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: navigation-diagnostic
+          path: |
+            build/route-session-ui/tests.log
+            build/route-session-ui/launch-system.log
+            build/route-session-ui/crashes
+            build/route-session-ui/attachments
+            build/route-session-ui/Session.xcresult
+          if-no-files-found: ignore
+          retention-days: 14
