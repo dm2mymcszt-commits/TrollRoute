@@ -1,6 +1,9 @@
 name: Navigation UI diagnostic
 on:
   workflow_dispatch:
+  push:
+    branches: [codex/round31-validation]
+    paths: [.github/workflows/navigation-diagnostic.yml]
 permissions:
   contents: read
 jobs:
