@@ -22,7 +22,7 @@
 
 ## What it does
 
-TrollRoute changes the location your iPhone reports to every app. Set a spot and stay there, or plan a trip and let the phone travel it along real roads, on foot, by bike or by car, at any speed from 1 to 500 km/h.
+TrollRoute changes the location your iPhone reports to every app. Set a spot and stay there, or plan a trip and let the phone travel it: along real roads on foot, by bike or by car, at any speed from 1 to 500 km/h, or by plane from one airport to another.
 
 Three things matter most here. Your location never changes by accident. Stopping a route never sends you back to your real position by surprise. And the movement other apps see (speed, heading, altitude) stays consistent.
 
@@ -41,15 +41,18 @@ Three things matter most here. Your location never changes by accident. Stopping
 ### Travel a route
 
 - Walking, cycling and driving routes, with alternatives. Each mode remembers its own speed.
+- Fly between airports. TrollRoute picks the nearest of 4,134 airports at each end (you can choose others), follows the real great-circle path, and climbs, cruises and descends with matching speed and altitude.
 - Drag the progress bar to jump anywhere on the route, change speed while moving, pause and resume.
 - Decide what happens at the end: stay there, go to a saved place, return to your real location, loop, drive back, or go back and forth. You can change your mind while the route is running.
 - Stopping a route asks where your location should go: back where it was before the route, where it is now, the route start, or your real location.
 - Long press the map to plan a route to that point.
+- History keeps your last 50 routes on the device, so you can run one again or delete it.
 
 ### The details
 
 - Tapping the map does nothing unless you turn that on, and the main Stop button asks before restoring your real location.
-- Altitude follows the terrain automatically, or uses a value you set.
+- Altitude follows the terrain automatically, or uses a value you set. During a flight it follows the flight instead.
+- On a long trip the time zone is refreshed as you travel.
 - A notification tells you when a route finishes.
 - A status screen shows TrollStore registration, location access and Precise Location, and explains what to change if something is off.
 
