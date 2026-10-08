@@ -31,7 +31,8 @@ finish() {
   DEVICE=""
 }
 trap finish EXIT
-python3 Tests/MapWorkspace/ui-project.py "$QA_DIR" Tests/LiveActivity/SystemTests.swift LiveActivityTests
+python3 Tests/MapWorkspace/ui-project.py "$QA_DIR" Tests/LiveActivity/SystemTests.swift LiveActivityTests \
+  Tests/LiveActivity/ControlGeometry.swift
 # A failed companion End or locked SpringBoard must never contaminate another
 # scenario. Each original test runs, with all its assertions, on a fresh device.
 failed=0

@@ -65,19 +65,23 @@ final class LiveActivitySystemTests: XCTestCase {
     private func tapSettledActivityControl(_ title: String) {
         let button = board.buttons[title]
         var previous = CGRect.null
+        var target = CGRect.null
         var stableSince: Date?
         let ready = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
             guard button.exists, button.isEnabled else {
                 stableSince = nil
                 return false
             }
-            let frame = button.frame
-            guard !frame.isEmpty, !frame.isNull, !frame.isInfinite,
-                  [frame.minX, frame.minY, frame.maxX, frame.maxY].allSatisfy(\.isFinite),
-                  self.board.frame.contains(frame) else {
+            let hosts = self.board.otherElements.matching(identifier: "activity-content-view")
+                .containing(.button, identifier: title)
+            guard hosts.count <= 1,
+                  let frame = ActivityControlGeometry.screenFrame(button.frame,
+                    host: hosts.firstMatch.exists ? hosts.firstMatch.frame : nil,
+                    screen: self.board.frame) else {
                 stableSince = nil
                 return false
             }
+            target = frame
             if frame != previous || stableSince == nil {
                 previous = frame
                 stableSince = Date()
@@ -89,7 +93,9 @@ final class LiveActivitySystemTests: XCTestCase {
         // when the button has finite, visible bounds. Tap those stable bounds
         // once. All subsequent Pause/Resume/Stop outcome assertions remain.
         XCTAssertEqual(XCTWaiter.wait(for: [ready], timeout: 15), .completed, board.debugDescription)
-        button.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
+        self.board.coordinate(withNormalizedOffset: .zero)
+            .withOffset(CGVector(dx: target.midX - self.board.frame.minX,
+                                 dy: target.midY - self.board.frame.minY)).tap()
     }
     private func waitForPresentation(_ identifiers: [String]) {
         var previous: [CGRect] = []

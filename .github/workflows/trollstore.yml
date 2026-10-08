@@ -27,6 +27,8 @@ jobs:
         run: python3 Tests/Settings/check.py
       - name: Check bounded Live Activity retry outcomes
         run: python3 Tests/LiveActivity/retry-policy.py
+      - name: Check recorded remote Activity control coordinates
+        run: bash Tests/LiveActivity/geometry-check.sh
   live-activity-ui:
     runs-on: macos-15
     timeout-minutes: 35
