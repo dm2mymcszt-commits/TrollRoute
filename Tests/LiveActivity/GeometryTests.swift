@@ -1,4 +1,5 @@
 import Foundation
+import CoreGraphics
 
 @main struct GeometryTests {
     static func main() {

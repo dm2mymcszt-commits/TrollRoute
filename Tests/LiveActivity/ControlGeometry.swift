@@ -1,4 +1,5 @@
 import Foundation
+import CoreGraphics
 
 enum ActivityControlGeometry {
     // Remote widget children can have local frames while their host is on screen.
