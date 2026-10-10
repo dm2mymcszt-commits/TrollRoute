@@ -66,7 +66,7 @@ cat "$QA_DIR/gestures.log"
 xcrun xcresulttool export attachments --path "$QA_DIR/Gestures.xcresult" --output-path "$QA_DIR/attachments"
 for appearance in dark light; do
   xcrun simctl ui "$DEVICE" appearance "$appearance"
-  for screen in map settings settings-enabled access-good access-bad confirmation search altitude-automatic altitude-custom altitude-negative; do
+  for screen in keeper-running keeper-stopped map settings settings-enabled access-good access-bad confirmation search altitude-automatic altitude-custom altitude-negative; do
     xcrun simctl terminate "$DEVICE" local.trollroute.workspacepreview 2>/dev/null || true
     xcrun simctl launch "$DEVICE" local.trollroute.workspacepreview --screen "$screen" --appearance "$appearance"
     if test "$screen" = search; then sleep 20; else sleep 5; fi

@@ -119,6 +119,7 @@ struct LocSimView: View {
             } else if locationSession.isActive {
                 VStack {
                     Text(keeperStatus.delivery)
+                    if let error = locationSession.keeperError { Text(error).foregroundColor(.orange) }
                     if let notice = keeperStatus.notice { Text(notice).foregroundColor(.orange) }
                     if !keeperStatus.display.running { Text("Location keeper is not running. Check Settings.").foregroundColor(.orange) }
                 }.font(.caption).padding(8).background(.regularMaterial)

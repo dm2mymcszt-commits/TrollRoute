@@ -41,7 +41,7 @@ app_files = [
     'TrollRoute/LocSim/MapMoveConfirmation.swift', 'TrollRoute/LocSim/MainStopConfirmation.swift',
     'TrollRoute/LocSim/LongPressRoute.swift', 'TrollRoute/LocSim/GPXParser.swift',
     'TrollRoute/LocSim/JoystickView.swift', 'TrollRoute/LocSim/RouteLocationPicker.swift',
-    'TrollRoute/LocSim/FavoritePlaceEditor.swift', 'TrollRoute/SettingsView.swift', 'TrollRoute/LocationAccess.swift',
+    'TrollRoute/LocSim/FavoritePlaceEditor.swift', 'TrollRoute/Keeper/KeeperUI.swift', str(out / 'KeeperModels.swift'), 'TrollRoute/SettingsView.swift', 'TrollRoute/LocationAccess.swift',
     'TrollRoute/LiveActivity/RouteActivityState.swift', 'TrollRoute/LiveActivity/RouteActivityAttributes.swift',
     'TrollRoute/LiveActivity/RouteActivityController.swift', 'TrollRoute/LiveActivity/RouteActivityIntent.swift',
     'Tests/LiveActivity/Host.swift',

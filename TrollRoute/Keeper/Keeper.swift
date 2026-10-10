@@ -154,7 +154,7 @@ enum KeeperFiles {
     static var executable: String {
         let bundle = Bundle.main.bundleURL
         let app = bundle.pathExtension == "appex" ? bundle.deletingLastPathComponent().deletingLastPathComponent() : bundle
-        return app.appendingPathComponent("TrollRoute").path
+        return app.appendingPathComponent("TrollRoute").resolvingSymlinksInPath().path
     }
     static var build: String { Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "unknown" }
     static func directory(_ container: URL) -> URL { container.appendingPathComponent("LocationSession") }
@@ -205,7 +205,8 @@ final class KeeperClient: LocationKeeperLifecycle {
         guard let container = KeeperFiles.container else { throw KeeperFiles.failure(ENOENT) }
         if KeeperFiles.locked(container), let record = KeeperFiles.read(container),
            record.build == KeeperFiles.build, record.executable == KeeperFiles.executable,
-           record.boot == SystemBootIdentity.current, record.error == 0 {
+           record.boot == SystemBootIdentity.current, record.error == 0,
+           TRProcessIdentity(record.pid) == record.identity {
             lastSuccess = true; return
         }
         try command("start", container: container)
@@ -230,6 +231,7 @@ final class KeeperClient: LocationKeeperLifecycle {
         guard rc == 0 else { throw KeeperFiles.failure(rc) }
     }
     func resumeIfCurrentBoot() {
+        lastCheck = -.infinity
         guard let state = try? LocationLeaseStore.shared?.read(), state.owner != nil,
               state.snapshot.isActive, state.bootIdentity == SystemBootIdentity.current,
               state.bootIdentity != "unknown" else { return }
@@ -275,7 +277,8 @@ enum KeeperRuntime {
                 guard rc == 0 else { throw KeeperFiles.failure(rc) }
                 for _ in 0..<60 {
                     if KeeperFiles.locked(container), let record = KeeperFiles.read(container),
-                       record.build == KeeperFiles.build, record.error == 0 { return true }
+                       record.build == KeeperFiles.build, record.error == 0,
+                       record.boot == SystemBootIdentity.current, TRProcessIdentity(record.pid) == record.identity { return true }
                     usleep(25000)
                 }
                 throw KeeperFiles.failure(ETIMEDOUT)

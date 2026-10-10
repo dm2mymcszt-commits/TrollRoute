@@ -322,6 +322,7 @@ final class LocationInjectionQueue {
 final class LocationSession: ObservableObject {
     @Published private(set) var snapshot: LocationSessionSnapshot
     @Published private(set) var error: String?
+    @Published private(set) var keeperError: String?
     @Published private(set) var needsReactivation = false
     var onOwnershipLost: (() -> Void)?
     private(set) var inputSample: CLLocation?
@@ -481,7 +482,7 @@ final class LocationSession: ObservableObject {
         needsReactivation = false
         lastKnown = snapshot.current
         if !requiresLease { store.save(snapshot) }
-        do { try keeper?.ensureRunning() } catch { self.error = "Location keeper could not start. Open Settings for details." }
+        do { try keeper?.ensureRunning(); keeperError = nil } catch { keeperError = "Location keeper could not start. Open Settings for details." }
     }
 
     /// Called by durable-command wakeups and activation. Loading never acquires

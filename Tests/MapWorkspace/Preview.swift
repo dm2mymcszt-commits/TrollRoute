@@ -129,7 +129,15 @@ struct WorkspacePreview: View {
     }
     var body: some Scene {
         WindowGroup {
-            if argument("--screen", fallback: "map").hasPrefix("access-") {
+            if argument("--screen", fallback: "map").hasPrefix("keeper-") {
+                let running = argument("--screen", fallback: "map") == "keeper-running"
+                NavigationView { Form { KeeperSettingsSection(model: KeeperStatusModel(preview:
+                    KeeperDisplay(running: running, started: running ? Date() : nil,
+                        restarts: running ? 2 : 0, lastRestart: running ? Date() : nil,
+                        detail: running ? "Watching for location service restarts." : "Location keeper is not running."))) }
+                    .navigationTitle("Location spoofing") }
+                    .preferredColorScheme(argument("--appearance", fallback: "dark") == "dark" ? .dark : .light)
+            } else if argument("--screen", fallback: "map").hasPrefix("access-") {
                 let good = argument("--screen", fallback: "map") == "access-good"
                 NavigationView {
                     Form {

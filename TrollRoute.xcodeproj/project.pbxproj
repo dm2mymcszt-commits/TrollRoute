@@ -698,12 +698,12 @@ CDA70003000000000000001F = {isa = XCBuildConfiguration; buildSettings = {
  APPLICATION_EXTENSION_API_ONLY = YES;
  CODE_SIGN_ENTITLEMENTS = TrollRouteActivity/entitlements.plist;
  CODE_SIGN_STYLE = Automatic;
- CURRENT_PROJECT_VERSION = 56;
+ CURRENT_PROJECT_VERSION = 57;
  GENERATE_INFOPLIST_FILE = YES;
  INFOPLIST_FILE = TrollRouteActivity/Info.plist;
  IPHONEOS_DEPLOYMENT_TARGET = 16.1;
  LD_RUNPATH_SEARCH_PATHS = ("$(inherited)", "@executable_path/Frameworks", "@executable_path/../../Frameworks",);
- MARKETING_VERSION = 3.1.0;
+ MARKETING_VERSION = 3.2.0;
  ENABLE_APPINTENTS_DEPLOYMENT_AWARE_PROCESSING = NO;
  PRODUCT_BUNDLE_IDENTIFIER = com.dm2mymcszt.trollroute.activity;
  PRODUCT_NAME = "$(TARGET_NAME)";
@@ -716,12 +716,12 @@ CDA70003000000000000001E = {isa = XCBuildConfiguration; buildSettings = {
  APPLICATION_EXTENSION_API_ONLY = YES;
  CODE_SIGN_ENTITLEMENTS = TrollRouteActivity/entitlements.plist;
  CODE_SIGN_STYLE = Automatic;
- CURRENT_PROJECT_VERSION = 56;
+ CURRENT_PROJECT_VERSION = 57;
  GENERATE_INFOPLIST_FILE = YES;
  INFOPLIST_FILE = TrollRouteActivity/Info.plist;
  IPHONEOS_DEPLOYMENT_TARGET = 16.1;
  LD_RUNPATH_SEARCH_PATHS = ("$(inherited)", "@executable_path/Frameworks", "@executable_path/../../Frameworks",);
- MARKETING_VERSION = 3.1.0;
+ MARKETING_VERSION = 3.2.0;
  ENABLE_APPINTENTS_DEPLOYMENT_AWARE_PROCESSING = NO;
  PRODUCT_BUNDLE_IDENTIFIER = com.dm2mymcszt.trollroute.activity;
  PRODUCT_NAME = "$(TARGET_NAME)";
@@ -736,7 +736,7 @@ CDA70003000000000000001E = {isa = XCBuildConfiguration; buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = "TrollRouteShare/TrollRouteShare.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 56;
+				CURRENT_PROJECT_VERSION = 57;
 				DEVELOPMENT_TEAM = 7G89J82G2A;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "TrollRouteShare/Info.plist";
@@ -748,7 +748,7 @@ CDA70003000000000000001E = {isa = XCBuildConfiguration; buildSettings = {
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 3.1.0;
+				MARKETING_VERSION = 3.2.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.dm2mymcszt.trollroute.share";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
@@ -765,7 +765,7 @@ CDA70003000000000000001E = {isa = XCBuildConfiguration; buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = "TrollRouteShare/TrollRouteShare.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 56;
+				CURRENT_PROJECT_VERSION = 57;
 				DEVELOPMENT_TEAM = 7G89J82G2A;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "TrollRouteShare/Info.plist";
@@ -777,7 +777,7 @@ CDA70003000000000000001E = {isa = XCBuildConfiguration; buildSettings = {
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 3.1.0;
+				MARKETING_VERSION = 3.2.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.dm2mymcszt.trollroute.share";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
@@ -916,10 +916,10 @@ CDA70003000000000000001E = {isa = XCBuildConfiguration; buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = TrollRoute/TrollRoute.entitlements;
-                SWIFT_ACTIVE_COMPILATION_CONDITIONS = "$(inherited) TROLLROUTE_APP";
+                SWIFT_ACTIVE_COMPILATION_CONDITIONS = "$(inherited) TROLLROUTE_APP TROLLROUTE_KEEPER_UI";
                 OTHER_LDFLAGS = "$(inherited) -weak_framework ActivityKit -weak_framework AppIntents";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 56;
+				CURRENT_PROJECT_VERSION = 57;
 				DEVELOPMENT_ASSET_PATHS = "\"TrollRoute/Preview Content\"";
 				DEVELOPMENT_TEAM = 7G89J82G2A;
 				ENABLE_PREVIEWS = YES;
@@ -940,7 +940,7 @@ CDA70003000000000000001E = {isa = XCBuildConfiguration; buildSettings = {
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 3.1.0;
+				MARKETING_VERSION = 3.2.0;
 				ENABLE_APPINTENTS_DEPLOYMENT_AWARE_PROCESSING = NO;
 				PRODUCT_BUNDLE_IDENTIFIER = com.dm2mymcszt.trollroute;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -958,10 +958,10 @@ CDA70003000000000000001E = {isa = XCBuildConfiguration; buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = TrollRoute/TrollRoute.entitlements;
-                SWIFT_ACTIVE_COMPILATION_CONDITIONS = "$(inherited) TROLLROUTE_APP";
+                SWIFT_ACTIVE_COMPILATION_CONDITIONS = "$(inherited) TROLLROUTE_APP TROLLROUTE_KEEPER_UI";
                 OTHER_LDFLAGS = "$(inherited) -weak_framework ActivityKit -weak_framework AppIntents";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 56;
+				CURRENT_PROJECT_VERSION = 57;
 				DEVELOPMENT_ASSET_PATHS = "\"TrollRoute/Preview Content\"";
 				DEVELOPMENT_TEAM = 7G89J82G2A;
 				ENABLE_PREVIEWS = YES;
@@ -982,7 +982,7 @@ CDA70003000000000000001E = {isa = XCBuildConfiguration; buildSettings = {
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 3.1.0;
+				MARKETING_VERSION = 3.2.0;
 				ENABLE_APPINTENTS_DEPLOYMENT_AWARE_PROCESSING = NO;
 				PRODUCT_BUNDLE_IDENTIFIER = com.dm2mymcszt.trollroute;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -999,11 +999,11 @@ CDA70003000000000000001E = {isa = XCBuildConfiguration; buildSettings = {
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 56;
+				CURRENT_PROJECT_VERSION = 57;
 				DEVELOPMENT_TEAM = 7G89J82G2A;
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
-				MARKETING_VERSION = 3.1.0;
+				MARKETING_VERSION = 3.2.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.dm2mymcszt.trollrouteTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = NO;
@@ -1019,11 +1019,11 @@ CDA70003000000000000001E = {isa = XCBuildConfiguration; buildSettings = {
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 56;
+				CURRENT_PROJECT_VERSION = 57;
 				DEVELOPMENT_TEAM = 7G89J82G2A;
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
-				MARKETING_VERSION = 3.1.0;
+				MARKETING_VERSION = 3.2.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.dm2mymcszt.trollrouteTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = NO;
@@ -1038,10 +1038,10 @@ CDA70003000000000000001E = {isa = XCBuildConfiguration; buildSettings = {
 			buildSettings = {
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 56;
+				CURRENT_PROJECT_VERSION = 57;
 				DEVELOPMENT_TEAM = 7G89J82G2A;
 				GENERATE_INFOPLIST_FILE = YES;
-				MARKETING_VERSION = 3.1.0;
+				MARKETING_VERSION = 3.2.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.dm2mymcszt.trollrouteUITests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = NO;
@@ -1056,10 +1056,10 @@ CDA70003000000000000001E = {isa = XCBuildConfiguration; buildSettings = {
 			buildSettings = {
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 56;
+				CURRENT_PROJECT_VERSION = 57;
 				DEVELOPMENT_TEAM = 7G89J82G2A;
 				GENERATE_INFOPLIST_FILE = YES;
-				MARKETING_VERSION = 3.1.0;
+				MARKETING_VERSION = 3.2.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.dm2mymcszt.trollrouteUITests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = NO;

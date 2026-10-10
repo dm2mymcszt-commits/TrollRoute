@@ -30,6 +30,7 @@ jobs:
       - name: Check recorded remote Activity control coordinates
         run: bash Tests/LiveActivity/geometry-check.sh
   live-activity-ui:
+    needs: build
     runs-on: macos-15
     timeout-minutes: 35
     strategy:
@@ -66,6 +67,7 @@ jobs:
           if-no-files-found: ignore
           retention-days: 14
   share-lifecycle-ui:
+    needs: build
     runs-on: macos-15
     timeout-minutes: 20
     env:
@@ -88,6 +90,7 @@ jobs:
           if-no-files-found: ignore
           retention-days: 14
   map-workspace-ui:
+    needs: build
     runs-on: macos-15
     timeout-minutes: 20
     env:
@@ -113,6 +116,7 @@ jobs:
           retention-days: 14
 
   route-session-ui:
+    needs: build
     runs-on: macos-15
     timeout-minutes: 20
     env:
@@ -198,6 +202,14 @@ jobs:
           python3 Tests/Identity/check.py build/TrollRoute.tipa
           python3 Tests/Identity/package-signing.py build/TrollRoute.tipa
 
+      - name: Upload TrollStore package
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: TrollRoute-${{ steps.version.outputs.version }}-${{ github.sha }}
+          path: build/TrollRoute.tipa
+          if-no-files-found: error
+          retention-days: 30
+
       - name: Check read-only data migration
         run: bash Tests/Migration/check.sh
 
@@ -206,6 +218,9 @@ jobs:
 
       - name: Check shared location ownership and previous spoof
         run: bash Tests/LocationSession/check.sh
+
+      - name: Check keeper lifecycle, recovery, storage ownership and event log
+        run: bash Tests/Keeper/check.sh
 
       - name: Check injection cadence, cancellation and motion preservation
         run: bash Tests/Injection/check.sh
@@ -242,14 +257,6 @@ jobs:
           path: build/route-map-qa/*.png
           if-no-files-found: ignore
           retention-days: 14
-
-      - name: Upload TrollStore package
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
-        with:
-          name: TrollRoute-${{ steps.version.outputs.version }}-${{ github.sha }}
-          path: build/TrollRoute.tipa
-          if-no-files-found: error
-          retention-days: 30
 
       - name: Upload build log
         if: always()

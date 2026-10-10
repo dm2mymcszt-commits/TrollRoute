@@ -64,7 +64,7 @@ struct SharedStateFile<Value: Codable> {
     private func locked<Result>(_ operation: () throws -> Result) throws -> Result {
         try FileManager.default.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
         try SharedFileAccess.repair(url.deletingLastPathComponent(), directory: true)
-        let descriptor = open(url.appendingPathExtension("lock").path, O_CREAT | O_RDWR | O_CLOEXEC, S_IRUSR | S_IWUSR)
+        let descriptor = open(url.appendingPathExtension("lock").path, O_CREAT | O_RDWR | O_CLOEXEC | O_NOFOLLOW, S_IRUSR | S_IWUSR)
         guard descriptor >= 0 else { throw NSError(domain: NSPOSIXErrorDomain, code: Int(errno)) }
         defer { close(descriptor) }
         try SharedFileAccess.repair(url.appendingPathExtension("lock"))
@@ -99,9 +99,11 @@ enum SharedFileAccess {
 enum SystemBootIdentity {
     static var current: String {
         #if canImport(Darwin)
-        var value = timeval(); var size = MemoryLayout<timeval>.size
-        guard sysctlbyname("kern.boottime", &value, &size, nil, 0) == 0 else { return "unknown" }
-        return "\(value.tv_sec):\(value.tv_usec)"
+        var bytes = [CChar](repeating: 0, count: 128)
+        var size = bytes.count
+        guard sysctlbyname("kern.bootsessionuuid", &bytes, &size, nil, 0) == 0,
+              size > 1 else { return "unknown" }
+        return String(cString: bytes)
         #else
         return "unknown"
         #endif

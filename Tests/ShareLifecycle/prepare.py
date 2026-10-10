@@ -48,3 +48,5 @@ with (app / 'Info.plist').open('wb') as f:
         UIDeviceFamily=[1], UILaunchScreen={}, UIBackgroundModes=['location'],
         NSLocationWhenInUseUsageDescription='Exercise shared-location lifecycle.',
         NSLocationAlwaysAndWhenInUseUsageDescription='Exercise shared-location lifecycle.'), f)
+
+save('KeeperModels.swift', source('TrollRoute/Keeper/Keeper.swift').split('#if os(iOS)')[0])

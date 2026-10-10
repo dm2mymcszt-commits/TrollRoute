@@ -12,7 +12,7 @@ final class CLSimulationManager {
 }
 
 @main struct KeeperTests {
-    static func main() throws {
+    @MainActor static func main() throws {
         var alive = false; var starts = 0; var stops = 0
         let keeper = KeeperLifecycle(running: { alive }, spawn: { alive = true; starts += 1 },
                                      terminate: { alive = false; stops += 1 })
@@ -56,6 +56,52 @@ final class CLSimulationManager {
         try keeper.stop(); try keeper.stop() // no keeper is a successful no-op for the controller
         print("PASS: revocation persists even when the external Stop fails; queued restore cannot resurrect it")
         print("PASS: exit/replacement full sequence, exact motion metadata, inactive authority and cancellation")
+        // Exercise the real LocationSession activation and Stop integration.
+        let domain = "keeper-session-\(UUID())"
+        let defaults = UserDefaults(suiteName: domain)!
+        defer { defaults.removePersistentDomain(forName: domain) }
+        let settings = AltitudeSettings(defaults: defaults); settings.setCustom(88)
+        let beforeStarts = starts
+        let session = LocationSession(driver: CoreLocationSimulationDriver(), defaults: defaults,
+            settings: settings, injectionInterval: 0, lease: lease, keeper: keeper, lookup: { _ in nil })
+        session.receive(point, kind: .stationary, newIntent: true)
+        session.receive(point, kind: .stationary, newIntent: true)
+        precondition(starts == beforeStarts + 1 && alive)
+        session.stop(); precondition(!alive && !session.isActive)
+        try lease.file.update { state in
+            state.owner = UUID(); state.bootIdentity = "previous-boot"
+            state.snapshot = .init(kind: .stationary, current: SessionLocation(point))
+        }
+        // A restore arriving DURING Stop blocks until revocation and then skips.
+        let racingOwner = UUID(); _ = try lease.claim(racingOwner)
+        try lease.perform(racingOwner) { $0 = .init(kind: .stationary, current: SessionLocation(point)) }
+        let stopping = DispatchSemaphore(value: 0), release = DispatchSemaphore(value: 0)
+        let stopped = DispatchSemaphore(value: 0), lateRestore = DispatchSemaphore(value: 0)
+        DispatchQueue.global().async {
+            _ = try! lease.stop(racingOwner) { stopping.signal(); release.wait() }
+            stopped.signal()
+        }
+        precondition(stopping.wait(timeout: .now() + 2) == .success)
+        DispatchQueue.global().async {
+            let applied = try! lease.restoreCurrent { _ in preconditionFailure("Restore started during Stop") }
+            precondition(!applied); lateRestore.signal()
+        }
+        precondition(lateRestore.wait(timeout: .now() + 0.1) == .timedOut)
+        release.signal()
+        precondition(stopped.wait(timeout: .now() + 2) == .success)
+        precondition(lateRestore.wait(timeout: .now() + 2) == .success)
+        try lease.file.update { state in
+            state.owner = UUID(); state.bootIdentity = "previous-boot"
+            state.snapshot = .init(kind: .stationary, current: SessionLocation(point))
+        }
+        let callsBeforeLoad = CLSimulationManager.operations.count
+        let rebooted = LocationSession(driver: CoreLocationSimulationDriver(), defaults: defaults,
+            settings: settings, lease: lease, keeper: keeper)
+        precondition(!rebooted.isActive && rebooted.needsReactivation && rebooted.lastKnown != nil)
+        precondition(CLSimulationManager.operations.count == callsBeforeLoad)
+        let restoredAcrossBoot = try lease.restoreCurrent { _ in preconditionFailure("Cross-boot restore") }
+        precondition(!restoredAcrossBoot)
+        print("PASS: actual activation/Stop integration and passive reboot loading")
         let log = KeeperLog(directory: dir)
         for index in 0..<700 { try log.append(.restoreSent, newPID: 42, attempt: index) }
         let journal = try log.read()

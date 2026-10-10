@@ -66,7 +66,7 @@ NSString *TRProcessIdentity(pid_t pid) {
 NSString *TRProcessPath(pid_t pid) {
     int (*path)(int, void *, uint32_t) = dlsym(RTLD_DEFAULT, "proc_pidpath");
     char buffer[4096] = {0};
-    return path && path(pid, buffer, sizeof(buffer)) > 0 ? [NSString stringWithUTF8String:buffer] : @"";
+    return path && path(pid, buffer, sizeof(buffer)) > 0 ? [[NSString stringWithUTF8String:buffer] stringByResolvingSymlinksInPath] : @"";
 }
 pid_t TRLocationPID(void) {
     int mib[] = {CTL_KERN, KERN_PROC, KERN_PROC_ALL, 0}; size_t size = 0;

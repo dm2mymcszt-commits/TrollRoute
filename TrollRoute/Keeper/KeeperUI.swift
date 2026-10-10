@@ -22,6 +22,7 @@ struct KeeperDisplay {
     @Published var diagnosticResult = "No diagnostic test has run."
     var diagnosticSamples: [KeeperDiagnosticSample] = []
     private var diagnosticStart = 0.0
+    private var diagnosticWallStart = Date.distantPast
     private var diagnosticWork: DispatchWorkItem?
     private var manager: CLLocationManager?
     private var observation: AnyCancellable?
@@ -36,7 +37,7 @@ struct KeeperDisplay {
 
     func refresh() {
         guard !preview else { return }
-        #if TROLLROUTE_APP
+        #if TROLLROUTE_KEEPER_UI
         guard let container = KeeperFiles.container else { display.detail = "Shared location storage is unavailable."; return }
         let record = KeeperFiles.read(container)
         display.running = KeeperFiles.locked(container) && record?.error == 0
@@ -53,19 +54,19 @@ struct KeeperDisplay {
     }
     func setNotifications(_ enabled: Bool) {
         notifications = enabled
-        #if TROLLROUTE_APP
+        #if TROLLROUTE_KEEPER_UI
         if let container = KeeperFiles.container { try? preferences(container).update { $0.notifications = enabled } }
         if enabled { UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound]) { _, _ in } }
         #endif
     }
-    #if TROLLROUTE_APP
+    #if TROLLROUTE_KEEPER_UI
     private func preferences(_ container: URL) -> SharedStateFile<KeeperPreferences> {
         SharedStateFile(url: KeeperFiles.directory(container).appendingPathComponent("keeper-preferences.json"), initial: { KeeperPreferences() })
     }
     #endif
     func setForeground(_ foreground: Bool) {
         guard !preview else { return }
-        #if TROLLROUTE_APP
+        #if TROLLROUTE_KEEPER_UI
         if !foreground {
             manager?.stopUpdatingLocation(); observation = nil; statusObservation = nil; statusTimer = nil
             if diagnosticRunning { finishDiagnostic(interrupted: true) }
@@ -79,7 +80,7 @@ struct KeeperDisplay {
             manager?.desiredAccuracy = kCLLocationAccuracyBest
         }
         statusObservation = NotificationCenter.default.publisher(for: .keeperStateChanged).sink { [weak self] _ in self?.refresh() }
-        statusTimer = Timer.publish(every: 30, on: .main, in: .common).autoconnect().sink { [weak self] _ in self?.refresh() }
+        statusTimer = Timer.publish(every: 30, on: .main, in: .common).autoconnect().sink { [weak self] _ in KeeperClient.shared.resumeIfCurrentBoot(); self?.refresh() }
         observation = LocSimManager.session.$snapshot.sink { [weak self] snapshot in
             guard let self = self else { return }
             if let current = snapshot.current {
@@ -98,7 +99,7 @@ struct KeeperDisplay {
         delivery = "System location could not be checked (error \((error as NSError).code))."
     }
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
-        #if TROLLROUTE_APP
+        #if TROLLROUTE_KEEPER_UI
         guard LocSimManager.session.isActive else { return }
         for location in locations {
             let flag = location.sourceInformation?.isSimulatedBySoftware
@@ -136,26 +137,27 @@ struct KeeperDisplay {
         #endif
     }
     func restartProtection() {
-        #if TROLLROUTE_APP
+        #if TROLLROUTE_KEEPER_UI
         do { try KeeperClient.shared.ensureRunning() } catch { delivery = "Location keeper could not start (error \((error as NSError).code))." }
         refresh()
         #endif
     }
     func stop() {
-        #if TROLLROUTE_APP
+        #if TROLLROUTE_KEEPER_UI
+        finishDiagnostic(interrupted: true)
         LocSimManager.session.stop(); notice = nil; refresh()
         if let error = LocSimManager.session.error { delivery = error }
         #endif
     }
     func reactivate() {
-        #if TROLLROUTE_APP
+        #if TROLLROUTE_KEEPER_UI
         guard let sample = LocSimManager.session.lastKnown else { return }
         LocSimManager.session.receive(sample.stationaryLocation, kind: .stationary, newIntent: true)
         refresh()
         #endif
     }
     func beginDiagnostic() {
-        #if TROLLROUTE_APP
+        #if TROLLROUTE_KEEPER_UI
         guard !diagnosticRunning, LocSimManager.session.isActive,
               let container = KeeperFiles.container else { diagnosticResult = "Set a simulated location before running the test."; return }
         do { try KeeperClient.shared.ensureRunning() } catch { diagnosticResult = "The keeper is not available. No restart was requested."; return }
@@ -163,7 +165,7 @@ struct KeeperDisplay {
               manager.authorizationStatus == .authorizedWhenInUse || manager.authorizationStatus == .authorizedAlways else {
             diagnosticResult = "Location access is required to measure delivery. No restart was requested."; return
         }
-        diagnosticSamples = []; diagnosticStart = ProcessInfo.processInfo.systemUptime
+        diagnosticSamples = []; diagnosticStart = ProcessInfo.processInfo.systemUptime; diagnosticWallStart = Date()
         diagnosticRunning = true; diagnosticResult = "Measuring for 15 seconds. Keep TrollRoute in the foreground."
         manager.startUpdatingLocation()
         let work = DispatchWorkItem { [weak self] in self?.finishDiagnostic() }
@@ -181,11 +183,11 @@ struct KeeperDisplay {
     func finishDiagnostic(interrupted: Bool = false) {
         guard diagnosticRunning else { return }
         diagnosticRunning = false; diagnosticWork?.cancel(); diagnosticWork = nil
-        #if TROLLROUTE_APP
+        #if TROLLROUTE_KEEPER_UI
         let end = ProcessInfo.processInfo.systemUptime
         let events = KeeperFiles.container.flatMap { try? KeeperLog(directory: KeeperFiles.directory($0)).read().events } ?? []
         diagnosticResult = KeeperDiagnosticReport.render(start: diagnosticStart, end: end,
-            samples: diagnosticSamples, events: events.filter { $0.uptime >= diagnosticStart && $0.uptime <= end },
+            samples: diagnosticSamples, events: events.filter { $0.time >= diagnosticWallStart && $0.uptime >= diagnosticStart && $0.uptime <= end },
             markerVerified: markerVerified, interrupted: interrupted)
         refresh()
         #endif
