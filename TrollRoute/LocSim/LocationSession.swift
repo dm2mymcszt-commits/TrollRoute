@@ -199,6 +199,19 @@ struct LocationLeaseStore {
         }
     }
 
+    /// Check active authority and perform the side effect under the SAME lock as Stop.
+    @discardableResult
+    func restoreCurrent(_ inject: (CLLocation) throws -> Void) throws -> Bool {
+        try file.transaction { state, _ in
+            try validate(state)
+            guard state.owner != nil, state.snapshot.isActive,
+                  state.bootIdentity == SystemBootIdentity.current,
+                  state.bootIdentity != "unknown", let sample = state.snapshot.current else { return false }
+            try inject(sample.location)
+            return true
+        }
+    }
+
     private func validate(_ state: State) throws {
         guard state.snapshot.isValid,
               state.moves.values.allSatisfy({ $0.sample.isValid && $0.sample.speed == 0 }) else {

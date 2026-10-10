@@ -51,10 +51,12 @@ class LocSimManager {
     }
 }
 
-/// Starts once, then replaces the queued sample while the session stays active.
+/// Starts once per service incarnation, then replaces the queued sample.
 /// This private API path must also be checked on a physical TrollStore device.
 final class CoreLocationSimulationDriver: LocationSimulationDriver {
-    private let simManager = CLSimulationManager()
+    private var simManager = CLSimulationManager()
+    private let serviceIdentity: () -> String
+    private var connectedIdentity: String?
     private var running = false
     private let timezoneUpdate: () -> Void
     private let now: () -> TimeInterval
@@ -62,9 +64,27 @@ final class CoreLocationSimulationDriver: LocationSimulationDriver {
     private var timezoneTime: TimeInterval?
 
     init(timezoneUpdate: @escaping () -> Void = CoreLocationSimulationDriver.postTimezoneUpdate,
-         now: @escaping () -> TimeInterval = { ProcessInfo.processInfo.systemUptime }) {
+         now: @escaping () -> TimeInterval = { ProcessInfo.processInfo.systemUptime },
+         serviceIdentity: @escaping () -> String = CoreLocationSimulationDriver.currentServiceIdentity) {
+        self.serviceIdentity = serviceIdentity
         self.timezoneUpdate = timezoneUpdate
         self.now = now
+    }
+
+    static func currentServiceIdentity() -> String {
+        #if os(iOS)
+        return TRProcessIdentity(TRLocationPID())
+        #else
+        return "test-service"
+        #endif
+    }
+    private func refreshConnection() {
+        let identity = serviceIdentity()
+        if connectedIdentity != identity || identity.isEmpty {
+            simManager = CLSimulationManager()
+            running = false
+            connectedIdentity = identity
+        }
     }
 
     /// Updates timezone
@@ -73,6 +93,7 @@ final class CoreLocationSimulationDriver: LocationSimulationDriver {
     }
     
     func inject(_ location: CLLocation, reason: LocationInjectionReason) {
+        refreshConnection()
         let starting = !running
         if starting { simManager.stopLocationSimulation() }
         simManager.clearSimulatedLocations()
@@ -102,6 +123,7 @@ final class CoreLocationSimulationDriver: LocationSimulationDriver {
     
     /// Stops location simulation
     func stop(){
+        refreshConnection()
         simManager.stopLocationSimulation()
         simManager.clearSimulatedLocations()
         simManager.flush()

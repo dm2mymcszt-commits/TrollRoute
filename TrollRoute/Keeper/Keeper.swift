@@ -1,4 +1,49 @@
 import Foundation
+
+/// Event-driven recovery with bounded retries; the idle safety timer never injects.
+/// Injectable scheduling lets tests exercise cancellation and process replacement.
+final class KeeperRecovery {
+    typealias Schedule = (TimeInterval, @escaping () -> Void) -> Void
+    private let identity: () -> String
+    private let restore: () throws -> Bool
+    private let schedule: Schedule
+    private let event: (String, Int) -> Void
+    private(set) var observed = ""
+    private var generation = 0
+    private var stopped = false
+    init(identity: @escaping () -> String, restore: @escaping () throws -> Bool,
+         schedule: @escaping Schedule, event: @escaping (String, Int) -> Void = { _, _ in }) {
+        self.identity = identity; self.restore = restore; self.schedule = schedule; self.event = event
+        observed = identity()
+    }
+    func check() {
+        let current = identity()
+        if current != observed { processExited() }
+    }
+    func processExited() {
+        guard !stopped else { return }
+        generation += 1
+        let token = generation
+        let previous = observed
+        event("service-exit", 0)
+        for (attempt, delay) in [0.0, 0.15, 0.5, 1, 2, 4, 8].enumerated() {
+            let work = { [weak self] in
+                guard let self = self, !self.stopped, self.generation == token else { return }
+                let current = self.identity()
+                guard !current.isEmpty, current != previous else {
+                    self.event("service-wait", attempt + 1); return
+                }
+                if current != self.observed { self.observed = current; self.event("service-replaced", attempt + 1) }
+                do {
+                    if try self.restore() { self.event("restore-sent", attempt + 1) }
+                    else { self.event("restore-skipped", attempt + 1) }
+                } catch { self.event("restore-error", attempt + 1) }
+            }
+            if delay == 0 { work() } else { schedule(delay, work) }
+        }
+    }
+    func stop() { stopped = true; generation += 1 }
+}
 #if os(iOS)
 import Darwin
 
@@ -164,14 +209,56 @@ enum KeeperRuntime {
         try JSONEncoder().encode(record).write(to: KeeperFiles.record(container), options: .atomic)
         try SharedFileAccess.repair(KeeperFiles.record(container))
         guard protection == 0 else { close(fd); throw KeeperFiles.failure(protection) }
+        let watcher = KeeperProcessWatcher(lease: lease)
+        watcher.start()
         let timer = DispatchSource.makeTimerSource(queue: .main)
         timer.schedule(deadline: .now() + 30, repeating: 30, leeway: .seconds(2))
         timer.setEventHandler {
             guard FileManager.default.fileExists(atPath: record.executable),
                   let latest = try? lease.read(), latest.owner != nil, latest.snapshot.isActive else { exit(0) }
+            watcher.check()
         }
         timer.resume()
-        withExtendedLifetime(timer) { dispatchMain() }
+        withExtendedLifetime((timer, watcher)) { dispatchMain() }
+    }
+}
+
+final class KeeperProcessWatcher {
+    private var source: DispatchSourceProcess?
+    private var watchedIdentity = ""
+    private let lease: LocationLeaseStore
+    private lazy var recovery = KeeperRecovery(identity: { [weak self] in self?.serviceIdentity() ?? "" },
+        restore: { [weak self] in
+            guard let self = self else { return false }
+            return try self.lease.restoreCurrent { location in
+                // A new manager for EVERY attempt; never reuse the old XPC connection.
+                CoreLocationSimulationDriver().inject(location, reason: .stateChange)
+            }
+        }, schedule: { delay, work in DispatchQueue.main.asyncAfter(deadline: .now() + delay, execute: work) })
+    init(lease: LocationLeaseStore) { self.lease = lease }
+    func start() { _ = recovery; attach() }
+    func check() { recovery.check(); attach() }
+    private func serviceIdentity() -> String {
+        let pid = TRLocationPID()
+        return pid > 0 ? TRProcessIdentity(pid) : ""
+    }
+    private func attach() {
+        let pid = TRLocationPID(); let identity = TRProcessIdentity(pid)
+        guard pid > 0, !identity.isEmpty, identity != watchedIdentity else { return }
+        source?.cancel()
+        watchedIdentity = identity
+        let next = DispatchSource.makeProcessSource(identifier: pid, eventMask: .exit, queue: .main)
+        next.setEventHandler { [weak self] in
+            guard let self = self, self.watchedIdentity == identity else { return }
+            self.source?.cancel(); self.source = nil; self.watchedIdentity = ""
+            self.recovery.processExited()
+            // Discovery while launchd is replacing the service is bounded, not idle polling.
+            for delay in [0.0, 0.15, 0.5, 1, 2, 4, 8] {
+                DispatchQueue.main.asyncAfter(deadline: .now() + delay) { [weak self] in self?.attach() }
+            }
+        }
+        source = next; next.resume()
+        if TRProcessIdentity(pid) != identity { recovery.check() }
     }
 }
 #endif

@@ -104,6 +104,16 @@ final class TestClock {
         precondition(Array(CLSimulationManager.operations.suffix(5)) == ["stop", "clear", "append", "flush", "start"])
         print("PASS: explicit jumps, latest-wins, cancellation race, pause/arrival/resume, Stop and restart; sample metadata unchanged")
 
+        var service = "one"
+        let restarting = CoreLocationSimulationDriver(timezoneUpdate: {}, serviceIdentity: { service })
+        restarting.inject(sample(2100), reason: .continuous)
+        let beforeReplacement = CLSimulationManager.operations.count
+        service = "two"
+        restarting.inject(sample(2101), reason: .continuous)
+        precondition(Array(CLSimulationManager.operations.dropFirst(beforeReplacement)) == ["stop", "clear", "append", "flush", "start"])
+        precondition(SessionLocation(CLSimulationManager.samples.last!) == SessionLocation(sample(2101)))
+        print("PASS: replacing locationd forces a full start with a fresh manager")
+
         // The real adapter is mode-independent: test distance and elapsed time
         // at walking, cycling, driving and plane speeds across the date line.
         for kmh in [5.0, 20, 50, 130, 850, 1000] {

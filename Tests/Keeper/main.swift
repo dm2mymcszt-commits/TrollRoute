@@ -20,6 +20,30 @@ final class CLSimulationManager {
         precondition(starts == 1)
         try keeper.stop(); precondition(!alive && stops == 1)
         try keeper.ensureRunning(); precondition(starts == 2)
+        let dir = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: dir) }
+        let lease = LocationLeaseStore(url: dir.appendingPathComponent("authority.json"))
+        let token = UUID(); _ = try lease.claim(token)
+        let point = CLLocation(coordinate: .init(latitude: 40, longitude: 2), altitude: 88,
+            horizontalAccuracy: 3, verticalAccuracy: 4, course: 145, courseAccuracy: 0.25,
+            speed: 28, speedAccuracy: 0.125, timestamp: Date(timeIntervalSince1970: 1234))
+        try lease.perform(token) { $0 = .init(kind: .route, current: SessionLocation(point)) }
+        var process = "old"; var scheduled: [() -> Void] = []; var restores = 0
+        let recovery = KeeperRecovery(identity: { process }, restore: {
+            try lease.restoreCurrent { location in
+                restores += 1
+                CoreLocationSimulationDriver().inject(location, reason: .stateChange)
+            }
+        }, schedule: { _, work in scheduled.append(work) })
+        process = ""; recovery.processExited(); precondition(restores == 0)
+        process = "new"; scheduled.removeFirst()()
+        precondition(restores == 1)
+        precondition(CLSimulationManager.operations == ["stop", "clear", "append", "flush", "start"])
+        precondition(SessionLocation(CLSimulationManager.samples.last!) == SessionLocation(point))
+        _ = try lease.stop(token, driverStop: {})
+        scheduled.forEach { $0() }; precondition(restores == 1)
+        recovery.stop(); recovery.processExited(); precondition(restores == 1)
+        print("PASS: exit/replacement full sequence, exact motion metadata, inactive authority and cancellation")
         print("PASS: fake spawner starts once, stops, and starts a new keeper")
     }
 }
