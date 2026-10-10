@@ -1,5 +1,7 @@
 import Foundation
 
+extension Notification.Name { static let keeperStateChanged = Notification.Name("TrollRoute.keeperStateChanged") }
+
 /// Event-driven recovery with bounded retries; the idle safety timer never injects.
 /// Injectable scheduling lets tests exercise cancellation and process replacement.
 final class KeeperRecovery {
@@ -44,8 +46,55 @@ final class KeeperRecovery {
     }
     func stop() { stopped = true; generation += 1 }
 }
+enum KeeperEventKind: String, Codable {
+    case started, stopped, serviceExit, serviceReplaced, serviceWait
+    case restoreSent, restoreSkipped, restoreError, protectionError, notificationError
+    case diagnosticRequested, diagnosticError
+}
+struct KeeperEvent: Codable {
+    let time: Date
+    let uptime: TimeInterval
+    let kind: KeeperEventKind
+    var oldPID: Int32 = 0
+    var newPID: Int32 = 0
+    var attempt: Int = 0
+    var errorCode: Int = 0
+    var line: String {
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        return "\(formatter.string(from: time)) \(kind.rawValue) old=\(oldPID) new=\(newPID) attempt=\(attempt) error=\(errorCode)"
+    }
+}
+struct KeeperJournal: Codable {
+    var events: [KeeperEvent] = []
+    var restarts = 0
+    var lastRestart: Date?
+}
+struct KeeperLog {
+    static let maximumBytes = 131_072
+    let file: SharedStateFile<KeeperJournal>
+    init(directory: URL) {
+        file = SharedStateFile(url: directory.appendingPathComponent("keeper-log.json"), initial: { KeeperJournal() })
+    }
+    func append(_ kind: KeeperEventKind, oldPID: Int32 = 0, newPID: Int32 = 0,
+                attempt: Int = 0, errorCode: Int = 0) throws {
+        try file.update { journal in
+            let now = Date()
+            journal.events.append(KeeperEvent(time: now, uptime: ProcessInfo.processInfo.systemUptime,
+                kind: kind, oldPID: oldPID, newPID: newPID, attempt: attempt, errorCode: errorCode))
+            if kind == .serviceReplaced { journal.restarts += 1; journal.lastRestart = now }
+            while journal.events.count > 512 { journal.events.removeFirst() }
+            while try JSONEncoder().encode(journal).count > Self.maximumBytes { journal.events.removeFirst() }
+        }
+    }
+    func read() throws -> KeeperJournal { try file.read() }
+    func text() throws -> String { try read().events.map(\.line).joined(separator: "\n") }
+}
+struct KeeperPreferences: Codable { var notifications = true }
+
 #if os(iOS)
 import Darwin
+import UserNotifications
 
 struct KeeperRecord: Codable {
     var pid: Int32
@@ -121,6 +170,7 @@ final class KeeperClient: LocationKeeperLifecycle {
             throw KeeperFiles.failure(EIO)
         }
         lastSuccess = true
+        NotificationCenter.default.post(name: .keeperStateChanged, object: nil)
         #endif
     }
     func stop() throws {
@@ -128,6 +178,7 @@ final class KeeperClient: LocationKeeperLifecycle {
         guard let container = KeeperFiles.container else { throw KeeperFiles.failure(ENOENT) }
         #if !targetEnvironment(simulator)
         try command("stop", container: container)
+        NotificationCenter.default.post(name: .keeperStateChanged, object: nil)
         #endif
     }
     func command(_ action: String, container: URL) throws {
@@ -158,6 +209,7 @@ enum KeeperRuntime {
                                O_CREAT | O_RDWR | O_CLOEXEC | O_NOFOLLOW, 0o600)
             guard control >= 0 else { throw KeeperFiles.failure(errno) }
             defer { close(control) }
+            try SharedFileAccess.repair(KeeperFiles.directory(container).appendingPathComponent("keeper.control.lock"))
             if args[2] != "run" {
                 let deadline = ProcessInfo.processInfo.systemUptime + 2
                 while flock(control, LOCK_EX | LOCK_NB) != 0 {
@@ -201,12 +253,18 @@ enum KeeperRuntime {
         }
         guard kill(record.pid, SIGTERM) == 0 || errno == ESRCH else { throw KeeperFiles.failure(errno) }
         for _ in 0..<40 {
-            if !KeeperFiles.locked(container) { return }
+            if !KeeperFiles.locked(container) {
+                try? KeeperLog(directory: KeeperFiles.directory(container)).append(.stopped)
+                return
+            }
             usleep(25000)
         }
         if TRProcessIdentity(record.pid) == record.identity { _ = kill(record.pid, SIGKILL) }
         for _ in 0..<40 {
-            if !KeeperFiles.locked(container) { return }
+            if !KeeperFiles.locked(container) {
+                try? KeeperLog(directory: KeeperFiles.directory(container)).append(.stopped)
+                return
+            }
             usleep(25000)
         }
         throw KeeperFiles.failure(ETIMEDOUT)
@@ -225,14 +283,19 @@ enum KeeperRuntime {
             boot: SystemBootIdentity.current, started: Date(), error: Int(protection))
         try JSONEncoder().encode(record).write(to: KeeperFiles.record(container), options: .atomic)
         try SharedFileAccess.repair(KeeperFiles.record(container))
-        guard protection == 0 else { close(fd); throw KeeperFiles.failure(protection) }
-        let watcher = KeeperProcessWatcher(lease: lease)
+        let log = KeeperLog(directory: KeeperFiles.directory(container))
+        guard protection == 0 else {
+            try? log.append(.protectionError, errorCode: Int(protection))
+            close(fd); throw KeeperFiles.failure(protection)
+        }
+        try log.append(.started, newPID: getpid())
+        let watcher = KeeperProcessWatcher(lease: lease, directory: KeeperFiles.directory(container))
         watcher.start()
         let timer = DispatchSource.makeTimerSource(queue: .main)
         timer.schedule(deadline: .now() + 30, repeating: 30, leeway: .seconds(2))
         timer.setEventHandler {
             guard FileManager.default.fileExists(atPath: record.executable),
-                  let latest = try? lease.read(), latest.owner != nil, latest.snapshot.isActive else { exit(0) }
+                  let latest = try? lease.read(), latest.owner != nil, latest.snapshot.isActive else { try? log.append(.stopped); exit(0) }
             watcher.check()
         }
         timer.resume()
@@ -244,6 +307,8 @@ final class KeeperProcessWatcher {
     private var source: DispatchSourceProcess?
     private var watchedIdentity = ""
     private let lease: LocationLeaseStore
+    private let directory: URL
+    private var lastPID: Int32 = 0
     private lazy var recovery = KeeperRecovery(identity: { [weak self] in self?.serviceIdentity() ?? "" },
         restore: { [weak self] in
             guard let self = self else { return false }
@@ -251,8 +316,32 @@ final class KeeperProcessWatcher {
                 // A new manager for EVERY attempt; never reuse the old XPC connection.
                 CoreLocationSimulationDriver().inject(location, reason: .stateChange)
             }
-        }, schedule: { delay, work in DispatchQueue.main.asyncAfter(deadline: .now() + delay, execute: work) })
-    init(lease: LocationLeaseStore) { self.lease = lease }
+        }, schedule: { delay, work in DispatchQueue.main.asyncAfter(deadline: .now() + delay, execute: work) },
+        event: { [weak self] event, attempt in self?.record(event, attempt: attempt) })
+    init(lease: LocationLeaseStore, directory: URL) {
+        self.lease = lease; self.directory = directory; lastPID = TRLocationPID()
+    }
+    private func record(_ event: String, attempt: Int) {
+        let kinds: [String: KeeperEventKind] = ["service-exit": .serviceExit,
+            "service-replaced": .serviceReplaced, "service-wait": .serviceWait,
+            "restore-sent": .restoreSent, "restore-skipped": .restoreSkipped, "restore-error": .restoreError]
+        guard let kind = kinds[event] else { return }
+        let pid = TRLocationPID()
+        try? KeeperLog(directory: directory).append(kind, oldPID: lastPID, newPID: pid, attempt: attempt)
+        if kind == .serviceReplaced {
+            lastPID = pid
+            let preferences = SharedStateFile(url: directory.appendingPathComponent("keeper-preferences.json"), initial: { KeeperPreferences() })
+            if (try? preferences.read().notifications) ?? true {
+                let content = UNMutableNotificationContent()
+                content.title = "Location service restarted"
+                content.body = "The location keeper is attempting to restore your simulated position. Open TrollRoute to check it."
+                UNUserNotificationCenter.current().add(UNNotificationRequest(identifier: UUID().uuidString,
+                    content: content, trigger: nil)) { [directory] error in
+                    if let error = error { try? KeeperLog(directory: directory).append(.notificationError, errorCode: (error as NSError).code) }
+                }
+            }
+        }
+    }
     func start() { _ = recovery; attach() }
     func check() { recovery.check(); attach() }
     private func serviceIdentity() -> String {

@@ -137,7 +137,8 @@ struct SettingsView: View {
             Image(systemName: "chevron.up.chevron.down").font(.caption)
         }
     }
-    private var safetyOptions: some View {
+    @ViewBuilder private var safetyOptions: some View {
+        KeeperSettingsSection(model: KeeperStatusModel.shared)
         Section("Location spoofing") {
             Toggle("Confirm before stopping location spoofing", isOn: $confirmBeforeStoppingSpoofing)
         }

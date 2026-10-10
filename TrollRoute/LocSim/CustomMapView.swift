@@ -92,7 +92,7 @@ struct CustomMapView: UIViewRepresentable {
             } else {
                 let annotation = MovingAnnotation()
                 annotation.coordinate = position
-                annotation.title = "Simulated Position"
+                annotation.title = "Requested Position"
                 context.coordinator.movingAnnotation = annotation
                 mapView.addAnnotation(annotation)
             }

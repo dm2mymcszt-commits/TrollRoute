@@ -32,6 +32,7 @@ struct LocSimView: View {
     @AppStorage("confirmBeforeStoppingSpoofing", store: SharedPreferences.defaults) private var confirmBeforeStoppingSpoofing = true
     @StateObject private var routeSimulator = RouteRuntime.shared.simulator
     
+    @ObservedObject private var keeperStatus = KeeperStatusModel.shared
     @ObservedObject private var locationSession = LocSimManager.session
     private var referenceCoordinate: CLLocationCoordinate2D {
         locationSession.current?.coordinate ?? locationSession.lastKnown?.coordinate ?? CLLocationCoordinate2D(latitude: 0, longitude: 0)
@@ -110,6 +111,18 @@ struct LocSimView: View {
                                     joystickActive: joystickActive, routeActive: routeSimulator.isSimulating))
         .safeAreaInset(edge: .bottom) {
           VStack(spacing: 4) {
+            if locationSession.needsReactivation {
+                VStack {
+                    Text("The saved simulation was reset by a restart or needs confirmation after an update.")
+                    Button("Set saved location again") { keeperStatus.reactivate() }
+                }.font(.caption).padding(8).background(.regularMaterial)
+            } else if locationSession.isActive {
+                VStack {
+                    Text(keeperStatus.delivery)
+                    if let notice = keeperStatus.notice { Text(notice).foregroundColor(.orange) }
+                    if !keeperStatus.display.running { Text("Location keeper is not running. Check Settings.").foregroundColor(.orange) }
+                }.font(.caption).padding(8).background(.regularMaterial)
+            }
             if routeSimulator.isSimulating {
                 RoutePlaybackPanel(
                     progress: routeSimulator.progress, elapsed: routeSimulator.elapsedTime,
@@ -165,8 +178,8 @@ struct LocSimView: View {
         .onChange(of: autoStartLongPressRoute) { _ in longPressRoute.cancel() }
         .onChange(of: tapMapToSetLocation) { _ in mapMove.cancel() }
         .onChange(of: askBeforeMoving) { _ in mapMove.cancel() }
-        .onAppear { sharedChannel.setActive(scenePhase == .active) }
-        .onChange(of: scenePhase) { phase in sharedChannel.setActive(phase == .active) }
+        .onAppear { sharedChannel.setActive(scenePhase == .active); keeperStatus.setForeground(scenePhase == .active) }
+        .onChange(of: scenePhase) { phase in sharedChannel.setActive(phase == .active); keeperStatus.setForeground(phase == .active) }
         .onReceive(sharedChannel.$revision) { _ in
             if locationSession.refreshShared() { joystickActive = false }
             offerSharedPlace()

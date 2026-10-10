@@ -322,6 +322,7 @@ final class LocationInjectionQueue {
 final class LocationSession: ObservableObject {
     @Published private(set) var snapshot: LocationSessionSnapshot
     @Published private(set) var error: String?
+    @Published private(set) var needsReactivation = false
     var onOwnershipLost: (() -> Void)?
     private(set) var inputSample: CLLocation?
     private(set) var lastKnown: SessionLocation?
@@ -364,6 +365,11 @@ final class LocationSession: ObservableObject {
         snapshot = self.requiresLease ? ((try? lease?.read().snapshot) ?? LocationSessionSnapshot()) : store.load()
         inputSample = self.requiresLease ? nil : snapshot.current?.location
         lastKnown = snapshot.current
+        if self.requiresLease, let state = try? lease?.read(), state.snapshot.isActive,
+           state.bootIdentity != SystemBootIdentity.current {
+            needsReactivation = true
+            snapshot = LocationSessionSnapshot()
+        }
     }
 
     var current: SessionLocation? { snapshot.current }
@@ -449,6 +455,7 @@ final class LocationSession: ObservableObject {
             } catch { failOwnership(error); return }
         } else { driver.stop() }
         snapshot = LocationSessionSnapshot()
+        needsReactivation = false
         if !requiresLease { store.save(snapshot) }
     }
 
@@ -471,6 +478,7 @@ final class LocationSession: ObservableObject {
             } catch { failOwnership(error); return }
         } else { driver.inject(location, reason: reason) }
         snapshot = delivered
+        needsReactivation = false
         lastKnown = snapshot.current
         if !requiresLease { store.save(snapshot) }
         do { try keeper?.ensureRunning() } catch { self.error = "Location keeper could not start. Open Settings for details." }
@@ -487,7 +495,8 @@ final class LocationSession: ObservableObject {
             let lost = leaseToken != nil && leaseToken != state.owner
             if lost { relinquish() }
             if leaseToken == nil {
-                snapshot = state.snapshot
+                needsReactivation = state.snapshot.isActive && state.bootIdentity != SystemBootIdentity.current
+                snapshot = needsReactivation ? LocationSessionSnapshot() : state.snapshot
                 lastKnown = state.snapshot.current ?? lastKnown
             }
             return lost

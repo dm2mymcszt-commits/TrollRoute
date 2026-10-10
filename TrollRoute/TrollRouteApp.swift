@@ -7,7 +7,7 @@
 
 import SwiftUI
 @main
-enum TrollRouteEntry {
+@MainActor enum TrollRouteEntry {
     static func main() {
         if KeeperRuntime.handleCommandLine() { return }
         TrollRouteApp.main()

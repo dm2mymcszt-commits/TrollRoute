@@ -56,6 +56,18 @@ final class CLSimulationManager {
         try keeper.stop(); try keeper.stop() // no keeper is a successful no-op for the controller
         print("PASS: revocation persists even when the external Stop fails; queued restore cannot resurrect it")
         print("PASS: exit/replacement full sequence, exact motion metadata, inactive authority and cancellation")
+        let log = KeeperLog(directory: dir)
+        for index in 0..<700 { try log.append(.restoreSent, newPID: 42, attempt: index) }
+        let journal = try log.read()
+        precondition(journal.events.count == 512)
+        let bytes = try Data(contentsOf: log.file.url)
+        precondition(bytes.count <= KeeperLog.maximumBytes)
+        let text = try log.text()
+        precondition(text.contains("restoreSent") && text.contains(". ") == false)
+        let raw = String(data: bytes, encoding: .utf8)!
+        for forbidden in ["latitude", "longitude", "coordinate", "address", "course", "speed"] { precondition(!raw.contains(forbidden)) }
+        precondition(journal.events.last!.line.range(of: #"\.\d{3}Z"#, options: .regularExpression) != nil)
+        print("PASS: bounded log, millisecond timestamps, only typed non-location fields")
         print("PASS: fake spawner starts once, stops, and starts a new keeper")
     }
 }

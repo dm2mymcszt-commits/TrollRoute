@@ -89,6 +89,7 @@ CDA700030000000000000065 /* RouteActivityAttributes.swift in Sources */ = {isa =
 		CDB320010000000000000300 /* KeeperNative.m in Extension Sources */ = {isa = PBXBuildFile; fileRef = CDB320010000000000000100; };
 		CDB320020000000000000200 /* Keeper.swift in Sources */ = {isa = PBXBuildFile; fileRef = CDB320020000000000000100; };
 		CDB320020000000000000300 /* Keeper.swift in Extension Sources */ = {isa = PBXBuildFile; fileRef = CDB320020000000000000100; };
+CDB320030000000000000200 /* KeeperUI.swift in Sources */ = {isa = PBXBuildFile; fileRef = CDB320030000000000000100; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -207,6 +208,7 @@ CDA700030000000000000001 /* RouteActivityAttributes.swift */ = {isa = PBXFileRef
 		BB110007000000070000BB07 /* FloatingQuickMenu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TrollRoute/LocSim/FloatingQuickMenu.swift"; sourceTree = SOURCE_ROOT; };
 		CDB320010000000000000100 /* KeeperNative.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "TrollRoute/Keeper/KeeperNative.m"; sourceTree = SOURCE_ROOT; };
 		CDB320020000000000000100 /* Keeper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TrollRoute/Keeper/Keeper.swift"; sourceTree = SOURCE_ROOT; };
+CDB320030000000000000100 /* KeeperUI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TrollRoute/Keeper/KeeperUI.swift"; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -331,7 +333,8 @@ CDA700030000000000000017 = {isa = PBXFrameworksBuildPhase; buildActionMask = 214
 				796072F12B4F5A7A00737B5D /* TrollRoute.entitlements */,
 				CDB320010000000000000100 /* KeeperNative.m */,
 				CDB320020000000000000100 /* Keeper.swift */,
-				CDA100010000000000000100 /* SharedPreferences.swift */,
+				CDB320030000000000000100 /* KeeperUI.swift */,
+CDA100010000000000000100 /* SharedPreferences.swift */,
                 CDA500020000000000000100 /* FavoritesStore.swift */,
 				CDA100010000000000000101 /* LegacyLocations.h */,
 				CDA100010000000000000102 /* LegacyLocations.m */,
@@ -609,7 +612,8 @@ CDA700030000000000000016 = {isa = PBXSourcesBuildPhase; buildActionMask = 214748
 				7989FD0A2B348A0200FBAB8D /* BookMarkHelper.swift in Sources */,
 				CDB320010000000000000200 /* KeeperNative.m in Sources */,
 				CDB320020000000000000200 /* Keeper.swift in Sources */,
-				CDA100010000000000000200 /* SharedPreferences.swift in Sources */,
+				CDB320030000000000000200 /* KeeperUI.swift in Sources */,
+CDA100010000000000000200 /* SharedPreferences.swift in Sources */,
                 CDA500020000000000000200 /* FavoritesStore.swift in Sources */,
 				CDA100010000000000000202 /* LegacyLocations.m in Sources */,
 				CDA100010000000000000203 /* LegacyMigration.swift in Sources */,
