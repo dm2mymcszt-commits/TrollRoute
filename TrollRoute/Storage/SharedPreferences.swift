@@ -68,8 +68,15 @@ struct SharedStateFile<Value: Codable> {
         guard descriptor >= 0 else { throw NSError(domain: NSPOSIXErrorDomain, code: Int(errno)) }
         defer { close(descriptor) }
         try SharedFileAccess.repair(url.appendingPathExtension("lock"))
-        while flock(descriptor, LOCK_EX) != 0 {
-            guard errno == EINTR else { throw NSError(domain: NSPOSIXErrorDomain, code: Int(errno)) }
+        let deadline = ProcessInfo.processInfo.systemUptime + 3
+        while flock(descriptor, LOCK_EX | LOCK_NB) != 0 {
+            guard errno == EINTR || errno == EWOULDBLOCK else {
+                throw NSError(domain: NSPOSIXErrorDomain, code: Int(errno))
+            }
+            guard ProcessInfo.processInfo.systemUptime < deadline else {
+                throw NSError(domain: NSPOSIXErrorDomain, code: Int(ETIMEDOUT))
+            }
+            usleep(10_000)
         }
         defer { flock(descriptor, LOCK_UN) }
         return try operation()

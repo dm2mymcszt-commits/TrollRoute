@@ -153,8 +153,25 @@ enum KeeperRuntime {
         }
         guard args[1] == "--keeper", geteuid() == 0 else { exit(77) }
         do {
+            // Serialize privileged start/stop controllers, independently of the keeper.
+            let control = open(KeeperFiles.directory(container).appendingPathComponent("keeper.control.lock").path,
+                               O_CREAT | O_RDWR | O_CLOEXEC | O_NOFOLLOW, 0o600)
+            guard control >= 0 else { throw KeeperFiles.failure(errno) }
+            defer { close(control) }
+            if args[2] != "run" {
+                let deadline = ProcessInfo.processInfo.systemUptime + 2
+                while flock(control, LOCK_EX | LOCK_NB) != 0 {
+                    guard errno == EWOULDBLOCK || errno == EINTR,
+                          ProcessInfo.processInfo.systemUptime < deadline else { throw KeeperFiles.failure(ETIMEDOUT) }
+                    usleep(25000)
+                }
+            }
             switch args[2] {
             case "start":
+                let lease = LocationLeaseStore(url: KeeperFiles.directory(container).appendingPathComponent("authority.v1.json"))
+                let state = try lease.read()
+                guard state.owner != nil, state.snapshot.isActive,
+                      state.bootIdentity == SystemBootIdentity.current, state.bootIdentity != "unknown" else { return true }
                 if KeeperFiles.locked(container), let old = KeeperFiles.read(container),
                    old.build == KeeperFiles.build, old.executable == KeeperFiles.executable,
                    old.boot == SystemBootIdentity.current { return true }

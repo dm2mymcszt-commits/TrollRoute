@@ -152,6 +152,7 @@ struct LocationLeaseStore {
             // Revoke before the external effect. Even if the driver or final
             // write fails, callbacks holding this token are no longer authorized.
             state.owner = nil
+            state.snapshot = LocationSessionSnapshot()
             try persist(state)
             try driverStop()
             state.snapshot = LocationSessionSnapshot()
@@ -426,6 +427,15 @@ final class LocationSession: ObservableObject {
     }
 
     func stop(newIntent: Bool = true) {
+        if !newIntent && !authorized() { return }
+        // Kill the helper before waiting on its authority lock, even if its API call hung.
+        // A second termination after revocation closes concurrent-start races.
+        var keeperFailure: Error?
+        do { try keeper?.stop() } catch { keeperFailure = error }
+        defer {
+            do { try keeper?.stop(); keeperFailure = nil } catch { keeperFailure = error }
+            if keeperFailure != nil { error = "The location keeper could not be stopped. Open Settings and try Stop again." }
+        }
         if newIntent { guard claimForUserAction() else { return } }
         inputSample = nil
         firstRouteSample = false

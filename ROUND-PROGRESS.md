@@ -10,3 +10,6 @@ UI-free relay/root modes, kernel singleton lock, app-update replacement, uninsta
 
 ## Item 2 ? implemented
 Keeper watches the service with a process-exit dispatch source. Discovery/recovery retries at 0, 0.15, 0.5, 1, 2, 4 and 8 seconds; idle PID safety check is 30 seconds and never injects while unchanged. Every attempt creates a new manager and reads the full sample under the authority lock. The app/share adapter checks service incarnation before each injection. Added fake watcher/scheduler, inactive session, metadata and restart regressions.
+
+## Item 3 ? implemented
+All existing Stop paths converge on LocationSession.stop. It terminates independently before acquiring authority (including a stuck keeper), revokes and clears the snapshot before the external Stop, and terminates/verifies again afterward to close concurrent-start races. Root start/stop controllers serialize with a separate kernel lock; identity and executable are checked before signaling, TERM escalates to KILL, failures surface as an app error. Authority waits are bounded. Holding at arrival does not invoke Stop. Added durable revocation failure/race regression.

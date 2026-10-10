@@ -43,6 +43,18 @@ final class CLSimulationManager {
         _ = try lease.stop(token, driverStop: {})
         scheduled.forEach { $0() }; precondition(restores == 1)
         recovery.stop(); recovery.processExited(); precondition(restores == 1)
+        // A callback already queued when Stop begins must recheck persisted authority.
+        let owner = UUID(); _ = try lease.claim(owner)
+        try lease.perform(owner) { $0 = .init(kind: .stationary, current: SessionLocation(point)) }
+        enum StopFailure: Error { case failed }
+        do { _ = try lease.stop(owner) { throw StopFailure.failed }; preconditionFailure() }
+        catch StopFailure.failed {}
+        let afterFailedEffect = try lease.read()
+        precondition(afterFailedEffect.owner == nil && !afterFailedEffect.snapshot.isActive)
+        let restoredAfterStop = try lease.restoreCurrent { _ in preconditionFailure("Restore won after Stop") }
+        precondition(!restoredAfterStop)
+        try keeper.stop(); try keeper.stop() // no keeper is a successful no-op for the controller
+        print("PASS: revocation persists even when the external Stop fails; queued restore cannot resurrect it")
         print("PASS: exit/replacement full sequence, exact motion metadata, inactive authority and cancellation")
         print("PASS: fake spawner starts once, stops, and starts a new keeper")
     }
