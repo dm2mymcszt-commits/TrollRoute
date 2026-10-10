@@ -34,6 +34,7 @@ struct SettingsView: View {
                     Label("Notifications and Live Activity", systemImage: "bell")
                 }
                 NavigationLink { Form { LocationAccessOverview() }.navigationTitle("Access") } label: { Label("Access", systemImage: "location.circle") }
+                NavigationLink { Form { KeeperDiagnosticsSection(model: KeeperStatusModel.shared) }.navigationTitle("Diagnostics") } label: { Label("Diagnostics", systemImage: "waveform.path.ecg") }
                 NavigationLink { Form { aboutOptions }.navigationTitle("About") } label: { Label("About", systemImage: "info.circle") }
             }
             .navigationTitle("Settings")

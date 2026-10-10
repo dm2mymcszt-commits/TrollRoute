@@ -20,7 +20,9 @@ struct KeeperDisplay {
     @Published var notifications = true
     @Published var diagnosticRunning = false
     @Published var diagnosticResult = "No diagnostic test has run."
-    var diagnosticSamples: [(received: Date, uptime: TimeInterval, simulated: Bool?, matches: Bool)] = []
+    var diagnosticSamples: [KeeperDiagnosticSample] = []
+    private var diagnosticStart = 0.0
+    private var diagnosticWork: DispatchWorkItem?
     private var manager: CLLocationManager?
     private var observation: AnyCancellable?
     private var statusObservation: AnyCancellable?
@@ -105,7 +107,7 @@ struct KeeperDisplay {
             let tolerance = max(15, min(100, location.horizontalAccuracy))
             let matches = location.horizontalAccuracy >= 0 && candidates.contains { location.distance(from: $0) <= tolerance }
             if diagnosticRunning {
-                diagnosticSamples.append((Date(), ProcessInfo.processInfo.systemUptime, flag, matches))
+                diagnosticSamples.append(KeeperDiagnosticSample(received: Date(), uptime: ProcessInfo.processInfo.systemUptime, timestamp: location.timestamp, simulated: flag, matches: matches))
                 continue
             }
             // Ignore delayed cached updates in health monitoring, but retain ALL in diagnostics.
@@ -152,8 +154,42 @@ struct KeeperDisplay {
         refresh()
         #endif
     }
-    func beginDiagnostic() { /* Implemented by the explicit diagnostic action. */ }
-    func finishDiagnostic(interrupted: Bool = false) { diagnosticRunning = false }
+    func beginDiagnostic() {
+        #if TROLLROUTE_APP
+        guard !diagnosticRunning, LocSimManager.session.isActive,
+              let container = KeeperFiles.container else { diagnosticResult = "Set a simulated location before running the test."; return }
+        do { try KeeperClient.shared.ensureRunning() } catch { diagnosticResult = "The keeper is not available. No restart was requested."; return }
+        guard let manager = manager,
+              manager.authorizationStatus == .authorizedWhenInUse || manager.authorizationStatus == .authorizedAlways else {
+            diagnosticResult = "Location access is required to measure delivery. No restart was requested."; return
+        }
+        diagnosticSamples = []; diagnosticStart = ProcessInfo.processInfo.systemUptime
+        diagnosticRunning = true; diagnosticResult = "Measuring for 15 seconds. Keep TrollRoute in the foreground."
+        manager.startUpdatingLocation()
+        let work = DispatchWorkItem { [weak self] in self?.finishDiagnostic() }
+        diagnosticWork = work; DispatchQueue.main.asyncAfter(deadline: .now() + 15, execute: work)
+        // Do not block delivery callbacks while the privileged relay starts.
+        DispatchQueue.global(qos: .userInitiated).async {
+            let rc = TRSpawn(KeeperFiles.executable, ["--keeper-relay", "diagnose", container.path], false, true)
+            if rc != 0 { DispatchQueue.main.async { [weak self] in
+                self?.finishDiagnostic(interrupted: true)
+                self?.diagnosticResult += "\nRestart command failed (error \(rc))."
+            } }
+        }
+        #endif
+    }
+    func finishDiagnostic(interrupted: Bool = false) {
+        guard diagnosticRunning else { return }
+        diagnosticRunning = false; diagnosticWork?.cancel(); diagnosticWork = nil
+        #if TROLLROUTE_APP
+        let end = ProcessInfo.processInfo.systemUptime
+        let events = KeeperFiles.container.flatMap { try? KeeperLog(directory: KeeperFiles.directory($0)).read().events } ?? []
+        diagnosticResult = KeeperDiagnosticReport.render(start: diagnosticStart, end: end,
+            samples: diagnosticSamples, events: events.filter { $0.uptime >= diagnosticStart && $0.uptime <= end },
+            markerVerified: markerVerified, interrupted: interrupted)
+        refresh()
+        #endif
+    }
 }
 
 struct KeeperSettingsSection: View {
@@ -205,5 +241,25 @@ struct KeeperSettingsPreviews: PreviewProvider {
             Form { KeeperSettingsSection(model: KeeperStatusModel(preview: .init(running: true, started: Date(), restarts: 2,
                 lastRestart: Date(), detail: "Watching for location service restarts."))) }.previewDisplayName("Keeper running")
         }
+    }
+}
+
+struct KeeperDiagnosticsSection: View {
+    @ObservedObject var model: KeeperStatusModel
+    @State private var confirm = false
+    @State private var share = false
+    var body: some View {
+        Section("Deliberate restart test") {
+            Text("This test restarts the location service once. Your real position may be visible. First set the simulated location at your real position. Keep this app open during the test.")
+            Button(model.diagnosticRunning ? "Measuring..." : "Restart service and measure", role: .destructive) { confirm = true }
+                .disabled(model.diagnosticRunning)
+            Text(model.diagnosticResult).font(.system(.caption, design: .monospaced)).textSelection(.enabled)
+            Button("Share test result") { share = true }.disabled(model.diagnosticRunning)
+        }
+        .alert("Your real position may be revealed", isPresented: $confirm) {
+            Button("Cancel", role: .cancel) {}
+            Button("Restart once and measure", role: .destructive) { model.beginDiagnostic() }
+        } message: { Text("Set your simulated position at your real position first. This test cannot guarantee privacy. Continue only when you are ready to measure.") }
+        .sheet(isPresented: $share) { KeeperShareText(text: model.diagnosticResult) }
     }
 }

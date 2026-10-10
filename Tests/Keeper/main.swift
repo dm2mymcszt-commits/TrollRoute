@@ -68,6 +68,14 @@ final class CLSimulationManager {
         for forbidden in ["latitude", "longitude", "coordinate", "address", "course", "speed"] { precondition(!raw.contains(forbidden)) }
         precondition(journal.events.last!.line.range(of: #"\.\d{3}Z"#, options: .regularExpression) != nil)
         print("PASS: bounded log, millisecond timestamps, only typed non-location fields")
+        let report = KeeperDiagnosticReport.render(start: 0, end: 10, samples: [
+            .init(received: Date(), uptime: 2, timestamp: Date(), simulated: false, matches: false),
+            .init(received: Date(), uptime: 2.375, timestamp: Date(), simulated: true, matches: true)],
+            events: [], markerVerified: true, interrupted: false)
+        precondition(report.contains("0.375 seconds") && report.contains("not a bound"))
+        let unknown = KeeperDiagnosticReport.render(start: 0, end: 10, samples: [], events: [], markerVerified: false, interrupted: true)
+        precondition(unknown.contains("INCOMPLETE") && unknown.contains("cannot reliably"))
+        print("PASS: diagnostic measures received intervals and labels unknown/interrupted observations")
         print("PASS: fake spawner starts once, stops, and starts a new keeper")
     }
 }

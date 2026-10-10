@@ -92,6 +92,49 @@ struct KeeperLog {
 }
 struct KeeperPreferences: Codable { var notifications = true }
 
+struct KeeperDiagnosticSample {
+    var received: Date
+    var uptime: TimeInterval
+    var timestamp: Date
+    var simulated: Bool?
+    var matches: Bool
+}
+enum KeeperDiagnosticReport {
+    static func render(start: TimeInterval, end: TimeInterval, samples: [KeeperDiagnosticSample],
+                       events: [KeeperEvent], markerVerified: Bool, interrupted: Bool) -> String {
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        var lines = ["Location restart diagnostic", String(format: "Observation: %.3f seconds", max(0, end - start))]
+        if interrupted { lines.append("INCOMPLETE: the app left the foreground or the command failed.") }
+        let restarted = events.contains { $0.kind == .serviceReplaced }
+        if !restarted { lines.append("No service replacement was recorded. This test cannot establish recovery timing.") }
+        let calibrated = markerVerified || samples.contains { $0.simulated == true }
+        if !calibrated {
+            lines.append("The software-simulation marker was not verified. Real and simulated deliveries cannot reliably be distinguished; matching coordinates alone do not prove simulation.")
+        } else if let first = samples.firstIndex(where: { $0.simulated == false }) {
+            let next = samples.dropFirst(first + 1).first { $0.simulated == true }
+            let duration = max(0, (next?.uptime ?? end) - samples[first].uptime)
+            lines.append(String(format: "Non-simulated delivery observed. First observed interval: %@%.3f seconds.", next == nil ? "at least " : "", duration))
+            lines.append("This is the interval between received updates, not a bound on what other apps received.")
+        } else if samples.isEmpty {
+            lines.append("No locations were delivered to this app. Result is inconclusive.")
+        } else if samples.contains(where: { $0.simulated == nil }) {
+            lines.append("Some locations have no source marker. Exposure cannot be excluded.")
+        } else {
+            lines.append("No non-simulated update was observed by this app. This does not prove zero exposure in other apps or between updates.")
+        }
+        lines.append("\nKeeper timeline:")
+        lines += events.map(\.line)
+        lines.append("\nEvery location received (no coordinates):")
+        lines += samples.map {
+            let flag = $0.simulated.map { $0 ? "software-simulated" : "not-software-simulated" } ?? "marker-unavailable"
+            return "\(formatter.string(from: $0.received)) sample=\(formatter.string(from: $0.timestamp)) \(flag) matches-request=\($0.matches)"
+        }
+        lines.append("A successful API call is a restoration request, not an acknowledgement from locationd.")
+        return lines.joined(separator: "\n")
+    }
+}
+
 #if os(iOS)
 import Darwin
 import UserNotifications
@@ -237,6 +280,15 @@ enum KeeperRuntime {
                 }
                 throw KeeperFiles.failure(ETIMEDOUT)
             case "stop": try terminate(container)
+            case "diagnose":
+                guard KeeperFiles.locked(container), let record = KeeperFiles.read(container),
+                      record.boot == SystemBootIdentity.current,
+                      TRProcessIdentity(record.pid) == record.identity,
+                      TRProcessPath(record.pid) == record.executable else { throw KeeperFiles.failure(ESRCH) }
+                let request = KeeperDiagnosticRequest(id: UUID(), requested: Date(), boot: SystemBootIdentity.current)
+                let file = SharedStateFile<KeeperDiagnosticRequest?>(url: KeeperFiles.directory(container).appendingPathComponent("keeper-diagnostic.json"), initial: { nil })
+                try file.update { $0 = request }
+                guard kill(record.pid, SIGUSR1) == 0 else { throw KeeperFiles.failure(errno) }
             case "run": try run(container)
             default: exit(64)
             }
@@ -277,6 +329,8 @@ enum KeeperRuntime {
         let state = try lease.read()
         guard state.owner != nil, state.snapshot.isActive,
               state.bootIdentity == SystemBootIdentity.current, state.bootIdentity != "unknown" else { close(fd); return }
+        let diagnostic = KeeperDiagnosticListener(lease: lease, directory: KeeperFiles.directory(container))
+        diagnostic.start()
         let protection = TRProtectKeeper()
         let record = KeeperRecord(pid: getpid(), identity: TRProcessIdentity(getpid()),
             executable: KeeperFiles.executable, build: KeeperFiles.build,
@@ -299,7 +353,7 @@ enum KeeperRuntime {
             watcher.check()
         }
         timer.resume()
-        withExtendedLifetime((timer, watcher)) { dispatchMain() }
+        withExtendedLifetime((timer, watcher, diagnostic)) { dispatchMain() }
     }
 }
 
@@ -365,6 +419,44 @@ final class KeeperProcessWatcher {
         }
         source = next; next.resume()
         if TRProcessIdentity(pid) != identity { recovery.check() }
+    }
+}
+
+struct KeeperDiagnosticRequest: Codable {
+    let id: UUID
+    let requested: Date
+    let boot: String
+}
+final class KeeperDiagnosticListener {
+    private var source: DispatchSourceSignal?
+    private let lease: LocationLeaseStore
+    private let directory: URL
+    init(lease: LocationLeaseStore, directory: URL) { self.lease = lease; self.directory = directory }
+    func start() {
+        signal(SIGUSR1, SIG_IGN)
+        let signalSource = DispatchSource.makeSignalSource(signal: SIGUSR1, queue: .main)
+        signalSource.setEventHandler { [weak self] in self?.perform() }
+        source = signalSource; signalSource.resume()
+    }
+    private func perform() {
+        let log = KeeperLog(directory: directory)
+        do {
+            let file = SharedStateFile<KeeperDiagnosticRequest?>(url: directory.appendingPathComponent("keeper-diagnostic.json"), initial: { nil })
+            let request = try file.update { value -> KeeperDiagnosticRequest? in
+                let request = value; value = nil; return request
+            }
+            // A one-shot request is consumed BEFORE the signal. No startup replay.
+            guard let request = request, request.boot == SystemBootIdentity.current,
+                  abs(request.requested.timeIntervalSinceNow) < 15 else { return }
+            try lease.file.transaction { state, _ in
+                guard state.owner != nil, state.snapshot.isActive,
+                      state.bootIdentity == SystemBootIdentity.current else { throw KeeperFiles.failure(ECANCELED) }
+                let pid = TRLocationPID()
+                guard pid > 1, TRProcessPath(pid) == "/usr/libexec/locationd" else { throw KeeperFiles.failure(ESRCH) }
+                try log.append(.diagnosticRequested, oldPID: pid)
+                guard kill(pid, SIGTERM) == 0 else { throw KeeperFiles.failure(errno) }
+            }
+        } catch { try? log.append(.diagnosticError, errorCode: (error as NSError).code) }
     }
 }
 #endif

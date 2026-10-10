@@ -16,6 +16,12 @@ for removed in ['HomeView.swift', 'DaemonView.swift', 'CleanerView.swift', 'Supe
     assert removed not in project, f'{removed} remains in the build'
 print('PASS: full-screen map entry and unused feature sources removed from the build')
 PY
+python3 - "$QA_DIR/KeeperModels.swift" <<'PYMODELS'
+from pathlib import Path
+import sys
+source = Path('TrollRoute/Keeper/Keeper.swift').read_text()
+Path(sys.argv[1]).write_text(source.split('#if os(iOS)')[0])
+PYMODELS
 python3 Tests/MapWorkspace/prepare.py "$QA_DIR"
 PREVIEW_APP="$QA_DIR/MapWorkspacePreview.app"
 mkdir -p "$PREVIEW_APP"
@@ -23,7 +29,7 @@ python3 Tests/RoutePicker/bookmark-support.py "$QA_DIR/Bookmarks.swift"
 xcrun --sdk iphonesimulator swiftc TrollRoute/Storage/SharedPreferences.swift TrollRoute/Storage/FavoritesStore.swift -target arm64-apple-ios17.0-simulator \
   -sdk "$(xcrun --sdk iphonesimulator --show-sdk-path)" \
   "$QA_DIR/CustomMapView.swift" TrollRoute/LocSim/FloatingQuickMenu.swift \
-  TrollRoute/LocSim/RouteLocationPicker.swift TrollRoute/LocSim/FavoritePlaceEditor.swift TrollRoute/LocSim/PlaceModels.swift TrollRoute/LocSim/PlaceInput.swift TrollRoute/LocSim/AddressQuery.swift TrollRoute/LocSim/PlaceSearch.swift TrollRoute/LiveActivity/RouteActivityAttributes.swift TrollRoute/LiveActivity/RouteActivityController.swift TrollRoute/LiveActivity/RouteActivityState.swift TrollRoute/Keeper/KeeperUI.swift TrollRoute/SettingsView.swift TrollRoute/LocSim/Flight.swift TrollRoute/LocSim/RouteHistory.swift TrollRoute/LocSim/RouteHistoryView.swift TrollRoute/LocationAccess.swift \
+  TrollRoute/LocSim/RouteLocationPicker.swift TrollRoute/LocSim/FavoritePlaceEditor.swift TrollRoute/LocSim/PlaceModels.swift TrollRoute/LocSim/PlaceInput.swift TrollRoute/LocSim/AddressQuery.swift TrollRoute/LocSim/PlaceSearch.swift TrollRoute/LiveActivity/RouteActivityAttributes.swift TrollRoute/LiveActivity/RouteActivityController.swift TrollRoute/LiveActivity/RouteActivityState.swift "$QA_DIR/KeeperModels.swift" TrollRoute/Keeper/KeeperUI.swift TrollRoute/SettingsView.swift TrollRoute/LocSim/Flight.swift TrollRoute/LocSim/RouteHistory.swift TrollRoute/LocSim/RouteHistoryView.swift TrollRoute/LocationAccess.swift \
   TrollRoute/LocSim/MapMoveConfirmation.swift TrollRoute/LocSim/MainStopConfirmation.swift "$QA_DIR/LongPressRoute.swift" \
   TrollRoute/LocSim/RouteElevation.swift TrollRoute/LocSim/Altitude.swift TrollRoute/LocSim/AltitudeSheet.swift \
   TrollRoute/LocSim/CoordTransform.swift TrollRoute/LocSim/RouteFinish.swift TrollRoute/LocSim/RouteStop.swift TrollRoute/LocSim/LocationSession.swift "$QA_DIR/Bookmarks.swift" \
