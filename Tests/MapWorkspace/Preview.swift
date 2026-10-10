@@ -14,6 +14,7 @@ struct WorkspacePreview: View {
         center: CLLocationCoordinate2D(latitude: 44.8378, longitude: -0.5792),
         span: MKCoordinateSpan(latitudeDelta: 0.07, longitudeDelta: 0.07))
     @State private var showSettings = false
+    @StateObject private var keeperStatus = KeeperStatusModel(preview: KeeperDisplay(running: true))
     @State private var showSearch = false
     @State private var showAltitude = false
     @StateObject private var altitude = AltitudeController(currentLocation: { nil }, deliver: { _ in })
@@ -60,6 +61,11 @@ struct WorkspacePreview: View {
             if action == .stop { mainStop.request(confirm: confirmStop, routeRunning: routeActive) { routeActive = false } }
         }, joystickActive: false, routeActive: routeActive))
         .frame(maxHeight: .infinity, alignment: .top)
+        .safeAreaInset(edge: .bottom) {
+            if screen.hasPrefix("status-") {
+                KeeperMapStatus(model: keeperStatus) { showSettings = true }
+            }
+        }
         .overlay(alignment: .topLeading) {
             if screen.hasPrefix("gestures") {
                 VStack(alignment: .leading) {
@@ -95,6 +101,11 @@ struct WorkspacePreview: View {
                 recents: places, initialQuery: screen == "favorites" ? "44.817059, -0.585746" : "125 Cr Gambetta, 33400 Talence", select: { _ in })
         }
         .task {
+            if screen == "status-confirmed" { keeperStatus.deliveryState = .confirmed }
+            if screen == "status-warning" { keeperStatus.display.running = false }
+            if screen == "status-waiting" {
+                keeperStatus.locationManager(CLLocationManager(), didFailWithError: NSError(domain: kCLErrorDomain, code: CLError.locationUnknown.rawValue))
+            }
             AltitudeSettings.shared.reset()
             if screen == "altitude-custom" { AltitudeSettings.shared.setCustom(250) }
             if screen == "altitude-negative" { AltitudeSettings.shared.setCustom(-12.5) }

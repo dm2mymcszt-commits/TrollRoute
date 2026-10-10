@@ -195,12 +195,13 @@ final class KeeperClient: LocationKeeperLifecycle {
     static let shared = KeeperClient()
     private var lastCheck: TimeInterval = -.infinity
     private var lastSuccess = false
-    func ensureRunning() throws {
+    func ensureRunning() throws { try ensureRunning(forceCheck: false) }
+    func ensureRunning(forceCheck: Bool) throws {
         #if targetEnvironment(simulator)
         return
         #else
         let now = ProcessInfo.processInfo.systemUptime
-        if lastSuccess && now - lastCheck < 30 { return }
+        if !forceCheck && lastSuccess && now - lastCheck < 30 { return }
         lastCheck = now; lastSuccess = false
         guard let container = KeeperFiles.container else { throw KeeperFiles.failure(ENOENT) }
         if KeeperFiles.locked(container), let record = KeeperFiles.read(container),

@@ -22,6 +22,41 @@ final class MapGestureTests: XCTestCase {
         app.launch()
     }
 
+    func testKeeperCheckGivesFeedbackAndRunningStartIsDisabled() {
+        let app = XCUIApplication(bundleIdentifier: "local.trollroute.workspacepreview")
+        for running in [true, false] {
+            app.launchArguments = ["--screen", running ? "keeper-running" : "keeper-stopped"]
+            startProcess(app)
+            let check = app.buttons["Check keeper"]
+            XCTAssertTrue(check.waitForExistence(timeout: 15))
+            let start = app.buttons[running ? "Keeper is already running" : "Start keeper for active location"]
+            XCTAssertTrue(start.exists)
+            XCTAssertEqual(start.isEnabled, !running)
+            for _ in 0..<2 {
+                check.tap()
+                let alert = app.alerts["Location keeper"]
+                XCTAssertTrue(alert.waitForExistence(timeout: 5))
+                XCTAssertTrue(alert.staticTexts[running
+                    ? "The keeper is running. It is watching for location service restarts."
+                    : "Location keeper is not running."].exists)
+                capture(app, running ? "keeper-check-running" : "keeper-check-stopped")
+                alert.buttons["OK"].tap()
+            }
+            stopProcess(app)
+        }
+    }
+
+    func testTransientLocationErrorWaitsWithoutClaimingVerification() {
+        let app = XCUIApplication(bundleIdentifier: "local.trollroute.workspacepreview")
+        app.launchArguments = ["--screen", "status-waiting"]
+        startProcess(app)
+        XCTAssertTrue(app.buttons.containing(.staticText, identifier: "Waiting for system location").firstMatch.waitForExistence(timeout: 15))
+        XCTAssertFalse(app.staticTexts["Simulated location verified"].exists)
+        XCTAssertFalse(app.staticTexts["Location protection unavailable"].exists)
+        capture(app, "keeper-transient-location-wait")
+        stopProcess(app)
+    }
+
     func testSettingsGroupsRetainEveryControl() {
         let app = XCUIApplication(bundleIdentifier: "local.trollroute.workspacepreview")
         app.launchArguments = ["--screen", "settings-enabled"]

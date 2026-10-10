@@ -11,9 +11,16 @@ struct KeeperDisplay {
     var detail = "Location keeper is not running."
 }
 
+enum KeeperDeliveryState {
+    case checking, confirmed, matching, recovering, unavailable
+}
+
 @MainActor final class KeeperStatusModel: NSObject, ObservableObject, CLLocationManagerDelegate {
     static let shared = KeeperStatusModel()
     @Published var display = KeeperDisplay()
+    @Published var checkedAt: Date?
+    @Published var actionFeedback: String?
+    @Published var deliveryState = KeeperDeliveryState.checking
     @Published var delivery = "System delivery has not been verified."
     @Published var notice: String?
     @Published var logText = "No keeper events recorded."
@@ -33,12 +40,30 @@ struct KeeperDisplay {
     private var lost = false
     private var preview = false
     override init() { super.init() }
-    init(preview: KeeperDisplay) { super.init(); self.preview = true; display = preview }
+    init(preview: KeeperDisplay) { super.init(); self.preview = true; display = preview; checkedAt = Date() }
+
+    var mapTitle: String {
+        if checkedAt == nil { return "Checking protection" }
+        if !display.running { return "Location protection unavailable" }
+        switch deliveryState {
+        case .checking: return "Waiting for system location"
+        case .confirmed: return notice == nil ? "Simulated location verified" : "Simulation restored"
+        case .matching: return "Position matches; simulation unverified"
+        case .recovering: return "Restoring simulation"
+        case .unavailable: return "Location check unavailable"
+        }
+    }
+    var needsAttention: Bool {
+        (checkedAt != nil && !display.running) || deliveryState == .recovering || deliveryState == .unavailable || notice != nil
+    }
 
     func refresh() {
         guard !preview else { return }
         #if TROLLROUTE_KEEPER_UI
-        guard let container = KeeperFiles.container else { display.detail = "Shared location storage is unavailable."; return }
+        defer { checkedAt = Date() }
+        guard let container = KeeperFiles.container else {
+            display = KeeperDisplay(detail: "Shared location storage is unavailable."); return
+        }
         let record = KeeperFiles.read(container)
         display.running = KeeperFiles.locked(container) && record?.error == 0
         display.started = display.running ? record?.started : nil
@@ -51,6 +76,11 @@ struct KeeperDisplay {
         }
         notifications = (try? preferences(container).read().notifications) ?? true
         #endif
+    }
+    func checkProtection() {
+        refresh()
+        checkedAt = Date()
+        actionFeedback = display.running ? "The keeper is running. It is watching for location service restarts." : display.detail
     }
     func setNotifications(_ enabled: Bool) {
         notifications = enabled
@@ -73,6 +103,8 @@ struct KeeperDisplay {
             return
         }
         LocSimManager.session.refreshShared()
+        deliveryState = .checking
+        delivery = "Waiting for a fresh system location."
         KeeperClient.shared.resumeIfCurrentBoot()
         refresh()
         if manager == nil {
@@ -96,7 +128,16 @@ struct KeeperDisplay {
         #endif
     }
     func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
-        delivery = "System location could not be checked (error \((error as NSError).code))."
+        let error = error as NSError
+        // locationUnknown is transient: Core Location keeps trying without a restart.
+        if error.domain == kCLErrorDomain && error.code == CLError.locationUnknown.rawValue {
+            if !lost { deliveryState = .checking; delivery = "Waiting for a fresh system location." }
+            return
+        }
+        deliveryState = .unavailable
+        delivery = error.domain == kCLErrorDomain && error.code == CLError.denied.rawValue
+            ? "Location access is unavailable. Check Location Services and the app's location permission."
+            : "System location could not be checked (error \(error.code))."
     }
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
         #if TROLLROUTE_KEEPER_UI
@@ -117,6 +158,7 @@ struct KeeperDisplay {
             let confirmed = flag == true && matches
             let mismatch = !matches || (markerVerified && flag == false)
             if mismatch {
+                deliveryState = .recovering
                 delivery = "System position does not match the simulation. Restoration requested."
                 if !lost {
                     lost = true
@@ -128,6 +170,7 @@ struct KeeperDisplay {
                     } catch { delivery = "Simulation was lost and restoration failed. Try setting your location again." }
                 }
             } else {
+                deliveryState = confirmed ? .confirmed : .matching
                 if lost && confirmed { notice = "Location simulation was lost and is now confirmed restored." }
                 delivery = confirmed ? (lost ? "Simulation was lost and is now confirmed restored." : "System reports a simulated location.") :
                     "System position matches the request; its simulation marker is unverified."
@@ -137,8 +180,16 @@ struct KeeperDisplay {
         #endif
     }
     func restartProtection() {
+        refresh()
+        if display.running { actionFeedback = "The keeper is already running. No second keeper was started."; return }
         #if TROLLROUTE_KEEPER_UI
-        do { try KeeperClient.shared.ensureRunning() } catch { delivery = "Location keeper could not start (error \((error as NSError).code))." }
+        LocSimManager.session.refreshShared()
+        guard LocSimManager.session.isActive else { actionFeedback = "Set a simulated location before starting the keeper."; return }
+        do {
+            try KeeperClient.shared.ensureRunning(forceCheck: true)
+            refresh()
+            actionFeedback = display.running ? "The keeper has started." : display.detail
+        } catch { actionFeedback = "Location keeper could not start (error \((error as NSError).code))." }
         refresh()
         #endif
     }
@@ -199,20 +250,49 @@ struct KeeperSettingsSection: View {
     @State private var showingLog = false
     var body: some View {
         Section("Location keeper") {
-            HStack { Text("Keeper"); Spacer(); Text(model.display.running ? "Running" : "Stopped").foregroundColor(.secondary) }
+            HStack { Text("Keeper"); Spacer(); Text(model.checkedAt == nil ? "Checking..." : (model.display.running ? "Running" : "Stopped")).foregroundColor(.secondary) }
             if let started = model.display.started { HStack { Text("Running since"); Spacer(); Text(started, style: .date); Text(started, style: .time) } }
             Text(model.display.detail).font(.caption)
             HStack { Text("Service restarts detected"); Spacer(); Text("\(model.display.restarts)") }
             if let date = model.display.lastRestart { HStack { Text("Last restart"); Spacer(); Text(date, style: .date); Text(date, style: .time) } }
             Text(model.delivery).font(.caption)
+            if let notice = model.notice {
+                Text(notice).font(.caption).foregroundColor(.orange)
+                Button("Dismiss notice") { model.notice = nil }
+            }
             Toggle("Notify when location service restarts", isOn: Binding(get: { model.notifications }, set: { model.setNotifications($0) }))
-            Button("Check keeper") { model.refresh() }
-            Button("Start keeper for active location") { model.restartProtection() }
+            Button("Check keeper") { model.checkProtection() }
+            if let checked = model.checkedAt { HStack { Text("Last checked"); Spacer(); Text(checked, style: .time) }.font(.caption).foregroundColor(.secondary) }
+            Button(model.display.running ? "Keeper is already running" : "Start keeper for active location") { model.restartProtection() }
+                .disabled(model.display.running)
             Button("Stop simulation and keeper", role: .destructive) { model.stop() }
             Button("View and share log") { model.refresh(); showingLog = true }
         }
         .onAppear { model.refresh() }
         .sheet(isPresented: $showingLog) { KeeperLogView(text: model.logText) }
+        .alert("Location keeper", isPresented: Binding(get: { model.actionFeedback != nil }, set: { if !$0 { model.actionFeedback = nil } })) {
+            Button("OK", role: .cancel) { model.actionFeedback = nil }
+        } message: { Text(model.actionFeedback ?? "") }
+    }
+}
+
+struct KeeperMapStatus: View {
+    @ObservedObject var model: KeeperStatusModel
+    var openSettings: () -> Void
+    var body: some View {
+        Button(action: openSettings) {
+            HStack(spacing: 8) {
+                Image(systemName: model.needsAttention ? "exclamationmark.shield" : "location")
+                    .foregroundColor(model.needsAttention ? .orange : .secondary)
+                Text(model.mapTitle).font(.caption).fontWeight(.medium)
+                Image(systemName: "chevron.right").font(.caption2).foregroundColor(.secondary)
+            }
+            .padding(.horizontal, 14).padding(.vertical, 10)
+            .background(.regularMaterial, in: Capsule())
+        }
+        .buttonStyle(.plain)
+        .accessibilityHint("Open Settings for location delivery and keeper details")
+        .padding(.horizontal, 16).padding(.bottom, 32)
     }
 }
 private struct KeeperLogView: View {
