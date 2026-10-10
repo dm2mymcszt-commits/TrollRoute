@@ -85,6 +85,10 @@ CDA700030000000000000065 /* RouteActivityAttributes.swift in Sources */ = {isa =
 		BB110002000000020000AA02 /* JoystickView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB110002000000020000BB02 /* JoystickView.swift */; };
 		BB110004000000040000AA04 /* GPXParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB110004000000040000BB04 /* GPXParser.swift */; };
 		BB110007000000070000AA07 /* FloatingQuickMenu.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB110007000000070000BB07 /* FloatingQuickMenu.swift */; };
+		CDB320010000000000000200 /* KeeperNative.m in Sources */ = {isa = PBXBuildFile; fileRef = CDB320010000000000000100; };
+		CDB320010000000000000300 /* KeeperNative.m in Extension Sources */ = {isa = PBXBuildFile; fileRef = CDB320010000000000000100; };
+		CDB320020000000000000200 /* Keeper.swift in Sources */ = {isa = PBXBuildFile; fileRef = CDB320020000000000000100; };
+		CDB320020000000000000300 /* Keeper.swift in Extension Sources */ = {isa = PBXBuildFile; fileRef = CDB320020000000000000100; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -201,6 +205,8 @@ CDA700030000000000000001 /* RouteActivityAttributes.swift */ = {isa = PBXFileRef
 		BB110002000000020000BB02 /* JoystickView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TrollRoute/LocSim/JoystickView.swift"; sourceTree = SOURCE_ROOT; };
 		BB110004000000040000BB04 /* GPXParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TrollRoute/LocSim/GPXParser.swift"; sourceTree = SOURCE_ROOT; };
 		BB110007000000070000BB07 /* FloatingQuickMenu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TrollRoute/LocSim/FloatingQuickMenu.swift"; sourceTree = SOURCE_ROOT; };
+		CDB320010000000000000100 /* KeeperNative.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "TrollRoute/Keeper/KeeperNative.m"; sourceTree = SOURCE_ROOT; };
+		CDB320020000000000000100 /* Keeper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TrollRoute/Keeper/Keeper.swift"; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -323,6 +329,8 @@ CDA700030000000000000017 = {isa = PBXFrameworksBuildPhase; buildActionMask = 214
 			isa = PBXGroup;
 			children = (
 				796072F12B4F5A7A00737B5D /* TrollRoute.entitlements */,
+				CDB320010000000000000100 /* KeeperNative.m */,
+				CDB320020000000000000100 /* Keeper.swift */,
 				CDA100010000000000000100 /* SharedPreferences.swift */,
                 CDA500020000000000000100 /* FavoritesStore.swift */,
 				CDA100010000000000000101 /* LegacyLocations.h */,
@@ -575,6 +583,8 @@ CDA700030000000000000016 = {isa = PBXSourcesBuildPhase; buildActionMask = 214748
 				BDA110050000000000000304 /* PlaceSearch.swift in Extension Sources */,
 				BDA110050000000000000303 /* AddressQuery.swift in Extension Sources */,
 				BDA110050000000000000302 /* PlaceInput.swift in Extension Sources */,
+				CDB320010000000000000300 /* KeeperNative.m in Extension Sources */,
+				CDB320020000000000000300 /* Keeper.swift in Extension Sources */,
 				CDA100010000000000000300 /* SharedPreferences.swift in Extension Sources */,
                 CDA500020000000000000300 /* FavoritesStore.swift in Extension Sources */,
 				BDA110050000000000000301 /* PlaceModels.swift in Extension Sources */,
@@ -597,6 +607,8 @@ CDA700030000000000000016 = {isa = PBXSourcesBuildPhase; buildActionMask = 214748
 				799488A62B347E2C00AFFDCF /* LocSimManager.swift in Sources */,
 				FAA456D72B265FEA00FC7287 /* ContentView.swift in Sources */,
 				7989FD0A2B348A0200FBAB8D /* BookMarkHelper.swift in Sources */,
+				CDB320010000000000000200 /* KeeperNative.m in Sources */,
+				CDB320020000000000000200 /* Keeper.swift in Sources */,
 				CDA100010000000000000200 /* SharedPreferences.swift in Sources */,
                 CDA500020000000000000200 /* FavoritesStore.swift in Sources */,
 				CDA100010000000000000202 /* LegacyLocations.m in Sources */,

@@ -39,6 +39,9 @@ import CoreLocation
                 changed() // Revocation is durable before the driver's external effect.
                 try inject(location)
             }
+        #if os(iOS)
+            try KeeperClient.shared.ensureRunning()
+            #endif
         } catch LocationLeaseStore.Failure.supersededMove { throw MoveError.superseded }
     }
 

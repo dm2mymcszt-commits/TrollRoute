@@ -91,6 +91,7 @@ struct LocationLeaseStore {
     }
     struct State: Codable {
         var owner: UUID?
+        var bootIdentity: String?
         var snapshot = LocationSessionSnapshot()
         var moves: [UUID: Move] = [:]
     }
@@ -135,6 +136,7 @@ struct LocationLeaseStore {
             try validate(state)
             guard state.owner == owner else { return false }
             try operation(&state.snapshot)
+            state.bootIdentity = SystemBootIdentity.current
             try validate(state)
             try persist(state)
             return true
@@ -190,6 +192,7 @@ struct LocationLeaseStore {
             }
             try inject(sample.location)
             state.snapshot = LocationSessionSnapshot(kind: .stationary, current: sample)
+            state.bootIdentity = SystemBootIdentity.current
             state.moves[id]?.status = .applied
             try persist(state)
             return true
@@ -202,6 +205,24 @@ struct LocationLeaseStore {
             throw Failure.invalidState
         }
     }
+}
+
+protocol LocationKeeperLifecycle: AnyObject {
+    func ensureRunning() throws
+    func stop() throws
+}
+
+/// Coalesces starts in one client. The kernel lock remains the cross-process authority.
+final class KeeperLifecycle: LocationKeeperLifecycle {
+    private let running: () -> Bool
+    private let spawn: () throws -> Void
+    private let terminate: () throws -> Void
+    init(running: @escaping () -> Bool, spawn: @escaping () throws -> Void,
+         terminate: @escaping () throws -> Void) {
+        self.running = running; self.spawn = spawn; self.terminate = terminate
+    }
+    func ensureRunning() throws { if !running() { try spawn() } }
+    func stop() throws { try terminate() }
 }
 
 protocol LocationSimulationDriver: AnyObject {
@@ -290,6 +311,7 @@ final class LocationSession: ObservableObject {
     var onOwnershipLost: (() -> Void)?
     private(set) var inputSample: CLLocation?
     private(set) var lastKnown: SessionLocation?
+    private let keeper: LocationKeeperLifecycle?
     private let driver: LocationSimulationDriver
     private let store: LocationSessionStore
     private let settings: AltitudeSettings
@@ -312,9 +334,11 @@ final class LocationSession: ObservableObject {
     init(driver: LocationSimulationDriver, defaults: UserDefaults = SharedPreferences.defaults,
          settings: AltitudeSettings = .shared, injectionInterval: TimeInterval = 0.25,
          lease: LocationLeaseStore? = nil, requiresLease: Bool = false,
+         keeper: LocationKeeperLifecycle? = nil,
          lookup: @escaping (CLLocationCoordinate2D) async -> Double? = ElevationLookup.fetch,
          batchLookup: @escaping ([CLLocationCoordinate2D]) async -> [Double?]? = ElevationLookup.fetchBatch) {
         self.driver = driver
+        self.keeper = keeper
         self.defaults = defaults
         self.settings = settings
         self.lookup = lookup
@@ -426,6 +450,7 @@ final class LocationSession: ObservableObject {
         snapshot = delivered
         lastKnown = snapshot.current
         if !requiresLease { store.save(snapshot) }
+        do { try keeper?.ensureRunning() } catch { self.error = "Location keeper could not start. Open Settings for details." }
     }
 
     /// Called by durable-command wakeups and activation. Loading never acquires

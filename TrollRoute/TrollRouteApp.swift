@@ -7,6 +7,13 @@
 
 import SwiftUI
 @main
+enum TrollRouteEntry {
+    static func main() {
+        if KeeperRuntime.handleCommandLine() { return }
+        TrollRouteApp.main()
+    }
+}
+
 struct TrollRouteApp: App {
     var body: some Scene { WindowGroup { MigrationLaunchView() } }
 }
@@ -16,6 +23,7 @@ struct ReadyAppView: View {
     var body: some View {
             ContentView()
                 .onAppear {
+                    KeeperClient.shared.resumeIfCurrentBoot()
                     if checkSandbox(), !appSettings.tsBypass, !appSettings.isFirstRun {
                         UIApplication.shared.alert(title:"TrollRoute wasn't installed with TrollStore", body:"Unable to create test file. The app cannot work without the correct entitlements. Please use TrollStore to install it.", withButton:true)
                     }

@@ -32,5 +32,11 @@
 		<string>group.com.dm2mymcszt.trollroute</string>
 		<string>group.live.cclerc.geraniumBookmarks</string>
 	</array>
+	<key>com.apple.private.persona-mgmt</key>
+	<true/>
+	<key>com.apple.private.memorystatus</key>
+	<true/>
+	<key>com.apple.private.kernel.jetsam</key>
+	<true/>
 </dict>
 </plist>

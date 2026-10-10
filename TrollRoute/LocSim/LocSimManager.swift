@@ -41,7 +41,14 @@ enum RouteLocationSample {
 
 class LocSimManager {
     static let session = LocationSession(driver: CoreLocationSimulationDriver(),
-                                         lease: .shared, requiresLease: true)
+                                         lease: .shared, requiresLease: true, keeper: keeper)
+    private static var keeper: LocationKeeperLifecycle? {
+        #if os(iOS)
+        return KeeperClient.shared
+        #else
+        return nil
+        #endif
+    }
 }
 
 /// Starts once, then replaces the queued sample while the session stays active.

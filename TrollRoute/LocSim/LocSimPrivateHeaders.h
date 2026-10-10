@@ -33,3 +33,5 @@
 -(void)startCellSimulation;
 -(void)stopCellSimulation;
 @end
+
+#import "../Keeper/KeeperNative.h"
