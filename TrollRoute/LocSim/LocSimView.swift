@@ -115,14 +115,11 @@ struct LocSimView: View {
                 VStack {
                     Text("The saved simulation was reset by a restart or needs confirmation after an update.")
                     Button("Set saved location again") { keeperStatus.reactivate() }
-                }.font(.caption).padding(8).background(.regularMaterial)
+                }.font(.caption).padding(12)
+                    .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 16))
+                    .padding(.horizontal, 16).padding(.bottom, 8)
             } else if locationSession.isActive {
-                VStack {
-                    Text(keeperStatus.delivery)
-                    if let error = locationSession.keeperError { Text(error).foregroundColor(.orange) }
-                    if let notice = keeperStatus.notice { Text(notice).foregroundColor(.orange) }
-                    if !keeperStatus.display.running { Text("Location keeper is not running. Check Settings.").foregroundColor(.orange) }
-                }.font(.caption).padding(8).background(.regularMaterial)
+                KeeperMapStatus(model: keeperStatus) { showSettings = true }
             }
             if routeSimulator.isSimulating {
                 RoutePlaybackPanel(

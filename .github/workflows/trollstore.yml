@@ -92,7 +92,8 @@ jobs:
   map-workspace-ui:
     needs: build
     runs-on: macos-15
-    timeout-minutes: 20
+    # Include the expanded dark/light keeper previews and artifact cleanup.
+    timeout-minutes: 25
     env:
       DEVELOPER_DIR: /Applications/Xcode_16.4.app/Contents/Developer
     steps:

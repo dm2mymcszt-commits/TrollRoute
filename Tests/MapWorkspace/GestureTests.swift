@@ -22,6 +22,41 @@ final class MapGestureTests: XCTestCase {
         app.launch()
     }
 
+    func testKeeperCheckGivesFeedbackAndRunningStartIsDisabled() {
+        let app = XCUIApplication(bundleIdentifier: "local.trollroute.workspacepreview")
+        for running in [true, false] {
+            app.launchArguments = ["--screen", running ? "keeper-running" : "keeper-stopped"]
+            startProcess(app)
+            let check = app.buttons["Check keeper"]
+            XCTAssertTrue(check.waitForExistence(timeout: 15))
+            let start = app.buttons[running ? "Keeper is already running" : "Start keeper for active location"]
+            XCTAssertTrue(start.exists)
+            XCTAssertEqual(start.isEnabled, !running)
+            for _ in 0..<2 {
+                check.tap()
+                let alert = app.alerts["Location keeper"]
+                XCTAssertTrue(alert.waitForExistence(timeout: 5))
+                XCTAssertTrue(alert.staticTexts[running
+                    ? "The keeper is running. It is watching for location service restarts."
+                    : "Location keeper is not running."].exists)
+                capture(app, running ? "keeper-check-running" : "keeper-check-stopped")
+                alert.buttons["OK"].tap()
+            }
+            stopProcess(app)
+        }
+    }
+
+    func testTransientLocationErrorWaitsWithoutClaimingVerification() {
+        let app = XCUIApplication(bundleIdentifier: "local.trollroute.workspacepreview")
+        app.launchArguments = ["--screen", "status-waiting"]
+        startProcess(app)
+        XCTAssertTrue(app.buttons.containing(.staticText, identifier: "Waiting for system location").firstMatch.waitForExistence(timeout: 15))
+        XCTAssertFalse(app.staticTexts["Simulated location verified"].exists)
+        XCTAssertFalse(app.staticTexts["Location protection unavailable"].exists)
+        capture(app, "keeper-transient-location-wait")
+        stopProcess(app)
+    }
+
     func testSettingsGroupsRetainEveryControl() {
         let app = XCUIApplication(bundleIdentifier: "local.trollroute.workspacepreview")
         app.launchArguments = ["--screen", "settings-enabled"]
@@ -245,12 +280,17 @@ final class MapGestureTests: XCTestCase {
     func testFreshDoubleTapZoomsWithoutSelectingLocation() {
         let app = launch("gestures-long")
         let before = mapState(app)
+        XCTAssertEqual(before.count, 4)
+        guard before.count == 4 else { return }
         app.coordinate(withNormalizedOffset: CGVector(dx: 0.3, dy: 0.65)).doubleTap()
         expectation(for: NSPredicate { _, _ in
             let after = self.mapState(app)
             return after.count == 4 && after[2] < before[2] * 0.9
         }, evaluatedWith: app)
-        waitForExpectations(timeout: 5)
+        // A simulator accessibility snapshot can briefly contain only the app
+        // during map animation. Await the same zoom result without repeating the gesture.
+        waitForExpectations(timeout: 15)
+        XCTAssertEqual(app.state, .runningForeground)
         XCTAssertEqual(app.staticTexts["gesture-counts"].label, "presses=0,taps=0")
     }
 
