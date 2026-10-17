@@ -48,7 +48,7 @@ final class KeeperRecovery {
 }
 enum KeeperEventKind: String, Codable {
     case started, stopped, serviceExit, serviceReplaced, serviceWait
-    case restoreSent, restoreSkipped, restoreError, protectionError, notificationError
+    case restoreSent, restoreSkipped, restoreError, protectionError, protectionVerified, notificationError
     case diagnosticRequested, diagnosticError
 }
 struct KeeperEvent: Codable {
@@ -59,10 +59,11 @@ struct KeeperEvent: Codable {
     var newPID: Int32 = 0
     var attempt: Int = 0
     var errorCode: Int = 0
+    var priority: Int32?
     var line: String {
         let formatter = ISO8601DateFormatter()
         formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
-        return "\(formatter.string(from: time)) \(kind.rawValue) old=\(oldPID) new=\(newPID) attempt=\(attempt) error=\(errorCode)"
+        return "\(formatter.string(from: time)) \(kind.rawValue) old=\(oldPID) new=\(newPID) attempt=\(attempt) error=\(errorCode)" + (priority.map { " priority=\($0)" } ?? "")
     }
 }
 struct KeeperJournal: Codable {
@@ -77,11 +78,11 @@ struct KeeperLog {
         file = SharedStateFile(url: directory.appendingPathComponent("keeper-log.json"), initial: { KeeperJournal() })
     }
     func append(_ kind: KeeperEventKind, oldPID: Int32 = 0, newPID: Int32 = 0,
-                attempt: Int = 0, errorCode: Int = 0) throws {
+                attempt: Int = 0, errorCode: Int = 0, priority: Int32? = nil) throws {
         try file.update { journal in
             let now = Date()
             journal.events.append(KeeperEvent(time: now, uptime: ProcessInfo.processInfo.systemUptime,
-                kind: kind, oldPID: oldPID, newPID: newPID, attempt: attempt, errorCode: errorCode))
+                kind: kind, oldPID: oldPID, newPID: newPID, attempt: attempt, errorCode: errorCode, priority: priority))
             if kind == .serviceReplaced { journal.restarts += 1; journal.lastRestart = now }
             while journal.events.count > 512 { journal.events.removeFirst() }
             while try JSONEncoder().encode(journal).count > Self.maximumBytes { journal.events.removeFirst() }
@@ -89,6 +90,15 @@ struct KeeperLog {
     }
     func read() throws -> KeeperJournal { try file.read() }
     func text() throws -> String { try read().events.map(\.line).joined(separator: "\n") }
+}
+struct KeeperProtectionHealth: Codable {
+    var priority: Int32
+    var checkedUptime: TimeInterval
+    var error: Int
+    func isFresh(at uptime: TimeInterval) -> Bool {
+        let age = uptime - checkedUptime
+        return error == 0 && (priority == 19 || priority == 190) && age >= 0 && age <= 90
+    }
 }
 struct KeeperPreferences: Codable { var notifications = true }
 
@@ -147,6 +157,7 @@ struct KeeperRecord: Codable {
     var boot: String
     var started: Date
     var error: Int = 0
+    var protection: KeeperProtectionHealth?
 }
 
 enum KeeperFiles {
@@ -279,6 +290,7 @@ enum KeeperRuntime {
                 for _ in 0..<60 {
                     if KeeperFiles.locked(container), let record = KeeperFiles.read(container),
                        record.build == KeeperFiles.build, record.error == 0,
+                       record.protection?.isFresh(at: ProcessInfo.processInfo.systemUptime) == true,
                        record.boot == SystemBootIdentity.current, TRProcessIdentity(record.pid) == record.identity { return true }
                     usleep(25000)
                 }
@@ -286,6 +298,7 @@ enum KeeperRuntime {
             case "stop": try terminate(container)
             case "diagnose":
                 guard KeeperFiles.locked(container), let record = KeeperFiles.read(container),
+                      record.error == 0, record.protection?.isFresh(at: ProcessInfo.processInfo.systemUptime) == true,
                       record.boot == SystemBootIdentity.current,
                       TRProcessIdentity(record.pid) == record.identity,
                       TRProcessPath(record.pid) == record.executable else { throw KeeperFiles.failure(ESRCH) }
@@ -335,18 +348,20 @@ enum KeeperRuntime {
               state.bootIdentity == SystemBootIdentity.current, state.bootIdentity != "unknown" else { close(fd); return }
         let diagnostic = KeeperDiagnosticListener(lease: lease, directory: KeeperFiles.directory(container))
         diagnostic.start()
-        let protection = TRProtectKeeper()
-        let record = KeeperRecord(pid: getpid(), identity: TRProcessIdentity(getpid()),
+        var priority: Int32 = -1
+        let protection = TRProtectKeeper(&priority)
+        var record = KeeperRecord(pid: getpid(), identity: TRProcessIdentity(getpid()),
             executable: KeeperFiles.executable, build: KeeperFiles.build,
-            boot: SystemBootIdentity.current, started: Date(), error: Int(protection))
+            boot: SystemBootIdentity.current, started: Date(), error: Int(protection),
+            protection: KeeperProtectionHealth(priority: priority, checkedUptime: ProcessInfo.processInfo.systemUptime, error: Int(protection)))
         try JSONEncoder().encode(record).write(to: KeeperFiles.record(container), options: .atomic)
         try SharedFileAccess.repair(KeeperFiles.record(container))
         let log = KeeperLog(directory: KeeperFiles.directory(container))
         guard protection == 0 else {
-            try? log.append(.protectionError, errorCode: Int(protection))
+            try? log.append(.protectionError, errorCode: Int(protection), priority: priority)
             close(fd); throw KeeperFiles.failure(protection)
         }
-        try log.append(.started, newPID: getpid())
+        try log.append(.started, newPID: getpid(), priority: priority)
         let watcher = KeeperProcessWatcher(lease: lease, directory: KeeperFiles.directory(container))
         watcher.start()
         let timer = DispatchSource.makeTimerSource(queue: .main)
@@ -354,6 +369,37 @@ enum KeeperRuntime {
         timer.setEventHandler {
             guard FileManager.default.fileExists(atPath: record.executable),
                   let latest = try? lease.read(), latest.owner != nil, latest.snapshot.isActive else { try? log.append(.stopped); exit(0) }
+            // A successful setter is insufficient: periodically read the kernel's
+            // effective priority and repair demotion. This never injects a location.
+            var actual: Int32 = -1
+            let error = TRCheckKeeperProtection(&actual)
+            let previousError = record.error
+            record.error = Int(error)
+            record.protection = KeeperProtectionHealth(priority: actual,
+                checkedUptime: ProcessInfo.processInfo.systemUptime, error: Int(error))
+            do {
+                try JSONEncoder().encode(record).write(to: KeeperFiles.record(container), options: .atomic)
+                try SharedFileAccess.repair(KeeperFiles.record(container))
+            } catch {
+                try? log.append(.protectionError, errorCode: (error as NSError).code, priority: actual)
+            }
+            if Int(error) != previousError {
+                try? log.append(error == 0 ? .protectionVerified : .protectionError,
+                    errorCode: Int(error), priority: actual)
+                if error != 0 {
+                    let prefs = SharedStateFile<KeeperPreferences>(url: KeeperFiles.directory(container).appendingPathComponent("keeper-preferences.json"), initial: { KeeperPreferences() })
+                    if (try? prefs.read().notifications) ?? true {
+                        let content = UNMutableNotificationContent()
+                        content.title = "Keeper protection unavailable"
+                        content.body = "Memory protection could not be verified. Open TrollRoute to check its status."
+                        content.sound = .default
+                        UNUserNotificationCenter.current().add(UNNotificationRequest(identifier: "keeper-protection", content: content, trigger: nil)) { error in
+                            if let error = error { try? log.append(.notificationError, errorCode: (error as NSError).code) }
+                        }
+                    }
+                }
+            }
+            // Keep watching even if memory protection fails; do not abandon recovery.
             watcher.check()
         }
         timer.resume()

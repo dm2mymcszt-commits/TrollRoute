@@ -65,9 +65,14 @@ enum KeeperDeliveryState {
             display = KeeperDisplay(detail: "Shared location storage is unavailable."); return
         }
         let record = KeeperFiles.read(container)
-        display.running = KeeperFiles.locked(container) && record?.error == 0
+        let alive = KeeperFiles.locked(container) && record?.boot == SystemBootIdentity.current
+            && record?.build == KeeperFiles.build
+            && record.map { TRProcessIdentity($0.pid) == $0.identity } == true
+        display.running = alive && record?.error == 0
+            && record?.protection?.isFresh(at: ProcessInfo.processInfo.systemUptime) == true
         display.started = display.running ? record?.started : nil
         display.detail = display.running ? "Watching for location service restarts." : "Location keeper is not running. Protection is unavailable."
+        if alive && !display.running { display.detail = "Keeper protection has not been verified recently." }
         if let error = record?.error, error != 0 { display.detail = "Keeper protection failed (error \(error))." }
         let log = KeeperLog(directory: KeeperFiles.directory(container))
         if let journal = try? log.read() {

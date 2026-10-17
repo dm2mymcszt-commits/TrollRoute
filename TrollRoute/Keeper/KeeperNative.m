@@ -1,5 +1,6 @@
 // Persona and Jetsam technique adapted from TrollSpeed (MIT); see notices.
 #import "KeeperNative.h"
+#import "KeeperProtection.h"
 #import <spawn.h>
 #import <fcntl.h>
 #import <sys/sysctl.h>
@@ -82,20 +83,30 @@ pid_t TRLocationPID(void) {
     }
     free(entries); return result;
 }
-int TRProtectKeeper(void) {
+static int TRDarwinMajor(void) {
+    char release[64] = {0}; size_t size = sizeof(release);
+    if (sysctlbyname("kern.osrelease", release, &size, NULL, 0) != 0) return 0;
+    release[sizeof(release) - 1] = 0;
+    char *end = NULL;
+    long major = strtol(release, &end, 10);
+    return end && *end == '.' && major > 0 && major < 100 ? (int)major : 0;
+}
+int TRProtectKeeper(int32_t *priority) {
+    *priority = -1;
 #if TARGET_OS_SIMULATOR
     return ENOTSUP;
 #else
-    int (*control)(uint32_t, int32_t, uint32_t, void *, size_t) = dlsym(RTLD_DEFAULT, "memorystatus_control");
-    int (*dirty)(pid_t, uint32_t) = dlsym(RTLD_DEFAULT, "proc_track_dirty");
-    if (!control || !dirty) return ENOTSUP;
-    struct { int32_t priority; uint64_t userData; } priority = {19, 0};
-    int first = 0;
-    if (control(2, getpid(), 0, &priority, sizeof(priority)) < 0) first = errno;
-    const uint32_t commands[] = {5, 6, 16, 18};
-    const uint32_t flags[] = {UINT32_MAX, 0, 0, 0};
-    for (int i = 0; i < 4; i++) if (control(commands[i], getpid(), flags[i], NULL, 0) < 0 && !first) first = errno;
-    int rc = dirty(getpid(), 0); if (rc && !first) first = rc;
-    return first;
+    TRMemoryControl control = dlsym(RTLD_DEFAULT, "memorystatus_control");
+    TRDirtyControl dirty = dlsym(RTLD_DEFAULT, "proc_track_dirty");
+    return TRConfigureProtection(control, dirty, getpid(), TRDarwinMajor(), priority);
+#endif
+}
+int TRCheckKeeperProtection(int32_t *priority) {
+    *priority = -1;
+#if TARGET_OS_SIMULATOR
+    return ENOTSUP;
+#else
+    TRMemoryControl control = dlsym(RTLD_DEFAULT, "memorystatus_control");
+    return TREnsurePriority(control, getpid(), TRDarwinMajor(), priority);
 #endif
 }

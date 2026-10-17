@@ -114,6 +114,22 @@ final class CLSimulationManager {
         for forbidden in ["latitude", "longitude", "coordinate", "address", "course", "speed"] { precondition(!raw.contains(forbidden)) }
         precondition(journal.events.last!.line.range(of: #"\.\d{3}Z"#, options: .regularExpression) != nil)
         print("PASS: bounded log, millisecond timestamps, only typed non-location fields")
+        // Existing installed logs have no priority field; retain their history.
+        let oldEvent = KeeperEvent(time: Date(), uptime: 1, kind: .started)
+        let oldJSON = try JSONEncoder().encode(oldEvent)
+        let decodedOld = try JSONDecoder().decode(KeeperEvent.self, from: oldJSON)
+        precondition(decodedOld.priority == nil)
+        try log.append(.protectionVerified, priority: 190)
+        let protectionText = try log.text()
+        let protectionJournal = try log.read()
+        precondition(protectionText.contains("priority=190"))
+        precondition(protectionJournal.events.count == 512)
+        let health = KeeperProtectionHealth(priority: 190, checkedUptime: 100, error: 0)
+        precondition(health.isFresh(at: 100) && health.isFresh(at: 130) && health.isFresh(at: 190))
+        precondition(!health.isFresh(at: 191) && !health.isFresh(at: 99))
+        precondition(!KeeperProtectionHealth(priority: 0, checkedUptime: 100, error: 0).isFresh(at: 100))
+        precondition(!KeeperProtectionHealth(priority: 190, checkedUptime: 100, error: 1).isFresh(at: 100))
+        print("PASS: effective priority log preserves old entries; unverified/stale/failed protection is rejected")
         let report = KeeperDiagnosticReport.render(start: 0, end: 10, samples: [
             .init(received: Date(), uptime: 2, timestamp: Date(), simulated: false, matches: false),
             .init(received: Date(), uptime: 2.375, timestamp: Date(), simulated: true, matches: true)],
